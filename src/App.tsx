@@ -21,11 +21,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool>(TOOLS[0]); // Default: PDF to Word
   
-  // Light/Dark Theme: default is light
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('omni_theme');
-    return (saved === 'dark' || saved === 'light') ? saved : 'light';
-  });
+  // Light/Dark Theme: exclusively dark
+  const [theme] = useState<'light' | 'dark'>('dark');
 
   // Recently used tools for users
   const [recentTools, setRecentTools] = useState<Tool[]>([]);
@@ -61,9 +58,9 @@ export default function App() {
 
   // Sync theme to root element
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('omni_theme', theme);
-  }, [theme]);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('omni_theme', 'dark');
+  }, []);
 
   // Handle tool selection & update recents
   const handleSelectTool = (tool: Tool) => {
@@ -312,7 +309,7 @@ export default function App() {
         remainingDailyLimit={remainingDailyLimit}
         onOpenOnboarding={() => setOnboardingOpen(true)}
         theme={theme}
-        onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+        onToggleTheme={() => {}}
       />
 
       {/* MAIN APP SECTION */}
@@ -390,9 +387,9 @@ export default function App() {
             {/* SEPARATOR DIVIDER */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-zinc-200 dark:border-white/5"></div>
+                <div className="w-full border-t border-white/5"></div>
               </div>
-              <span className="relative px-4 bg-slate-50 dark:bg-slate-900 border border-zinc-200 dark:border-white/10 py-1 rounded-full text-xs text-zinc-600 dark:text-zinc-300 font-mono">158 Conversion Tools Available</span>
+              <span className="relative px-4 bg-zinc-950 border border-white/10 py-1 rounded-full text-xs text-zinc-400 font-mono">158 Conversion Tools Available</span>
             </div>
 
             {/* RECENTLY USED TOOLS QUICK ACCESS */}
@@ -607,13 +604,13 @@ export default function App() {
       />
 
       {/* FOOTER */}
-      <footer className="border-t border-zinc-200 dark:border-white/5 bg-zinc-100/40 dark:bg-slate-950/40 backdrop-blur-md py-8 text-center" id="app-footer">
-        <div className="max-w-7xl mx-auto px-4 text-xs text-zinc-600 space-y-3 font-mono">
+      <footer className="border-t border-white/5 bg-zinc-950/40 backdrop-blur-md py-8 text-center" id="app-footer">
+        <div className="max-w-7xl mx-auto px-4 text-xs text-zinc-500 space-y-3 font-mono">
           <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-            <span className="font-bold text-zinc-500 dark:text-zinc-400">OmniConvert SaaS Sandbox Platform</span>
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span className="font-bold text-zinc-300">OmniConvert SaaS Sandbox Platform</span>
           </div>
-          <p className="text-zinc-500 dark:text-zinc-400">edge dispatcher SLA: 99.9% uptime guaranteed • Proudly hosted via Cloudflare Workers</p>
+          <p className="text-zinc-400">edge dispatcher SLA: 99.9% uptime guaranteed • Proudly hosted via Cloudflare Workers</p>
           <div className="flex justify-center gap-4 text-[11px] text-zinc-500">
             <span>Built by Google AI Studio</span>
             <span>•</span>

@@ -1,4 +1,4 @@
-import { Sparkles, User as UserIcon, LogOut, ShieldAlert, Library, Route, BarChart3, CreditCard, ChevronDown, HelpCircle, Sun, Moon, Gift } from 'lucide-react';
+import { Sparkles, User as UserIcon, LogOut, ShieldAlert, Library, Route, BarChart3, CreditCard, ChevronDown, HelpCircle, Gift } from 'lucide-react';
 import { User } from '../types';
 
 interface NavbarProps {
@@ -126,20 +126,6 @@ export default function Navbar({
           {/* User Auth Info & Credit Badges */}
           <div className="flex items-center gap-3" id="navbar-actions">
             
-            {/* Theme Toggle Button */}
-            <button
-              onClick={onToggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-xl glass hover:bg-zinc-500/10 dark:hover:bg-white/5 text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer"
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-              id="theme-toggle-btn"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-4.5 h-4.5" />
-              ) : (
-                <Sun className="w-4.5 h-4.5" />
-              )}
-            </button>
-
             {/* Limit Banner */}
             <div className="hidden sm:flex flex-col items-end text-right">
               {currentUser ? (

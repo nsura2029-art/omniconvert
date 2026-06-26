@@ -4,6 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Google AI Studio App</title>
+    <script>
+      // Fix for environment issue where some scripts try to assign to getter-only window.fetch
+      (function() {
+        try {
+          var currentFetch = window.fetch;
+          var patch = function(obj) {
+            if (!obj) return;
+            var desc = Object.getOwnPropertyDescriptor(obj, 'fetch');
+            if (!desc || desc.configurable) {
+              Object.defineProperty(obj, 'fetch', {
+                configurable: true,
+                enumerable: true,
+                get: function() { return currentFetch; },
+                set: function(val) { currentFetch = val; }
+              });
+            }
+          };
+          patch(window);
+          if (typeof globalThis !== 'undefined') {
+            patch(globalThis);
+          }
+        } catch (e) {
+          console.warn('Failed to patch fetch descriptor:', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
