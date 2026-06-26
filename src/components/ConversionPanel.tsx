@@ -97,6 +97,7 @@ export default function ConversionPanel({
 
   // File Upload Source States
   const [showSourceModal, setShowSourceModal] = useState(false);
+  const [showUploadDropdown, setShowUploadDropdown] = useState(false);
   const [activeUploadSource, setActiveUploadSource] = useState<'menu' | 'url' | 'gdrive' | 'dropbox' | 'onedrive'>('menu');
   const [urlInput, setUrlInput] = useState('');
   const [selectedCloudFiles, setSelectedCloudFiles] = useState<string[]>([]);
@@ -113,6 +114,7 @@ export default function ConversionPanel({
     setFileProgresses({});
     setIsProcessing(false);
     setCurrentLogs([]);
+    setShowUploadDropdown(false);
   }, [selectedTool]);
 
   // Drag and Drop handlers
@@ -149,6 +151,7 @@ export default function ConversionPanel({
     if (e.target.files && e.target.files[0]) {
       const selectedFiles = Array.from(e.target.files) as File[];
       setFiles(prev => [...prev, ...selectedFiles]);
+      setShowUploadDropdown(false);
       
       const initialFormats = { ...targetFormats };
       selectedFiles.forEach(f => {
@@ -600,8 +603,7 @@ export default function ConversionPanel({
             onDrop={handleDrop}
             onClick={() => {
               if (files.length === 0 && !isProcessing) {
-                setShowSourceModal(true);
-                setActiveUploadSource('menu');
+                setShowUploadDropdown(prev => !prev);
               }
             }}
             className={`relative min-h-[220px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-6 text-center transition-all ${
@@ -632,12 +634,12 @@ export default function ConversionPanel({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setShowSourceModal(true);
-                      setActiveUploadSource('menu');
+                      setShowUploadDropdown(prev => !prev);
                     }}
-                    className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:underline"
+                    className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:underline"
                   >
                     Click to upload
+                    <ArrowRight className={`w-3.5 h-3.5 transition-transform ${showUploadDropdown ? 'rotate-90' : ''}`} />
                   </button>
                   <span className="text-sm text-zinc-600 dark:text-zinc-400"> or drag and drop files here</span>
                   <p className="text-[11px] text-zinc-500 font-mono mt-1">
@@ -645,6 +647,58 @@ export default function ConversionPanel({
                   </p>
                 </div>
 
+                <AnimatePresence>
+                  {showUploadDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.16 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-[136px] left-1/2 z-20 w-[min(320px,calc(100%-32px))] -translate-x-1/2 rounded-2xl glass border border-zinc-200 dark:border-white/10 p-3 text-left shadow-2xl"
+                    >
+                      <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono">
+                        Upload source
+                      </label>
+                      <select
+                        defaultValue=""
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const source = e.currentTarget.value;
+                          e.currentTarget.value = '';
+                          setShowUploadDropdown(false);
+
+                          if (source === 'computer') {
+                            fileInputRef.current?.click();
+                            return;
+                          }
+
+                          if (source === 'url') {
+                            setShowSourceModal(true);
+                            setActiveUploadSource('url');
+                            return;
+                          }
+
+                          if (source === 'gdrive' || source === 'dropbox' || source === 'onedrive') {
+                            setShowSourceModal(true);
+                            setActiveUploadSource(source);
+                            setSelectedCloudFiles([]);
+                            setCloudSearchQuery('');
+                          }
+                        }}
+                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-xs font-bold text-zinc-800 shadow-sm outline-none transition-colors hover:border-indigo-500/40 focus:border-indigo-500 dark:border-white/10 dark:bg-slate-900 dark:text-zinc-100"
+                      >
+                        <option value="" disabled>Choose upload source...</option>
+                        <option value="computer">From my computer</option>
+                        <option value="url">By URL</option>
+                        <option value="gdrive">From Google Drive</option>
+                        <option value="dropbox">From Dropbox</option>
+                        <option value="onedrive">From OneDrive</option>
+                      </select>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 {/* Direct Screen Recorder Trigger if it's Screen Recording tool */}
                 {selectedTool.name === 'Screen Recording to MP4' && (
                   <div className="pt-2" onClick={(e) => e.stopPropagation()}>
