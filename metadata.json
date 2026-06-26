@@ -1,0 +1,6 @@
+{
+  "name": "OmniConvert SaaS",
+  "description": "A high-performance file conversion SaaS platform featuring multi-format batch processing, custom workflows, cloud storage integrations, and usage limits.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
