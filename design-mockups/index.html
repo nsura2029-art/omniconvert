@@ -1,0 +1,65 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OmniConvert Design Mockups</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #111827; background: #f8fbff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top left, #dbeafe 0, transparent 34rem), radial-gradient(circle at top right, #f5d0fe 0, transparent 30rem), #f8fbff; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0; }
+    .eyebrow { color: #4f46e5; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; }
+    h1 { margin: 12px 0 10px; font-size: clamp(36px, 6vw, 68px); line-height: .96; letter-spacing: -0.04em; max-width: 820px; }
+    p { color: #64748b; font-size: 17px; line-height: 1.65; max-width: 720px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 34px; }
+    a { color: inherit; text-decoration: none; }
+    .card { background: rgba(255,255,255,.78); border: 1px solid rgba(15,23,42,.08); border-radius: 18px; padding: 18px; min-height: 260px; box-shadow: 0 20px 50px rgba(79,70,229,.08); display: flex; flex-direction: column; justify-content: space-between; transition: transform .2s ease, box-shadow .2s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 26px 70px rgba(79,70,229,.14); }
+    .preview { height: 126px; border-radius: 14px; border: 1px solid rgba(15,23,42,.08); overflow: hidden; padding: 12px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; }
+    .one { background: #eef6ff; } .two { background: #f7f5ff; } .three { background: #fbfaf7; }
+    .mini { border-radius: 10px; background: #fff; border: 1px solid rgba(15,23,42,.07); box-shadow: 0 8px 20px rgba(15,23,42,.06); }
+    .mini.tall { grid-row: span 2; } .line { height: 8px; border-radius: 999px; background: #cbd5e1; margin: 12px; }
+    h2 { margin: 18px 0 7px; font-size: 21px; letter-spacing: -0.02em; }
+    .tag { display: inline-flex; width: fit-content; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 800; background: #eef2ff; color: #4f46e5; }
+    .cta { margin-top: 16px; display: inline-flex; align-items: center; justify-content: center; height: 40px; border-radius: 11px; background: #111827; color: white; font-weight: 800; font-size: 13px; }
+    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } main { padding: 34px 0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">OmniConvert UI routes</div>
+    <h1>Three light-mode product directions for the conversion workspace.</h1>
+    <p>Each option is a standalone HTML mockup with modern cards, calm color, and a more coherent light aesthetic than the current dark-first generated UI.</p>
+    <section class="grid">
+      <a class="card" href="cloud-desk.html">
+        <div>
+          <span class="tag">Design 01</span>
+          <div class="preview one"><div class="mini tall"></div><div class="mini"><div class="line"></div><div class="line" style="width:60%"></div></div><div class="mini"><div class="line" style="background:#4f46e5"></div></div></div>
+          <h2>Cloud Desk</h2>
+          <p>Clean daily-use SaaS with blue mist surfaces, crisp cards, and conversion tools that feel trustworthy.</p>
+        </div>
+        <span class="cta">Open Cloud Desk</span>
+      </a>
+      <a class="card" href="frosted-studio.html">
+        <div>
+          <span class="tag">Design 02</span>
+          <div class="preview two"><div class="mini tall" style="background:rgba(255,255,255,.74)"></div><div class="mini" style="background:#efe7ff"><div class="line" style="background:#7c3aed"></div></div><div class="mini" style="background:#e0f7fb"></div></div>
+          <h2>Frosted Studio</h2>
+          <p>Premium glass UI with lavender, cyan, and soft rose accents for a more memorable startup feel.</p>
+        </div>
+        <span class="cta">Open Frosted Studio</span>
+      </a>
+      <a class="card" href="format-os.html">
+        <div>
+          <span class="tag">Design 03</span>
+          <div class="preview three"><div class="mini tall" style="background:#f1f5f9"></div><div class="mini"><div class="line" style="background:#14b8a6"></div></div><div class="mini"><div class="line" style="background:#f59e0b"></div></div></div>
+          <h2>Format OS</h2>
+          <p>A compact operating-console interface with stronger dashboard structure and quick scanning.</p>
+        </div>
+        <span class="cta">Open Format OS</span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>

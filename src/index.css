@@ -1,48 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
+@layer utilities {
+  .bg-white\/1 {
+    background-color: rgb(255 255 255 / 0.01);
+  }
 
+  .bg-white\/2 {
+    background-color: rgb(255 255 255 / 0.02);
+  }
+
+  .bg-white\/3 {
+    background-color: rgb(255 255 255 / 0.03);
+  }
+
+  .bg-white\/4 {
+    background-color: rgb(255 255 255 / 0.04);
+  }
+
+  .text-zinc-450 {
+    color: #71717a;
+  }
+
+  .text-zinc-550 {
+    color: #52525b;
+  }
+
+  .text-zinc-850 {
+    color: #18181b;
+  }
+
+  .text-blue-550 {
+    color: #2563eb;
+  }
+
+  .text-cyan-550 {
+    color: #0891b2;
+  }
+}
 :root {
-  --bg-main: #f8fafc;
+  --bg-main: #fbfaf7;
   --text-main: #0f172a;
-  --text-secondary: #475569;
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-bg-hover: rgba(255, 255, 255, 0.95);
-  --glass-border: rgba(15, 23, 42, 0.08);
-  --glass-border-hover: rgba(15, 23, 42, 0.16);
-  --glass-nav: rgba(248, 250, 252, 0.75);
-  --input-bg: rgba(255, 255, 255, 0.8);
-  --shadow-color: rgba(15, 23, 42, 0.04);
-  --border-color: rgba(15, 23, 42, 0.08);
+  --text-secondary: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-bg-hover: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(15, 23, 42, 0.09);
+  --glass-border-hover: rgba(37, 99, 235, 0.22);
+  --glass-nav: rgba(255, 255, 255, 0.82);
+  --input-bg: rgba(255, 255, 255, 0.88);
+  --shadow-color: rgba(15, 23, 42, 0.08);
+  --border-color: rgba(226, 232, 240, 0.95);
   --mesh-gradient: 
-    radial-gradient(at 0% 0%, rgba(199, 210, 254, 0.4) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, rgba(233, 213, 255, 0.4) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, rgba(253, 230, 138, 0.25) 0, transparent 50%);
+    radial-gradient(at 8% 0%, rgba(219, 234, 254, 0.76) 0, transparent 42%), 
+    radial-gradient(at 84% 2%, rgba(204, 251, 241, 0.62) 0, transparent 36%), 
+    radial-gradient(at 52% 100%, rgba(254, 243, 199, 0.5) 0, transparent 42%);
 }
 
 .dark {
-  --bg-main: #09090b;
+  --bg-main: #0b1220;
   --text-main: #f8fafc;
-  --text-secondary: #94a3b8;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.15);
-  --glass-nav: rgba(9, 9, 11, 0.4);
-  --input-bg: rgba(0, 0, 0, 0.2);
-  --shadow-color: rgba(0, 0, 0, 0.6);
-  --border-color: rgba(255, 255, 255, 0.08);
+  --text-secondary: #a5b4c8;
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-bg-hover: rgba(30, 41, 59, 0.78);
+  --glass-border: rgba(148, 163, 184, 0.18);
+  --glass-border-hover: rgba(20, 184, 166, 0.32);
+  --glass-nav: rgba(15, 23, 42, 0.82);
+  --input-bg: rgba(15, 23, 42, 0.7);
+  --shadow-color: rgba(0, 0, 0, 0.48);
+  --border-color: rgba(148, 163, 184, 0.18);
   --mesh-gradient: 
-    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+    radial-gradient(at 8% 0%, rgba(37, 99, 235, 0.24) 0, transparent 44%), 
+    radial-gradient(at 82% 0%, rgba(20, 184, 166, 0.2) 0, transparent 38%), 
+    radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.1) 0, transparent 42%);
 }
 
+/* Light-mode normalization for generated dark-first panels. */
+:root:not(.dark) #omnicovert-saas-root :where(.border-white\/5, .border-white\/10) {
+  border-color: rgba(226, 232, 240, 0.95) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.bg-black\/20, .bg-black\/30, .bg-black\/40, .bg-black\/50, .bg-black\/60) {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.bg-white\/1, .bg-white\/2, .bg-white\/3, .bg-white\/4, .bg-white\/5, .bg-white\/10) {
+  background-color: rgba(241, 245, 249, 0.78) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.text-zinc-100, .text-zinc-200) {
+  color: #18181b !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root .text-zinc-300 {
+  color: #3f3f46 !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.glass, .glass-card) .text-white:not(.btn-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-gradient"]) {
+  color: #18181b !important;
+}
+/* Format OS palette bridge for existing generated Tailwind color classes. */
+:root:not(.dark) #omnicovert-saas-root :where(.text-indigo-300, .text-indigo-400, .text-indigo-500, .text-indigo-600) {
+  color: #2563eb !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.text-purple-300, .text-purple-400, .text-purple-500, .text-cyan-400, .text-cyan-500, .text-cyan-550) {
+  color: #14b8a6 !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.text-amber-400, .text-amber-500, .text-amber-600, .text-orange-400, .text-orange-500) {
+  color: #f59e0b !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.bg-indigo-500\/10, .bg-indigo-600\/20, .bg-blue-500\/10) {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.bg-purple-500\/10, .bg-purple-600\/20, .bg-cyan-500\/10) {
+  background-color: rgba(20, 184, 166, 0.08) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.bg-amber-500\/10, .bg-orange-600\/20) {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.border-indigo-500\/10, .border-indigo-500\/15, .border-indigo-500\/20, .border-indigo-500\/25, .border-indigo-500\/30, .border-indigo-500\/40, .border-indigo-500\/50) {
+  border-color: rgba(37, 99, 235, 0.2) !important;
+}
+
+:root:not(.dark) #omnicovert-saas-root :where(.border-purple-500\/20, .border-cyan-500\/20) {
+  border-color: rgba(20, 184, 166, 0.2) !important;
+}
 body {
   background-color: var(--bg-main);
   margin: 0;
@@ -112,20 +206,20 @@ body {
 }
 
 .glass-input:focus {
-  border-color: rgba(99, 102, 241, 0.4) !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(37, 99, 235, 0.42) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14) !important;
 }
 
 /* Primary Button with Mesh Gradient */
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+  background: linear-gradient(135deg, #2563eb 0%, #14b8a6 100%) !important;
   border: none !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .btn-primary:hover {
   filter: brightness(1.1);
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.24);
 }
 
 .btn-primary:active {
@@ -142,5 +236,5 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: linear-gradient(90deg, #2563eb, #14b8a6);
 }
