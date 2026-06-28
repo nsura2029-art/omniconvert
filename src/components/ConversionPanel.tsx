@@ -689,6 +689,13 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
           </div>
         </motion.div>
       )}
+
+      {converted && conversion && (
+        <div
+          aria-hidden="true"
+          className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-slate-500/70 to-transparent dark:via-slate-300/60"
+        />
+      )}
     </motion.article>
   );
 };
