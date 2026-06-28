@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
 import confetti from 'canvas-confetti';
@@ -57,6 +57,52 @@ const getCadTargetOptions = (fileName: string, fallbackOutput: string[]) => {
   const ext = getFileExtension(fileName);
   return CAD_TARGET_MATRIX[ext] || fallbackOutput || CAD_TARGET_MATRIX.default;
 };
+
+// Format -> category map for the categorized "to" picker.
+const FORMAT_CATEGORY_MAP: Record<string, string> = {
+  // Image
+  PNG: 'Image', JPG: 'Image', JPEG: 'Image', WEBP: 'Image', GIF: 'Image',
+  BMP: 'Image', TIFF: 'Image', TIF: 'Image', SVG: 'Image', HEIC: 'Image',
+  ICO: 'Image', AVIF: 'Image', PSD: 'Image', RAW: 'Image',
+  // Audio
+  MP3: 'Audio', WAV: 'Audio', OGG: 'Audio', M4A: 'Audio', OPUS: 'Audio',
+  FLAC: 'Audio', AAC: 'Audio', WMA: 'Audio', M4R: 'Audio', DTS: 'Audio',
+  AMR: 'Audio', MP2: 'Audio', VOC: 'Audio', AIFF: 'Audio', AIF: 'Audio',
+  '8SVX': 'Audio', CVS: 'Audio',
+  // Video
+  MP4: 'Video', MOV: 'Video', AVI: 'Video', MKV: 'Video', WEBM: 'Video',
+  FLV: 'Video', WMV: 'Video', MPEG: 'Video', MPG: 'Video',
+  '3GP': 'Video', M4V: 'Video', TS: 'Video',
+  // Document
+  PDF: 'Document', DOC: 'Document', DOCX: 'Document', TXT: 'Document',
+  MD: 'Document', RTF: 'Document', ODT: 'Document', HTML: 'Document',
+  HTM: 'Document', EPUB: 'Document', MOBI: 'Document', CSV: 'Document',
+  // Archive
+  ZIP: 'Archive', RAR: 'Archive', '7Z': 'Archive', TAR: 'Archive', GZ: 'Archive',
+  BZ2: 'Archive', XZ: 'Archive',
+  // 3D / CAD
+  STL: '3D', OBJ: '3D', STEP: '3D', STP: '3D', IGES: '3D', IGS: '3D',
+  DWG: '3D', DXF: '3D', FBX: '3D', '3DS': '3D'
+};
+
+const CATEGORY_ORDER = ['Image', 'Audio', 'Video', 'Document', 'Archive', '3D', 'Other'];
+
+const categorizeFormats = (formats: string[]) => {
+  const groups = new Map<string, string[]>();
+  formats.forEach(raw => {
+    const upper = raw.toUpperCase().trim();
+    const cat = FORMAT_CATEGORY_MAP[upper] || 'Other';
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat)!.push(raw);
+  });
+  return CATEGORY_ORDER
+    .filter(c => groups.has(c))
+    .map(c => ({ name: c, formats: groups.get(c)!.slice().sort() }));
+};
+
+// Tiny conditional-class helper (no classnames dep).
+const cls = (...parts: Array<string | false | null | undefined>): string =>
+  parts.filter(Boolean).join(' ');
 
 function ProviderIcon({ provider }: { provider: 'computer' | 'url' | 'gdrive' | 'dropbox' | 'onedrive' }) {
   if (provider === 'gdrive') {
@@ -280,6 +326,187 @@ function UploadPlaceholder({
   );
 }
 
+const CategoryIcon: React.FC<{ name: string }> = ({ name }) => {
+  switch (name) {
+    case 'Image': return <Image className="h-3.5 w-3.5" />;
+    case 'Audio': return <Volume2 className="h-3.5 w-3.5" />;
+    case 'Video': return <Video className="h-3.5 w-3.5" />;
+    case 'Document': return <FileText className="h-3.5 w-3.5" />;
+    case 'Archive': return <FolderArchive className="h-3.5 w-3.5" />;
+    case '3D': return <Box className="h-3.5 w-3.5" />;
+    default: return <File className="h-3.5 w-3.5" />;
+  }
+};
+
+interface TargetFormatPickerProps {
+  currentTarget: string;
+  formats: string[];
+  disabled?: boolean;
+  onChange: (format: string) => void;
+  size?: 'sm' | 'md';
+  ariaLabel?: string;
+}
+
+const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
+  currentTarget,
+  formats,
+  disabled,
+  onChange,
+  size = 'md',
+  ariaLabel,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const rootRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const categories = useMemo(() => categorizeFormats(formats), [formats]);
+
+  const filteredCategories = useMemo(() => {
+    if (!search.trim()) return categories;
+    const q = search.trim().toLowerCase();
+    return categories
+      .map(c => ({ ...c, formats: c.formats.filter(f => f.toLowerCase().includes(q)) }))
+      .filter(c => c.formats.length > 0);
+  }, [categories, search]);
+
+  // Pick / refresh active category: prefer one that contains the current target.
+  useEffect(() => {
+    if (filteredCategories.length === 0) return;
+    if (!filteredCategories.find(c => c.name === activeCategory)) {
+      const fromCurrent = filteredCategories.find(c => c.formats.includes(currentTarget));
+      setActiveCategory((fromCurrent ?? filteredCategories[0]).name);
+    }
+  }, [filteredCategories, activeCategory, currentTarget]);
+
+  // Click-outside + Escape close.
+  useEffect(() => {
+    if (!open) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  // Focus search on open; reset on close.
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => searchRef.current?.focus());
+    } else {
+      setSearch('');
+    }
+  }, [open]);
+
+  const visibleFormats = filteredCategories.find(c => c.name === activeCategory)?.formats ?? [];
+  const triggerPad = size === 'sm' ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs';
+
+  return (
+    <div ref={rootRef} className="relative inline-block">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        className={cls(
+          'inline-flex min-h-11 items-center gap-1.5 rounded-xl border font-mono font-black outline-none',
+          'bg-black/60 border-white/10 text-zinc-100 hover:bg-black/80',
+          'focus-visible:ring-4 focus-visible:ring-blue-500/30',
+          'disabled:cursor-not-allowed disabled:opacity-50',
+          triggerPad
+        )}
+      >
+        <span className="uppercase">{currentTarget || '---'}</span>
+        <ChevronDown className={cls('h-3 w-3 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <div
+          role="listbox"
+          className="absolute left-0 top-full z-50 mt-2 w-[420px] rounded-xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60 overflow-hidden"
+        >
+          <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+            <Search className="h-3.5 w-3.5 text-zinc-500" />
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search"
+              className="flex-1 bg-transparent text-xs text-zinc-200 placeholder:text-zinc-500 outline-none"
+            />
+          </div>
+          <div className="grid grid-cols-[140px_1fr] max-h-[280px]">
+            <div className="border-r border-white/10 overflow-y-auto py-1">
+              {filteredCategories.length === 0 && (
+                <p className="px-3 py-4 text-[11px] text-zinc-500">No formats match.</p>
+              )}
+              {filteredCategories.map(cat => {
+                const active = cat.name === activeCategory;
+                return (
+                  <button
+                    key={cat.name}
+                    type="button"
+                    onClick={() => setActiveCategory(cat.name)}
+                    className={cls(
+                      'flex w-full items-center justify-between px-3 py-2 text-xs',
+                      active
+                        ? 'bg-white/10 text-white font-bold'
+                        : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <CategoryIcon name={cat.name} />
+                      {cat.name}
+                    </span>
+                    {active && <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="overflow-y-auto p-3">
+              {visibleFormats.length === 0 ? (
+                <p className="px-1 py-6 text-center text-[11px] text-zinc-500">No formats in this category.</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {visibleFormats.map(fmt => {
+                    const selected = fmt === currentTarget;
+                    return (
+                      <button
+                        key={fmt}
+                        type="button"
+                        onClick={() => { onChange(fmt); setOpen(false); }}
+                        className={cls(
+                          'rounded-lg px-2 py-2 text-[11px] font-mono font-black uppercase text-center transition-colors',
+                          selected
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700'
+                        )}
+                      >
+                        {fmt}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 type UploadedFileRowProps = {
   file: File;
   readiness: 'analyzing' | 'ready';
@@ -287,7 +514,7 @@ type UploadedFileRowProps = {
   converted: boolean;
   conversion?: FileConversion;
   currentTarget: string;
-  targetOptions: string[];
+  formats: string[];
   isProcessing: boolean;
   onTargetChange: (format: string) => void;
   onRemove: () => void;
@@ -301,7 +528,7 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
   converted,
   conversion,
   currentTarget,
-  targetOptions,
+  formats,
   isProcessing,
   onTargetChange,
   onRemove,
@@ -339,17 +566,14 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
 
         <div className="flex min-h-11 items-center justify-center gap-2 justify-self-center text-center">
           <span className="text-xs font-black uppercase text-slate-500">TO</span>
-          <select
-            value={currentTarget}
+          <TargetFormatPicker
+            currentTarget={currentTarget}
+            formats={formats}
             disabled={readiness === 'analyzing' || isProcessing}
-            onChange={(event) => onTargetChange(event.target.value)}
-            className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 disabled:opacity-50"
-            aria-label={`Target format for ${file.name}`}
-          >
-            {[...new Set([currentTarget, ...targetOptions])].map(format => (
-              <option key={format} value={format}>{format}</option>
-            ))}
-          </select>
+            onChange={onTargetChange}
+            size="md"
+            ariaLabel={`Target format for ${file.name}`}
+          />
         </div>
 
         <div className="min-w-[150px]">
@@ -405,6 +629,132 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
       )}
     </motion.article>
   );
+};
+
+// Minimal ZIP STORE writer used by the bundled "Download all" action.
+// No compression, no external dependency — STORE method only.
+// Spec reference: PKWARE APPNOTE.TXT (Local + Central + EOCD records).
+
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) {
+      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    }
+    table[i] = c >>> 0;
+  }
+  return table;
+})();
+
+const crc32 = (data: Uint8Array): number => {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) {
+    crc = CRC_TABLE[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+};
+
+const buildZip = (files: Array<{ name: string; data: Uint8Array }>): Uint8Array => {
+  const encoder = new TextEncoder();
+  const localParts: Uint8Array[] = [];
+  const centralParts: Uint8Array[] = [];
+  let offset = 0;
+
+  for (const file of files) {
+    const nameBytes = encoder.encode(file.name);
+    const crc = crc32(file.data);
+    const size = file.data.length;
+
+    const local = new Uint8Array(30 + nameBytes.length);
+    const lv = new DataView(local.buffer);
+    lv.setUint32(0, 0x04034b50, true);       // Local file header signature
+    lv.setUint16(4, 20, true);                // Version needed to extract
+    lv.setUint16(6, 0, true);                 // General purpose bit flag
+    lv.setUint16(8, 0, true);                 // Compression method: 0 = STORE
+    lv.setUint16(10, 0, true);                // Last mod file time
+    lv.setUint16(12, 0x21, true);             // Last mod file date (2000-01-01)
+    lv.setUint32(14, crc, true);              // CRC-32
+    lv.setUint32(18, size, true);             // Compressed size
+    lv.setUint32(22, size, true);             // Uncompressed size
+    lv.setUint16(26, nameBytes.length, true); // File name length
+    lv.setUint16(28, 0, true);                // Extra field length
+    local.set(nameBytes, 30);
+    localParts.push(local, file.data);
+
+    const central = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(central.buffer);
+    cv.setUint32(0, 0x02014b50, true);        // Central directory signature
+    cv.setUint16(4, 20, true);                 // Version made by
+    cv.setUint16(6, 20, true);                 // Version needed
+    cv.setUint16(8, 0, true);                  // General purpose bit flag
+    cv.setUint16(10, 0, true);                 // Compression method
+    cv.setUint16(12, 0, true);                 // Last mod file time
+    cv.setUint16(14, 0x21, true);              // Last mod file date
+    cv.setUint32(16, crc, true);               // CRC-32
+    cv.setUint32(20, size, true);              // Compressed size
+    cv.setUint32(24, size, true);              // Uncompressed size
+    cv.setUint16(28, nameBytes.length, true);  // File name length
+    cv.setUint16(30, 0, true);                 // Extra field length
+    cv.setUint16(32, 0, true);                 // File comment length
+    cv.setUint16(34, 0, true);                 // Disk number start
+    cv.setUint16(36, 0, true);                 // Internal file attributes
+    cv.setUint32(38, 0, true);                 // External file attributes
+    cv.setUint32(42, offset, true);            // Relative offset of local header
+    central.set(nameBytes, 46);
+    centralParts.push(central);
+
+    offset += local.length + file.data.length;
+  }
+
+  const centralStart = offset;
+  let centralSize = 0;
+  for (const part of centralParts) centralSize += part.length;
+
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);          // End of central dir signature
+  ev.setUint16(4, 0, true);                   // Number of this disk
+  ev.setUint16(6, 0, true);                   // Disk with central dir
+  ev.setUint16(8, files.length, true);        // Entries on this disk
+  ev.setUint16(10, files.length, true);       // Total entries
+  ev.setUint32(12, centralSize, true);        // Size of central directory
+  ev.setUint32(16, centralStart, true);       // Offset of central dir
+  ev.setUint16(20, 0, true);                  // Comment length
+
+  const totalSize = offset + centralSize + 22;
+  const out = new Uint8Array(totalSize);
+  let p = 0;
+  for (const part of localParts) { out.set(part, p); p += part.length; }
+  for (const part of centralParts) { out.set(part, p); p += part.length; }
+  out.set(eocd, p);
+  return out;
+};
+
+const downloadUrlToBlob = async (url: string | undefined): Promise<Blob> => {
+  if (!url || url === '#') {
+    return new Blob(['OmniConvert sandbox conversion result'], { type: 'text/plain' });
+  }
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.blob();
+  } catch {
+    return new Blob(['OmniConvert sandbox conversion result'], { type: 'text/plain' });
+  }
+};
+
+const dedupeZipNames = (names: string[]): string[] => {
+  const seen = new Map<string, number>();
+  return names.map(name => {
+    const count = seen.get(name) ?? 0;
+    seen.set(name, count + 1);
+    if (count === 0) return name;
+    const dot = name.lastIndexOf('.');
+    const base = dot > 0 ? name.slice(0, dot) : name;
+    const ext = dot > 0 ? name.slice(dot) : '';
+    return `${base} (${count + 1})${ext}`;
+  });
 };
 
 const isCompatibleExtension = (fileName: string, toolInput: string) => {
@@ -661,27 +1011,42 @@ export default function ConversionPanel({
     setConversions([]);
 
     // Prepare list of items to convert
-    // If the tool is a creator (like Text to Speech or Markdown to HTML), mock a single virtual file
-    const itemsToConvert = files.length > 0 ? files : [
-      new File([selectedTool.name === 'Text to Speech' ? ttsText : mdText], 
-        selectedTool.name === 'Text to Speech' ? 'narration_draft.txt' : 'document_preview.md', 
-        { type: 'text/plain' })
-    ];
+    // - Skip files that have already completed in a prior run
+    // - If the tool is a creator (like Text to Speech or Markdown to HTML) and there are no files,
+    //   mock a single virtual file.
+    const itemsToConvert = files.length > 0
+      ? files.filter(file => {
+          const progress = fileProgresses[file.name];
+          return !progress || progress.status !== 'completed';
+        })
+      : [
+          new File([selectedTool.name === 'Text to Speech' ? ttsText : mdText],
+            selectedTool.name === 'Text to Speech' ? 'narration_draft.txt' : 'document_preview.md',
+            { type: 'text/plain' })
+        ];
 
-    // Initialize individual progresses
-    const initialProgresses: Record<string, {
-      status: 'pending' | 'uploading' | 'processing' | 'saving' | 'completed' | 'failed';
-      progress: number;
-      statusText: string;
-    }> = {};
-    itemsToConvert.forEach(file => {
-      initialProgresses[file.name] = {
-        status: 'pending',
-        progress: 0,
-        statusText: 'Awaiting queue allocation...'
-      };
+    if (itemsToConvert.length === 0) {
+      // Nothing new to convert; preserve existing conversions and progress, just exit.
+      setIsProcessing(false);
+      return;
+    }
+
+    // Initialize individual progresses (merge so already-completed files keep their state).
+    setFileProgresses(prev => {
+      const next: Record<string, {
+        status: 'pending' | 'uploading' | 'processing' | 'saving' | 'completed' | 'failed';
+        progress: number;
+        statusText: string;
+      }> = { ...prev };
+      itemsToConvert.forEach(file => {
+        next[file.name] = {
+          status: 'pending',
+          progress: 0,
+          statusText: 'Awaiting queue allocation...'
+        };
+      });
+      return next;
     });
-    setFileProgresses(initialProgresses);
 
     const updateProgress = (
       fileName: string, 
@@ -956,9 +1321,9 @@ export default function ConversionPanel({
       onConversionCompleted(newConversion);
     }
 
-    setConversions(processingOutputs);
+    setConversions(prev => [...prev, ...processingOutputs]);
     setIsProcessing(false);
-    
+
     // Celebration
     confetti({
       particleCount: 100,
@@ -976,11 +1341,27 @@ export default function ConversionPanel({
     document.body.removeChild(link);
   };
 
-  const handleDownloadAll = () => {
-    conversions.forEach(conversion => {
-      handleDownloadSingle(conversion.downloadUrl || '#', conversion.fileName);
-    });
-    setCadNotice('Downloading all converted files to your computer.');
+  const handleDownloadAllAsZip = async () => {
+    if (conversions.length === 0) return;
+    setCadNotice('Bundling converted files into a zip archive...');
+    try {
+      const blobs = await Promise.all(
+        conversions.map(conversion => downloadUrlToBlob(conversion.downloadUrl))
+      );
+      const uniqueNames = dedupeZipNames(conversions.map(c => c.fileName));
+      const files = await Promise.all(uniqueNames.map(async (name, idx) => ({
+        name,
+        data: new Uint8Array(await blobs[idx].arrayBuffer())
+      })));
+      const zipBytes = buildZip(files);
+      const zipBlob = new Blob([zipBytes], { type: 'application/zip' });
+      const stamp = new Date().toISOString().slice(0, 10);
+      const zipName = `omniconvert-conversions-${stamp}.zip`;
+      handleDownloadSingle(URL.createObjectURL(zipBlob), zipName);
+      setCadNotice(`Downloaded ${files.length} file${files.length === 1 ? '' : 's'} as ${zipName}.`);
+    } catch (err) {
+      setCadNotice(`Could not bundle files into a zip: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
   };
 
   const handleCadCopyReferral = () => {
@@ -1076,6 +1457,9 @@ export default function ConversionPanel({
                     const converted = Boolean(conversion);
                     const targetOptions = getCadTargetOptions(file.name, outputs);
                     const currentTarget = targetFormats[file.name] || outputs[0] || targetOptions[0];
+                    // Picker expects the full union of options + the current target so users can
+                    // always re-pick the format that's currently set.
+                    const pickerFormats = Array.from(new Set([currentTarget, ...targetOptions]));
 
                     return (
                       <UploadedFileRow
@@ -1086,7 +1470,7 @@ export default function ConversionPanel({
                         converted={converted}
                         conversion={conversion}
                         currentTarget={currentTarget}
-                        targetOptions={targetOptions}
+                        formats={pickerFormats}
                         isProcessing={isProcessing}
                         onTargetChange={(format) => setTargetFormats(prev => ({ ...prev, [file.name]: format }))}
                         onRemove={() => removeFile(index)}
@@ -1120,6 +1504,15 @@ export default function ConversionPanel({
                 >
                   Clear all
                 </button>
+                {allConverted && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadAllAsZip}
+                    className="min-h-10 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black text-blue-700 outline-none hover:bg-blue-100 focus-visible:ring-4 focus-visible:ring-blue-100"
+                  >
+                    Download all
+                  </button>
+                )}
               </div>
 
               <div
@@ -1207,7 +1600,7 @@ export default function ConversionPanel({
                   type="button"
                   onClick={handleConvert}
                   disabled={isProcessing}
-                  className="inline-flex min-h-16 items-center justify-center gap-3 bg-blue-600 px-10 text-base font-black text-white outline-none hover:bg-blue-700 focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="inline-flex min-h-16 items-center justify-center gap-3 btn-primary px-10 text-base font-black text-white outline-none focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
                   {isProcessing && <Loader2 className="h-5 w-5 animate-spin" />}
                   {isProcessing ? 'Converting...' : 'Convert'}
@@ -1216,14 +1609,7 @@ export default function ConversionPanel({
               </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-end gap-3 px-5 py-3">
-                {allConverted && (
-                  <button type="button" onClick={handleDownloadAll} className="min-h-10 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black text-blue-700 outline-none hover:bg-blue-100 focus-visible:ring-4 focus-visible:ring-blue-100">
-                    Download all
-                  </button>
-                )}
               </div>
-            </div>
           )}
 
           <input
@@ -1597,19 +1983,17 @@ export default function ConversionPanel({
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {/* Target Format selector */}
+                          {/* Target Format picker (categorized + searchable) */}
                           {outputs.length > 1 && (
-                            <select
-                              value={targetFormats[file.name] || outputs[0]}
-                              onChange={(e) => setTargetFormats(prev => ({ ...prev, [file.name]: e.target.value }))}
-                              className="bg-black/60 border border-white/10 rounded-lg text-[10px] py-1 px-2 text-zinc-300 focus:outline-none cursor-pointer"
-                            >
-                              {outputs.map(out => (
-                                <option key={out} value={out}>{out}</option>
-                              ))}
-                            </select>
+                            <TargetFormatPicker
+                              currentTarget={targetFormats[file.name] || outputs[0]}
+                              formats={Array.from(new Set([targetFormats[file.name] || outputs[0], ...outputs]))}
+                              onChange={(format) => setTargetFormats(prev => ({ ...prev, [file.name]: format }))}
+                              size="sm"
+                              ariaLabel={`Target format for ${file.name}`}
+                            />
                           )}
-                          <button 
+                          <button
                             onClick={() => removeFile(idx)}
                             className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
                           >

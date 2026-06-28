@@ -29,6 +29,10 @@
 - Informational pages such as Security must align with category-page rhythm: use comparable H1/body/section heading sizes, keep breadcrumb-to-heading spacing compact, keep breadcrumbs left-aligned and sticky, and maintain section gaps consistent with `CategoryPage.tsx` rather than landing-page hero spacing.
 - Use lucide-react icons already imported or add icons from lucide-react when needed.
 - Match the Format OS light palette and avoid reintroducing purple-heavy gradients as the dominant visual language.
+- In `ConversionPanel.tsx`, the bundled **Download all** action (next to **Clear all** in the CAD converter shell) zips every converted output into `omniconvert-conversions-YYYY-MM-DD.zip` via the inline `buildZip` STORE writer. Do not introduce a third-party ZIP dependency unless the writer's scope grows beyond the current single-bundle download.
+- Primary action buttons that drive a single conversion (CAD **Convert** button, **Initiate Sandbox Convert**) must reuse the `btn-primary` mesh-gradient token so they match the navbar `Sign In` button.
+- The **Convert** action in `ConversionPanel.tsx` must only process files whose current entry in `fileProgresses` is missing or not `completed`. Already-converted files are skipped, their progress is preserved, and conversions from prior runs are merged into `conversions` rather than replaced. Creator tools (TTS, Markdown to HTML) keep their virtual-file fallback when `files` is empty.
+- The per-row **Target format** selector uses the inline `TargetFormatPicker` component (search + category list + format chips, click-outside and Escape to close). Categories are derived from `FORMAT_CATEGORY_MAP` (Image, Audio, Video, Document, Archive, 3D, Other) and limited to the tool's `outputs`; do not replace this picker with a native `<select>` or introduce a third-party dropdown/menu library without updating the DOX contract.
 
 ## Verification
 - Run `npm run build` for component changes.
