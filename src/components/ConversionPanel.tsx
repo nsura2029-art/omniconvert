@@ -179,14 +179,23 @@ const formatReadableFileSize = (size: number) => {
 
 function UploadProgressBar({ value, label }: { value: number; label?: string }) {
   const safeValue = Math.max(0, Math.min(100, value));
+  const halfWidth = safeValue / 2;
 
   return (
-    <div className="space-y-1.5" aria-label={label || `Upload progress ${safeValue}%`}>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+    <div className="w-full space-y-1.5" aria-label={label || `Upload progress ${safeValue}%`}>
+      <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100">
+        {/* Left-anchored fill: grows right from the left edge */}
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-400"
+          className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-cyan-300"
           initial={{ width: 0 }}
-          animate={{ width: `${safeValue}%` }}
+          animate={{ width: `${halfWidth}%` }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+        />
+        {/* Right-anchored fill: grows left from the right edge */}
+        <motion.div
+          className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-l from-emerald-400 via-cyan-400 to-cyan-300"
+          initial={{ width: 0 }}
+          animate={{ width: `${halfWidth}%` }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
         />
       </div>
@@ -1122,9 +1131,9 @@ export default function ConversionPanel({
     });
 
     const updateProgress = (
-      fileName: string, 
-      status: 'pending' | 'uploading' | 'processing' | 'saving' | 'completed' | 'failed', 
-      progress: number, 
+      fileName: string,
+      status: 'pending' | 'uploading' | 'processing' | 'saving' | 'completed' | 'failed',
+      progress: number,
       statusText: string
     ) => {
       setFileProgresses(prev => ({
@@ -1135,11 +1144,12 @@ export default function ConversionPanel({
 
     const processingOutputs: FileConversion[] = [];
 
-    for (let i = 0; i < itemsToConvert.length; i++) {
-      const currentFile = itemsToConvert[i];
+    // Each file runs its own conversion pipeline concurrently; per-file state
+    // (progress, logs, conversion record) is kept independent via closures.
+    const processSingleFile = async (currentFile: File): Promise<FileConversion> => {
       const selectedTargetFormat = targetFormats[currentFile.name] || outputs[0];
       const conversionId = 'conv_' + Math.random().toString(36).substr(2, 9);
-      
+
       const logMessages: string[] = [];
       const addLog = (msg: string) => {
         const timestamp = new Date().toLocaleTimeString();
@@ -1392,7 +1402,12 @@ export default function ConversionPanel({
 
       processingOutputs.push(newConversion);
       onConversionCompleted(newConversion);
-    }
+      return newConversion;
+    };
+
+    // Run every file's pipeline in parallel. With N files the wall-clock time
+    // drops from N * stepDuration to roughly stepDuration.
+    await Promise.all(itemsToConvert.map(processSingleFile));
 
     // Record the target format we actually used for each processed file so the next
     // Convert click can detect when the user changed TO via the picker and re-process.
