@@ -828,6 +828,7 @@ export default function ConversionPanel({
   const [dragActive, setDragActive] = useState(false);
   const [targetFormats, setTargetFormats] = useState<Record<string, string>>({});
   const [conversions, setConversions] = useState<FileConversion[]>([]);
+  const [lastConvertedTargets, setLastConvertedTargets] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [fileProgresses, setFileProgresses] = useState<Record<string, {
     status: 'pending' | 'uploading' | 'processing' | 'saving' | 'completed' | 'failed';
@@ -881,6 +882,7 @@ export default function ConversionPanel({
     // Reset file state on tool change
     setFiles([]);
     setConversions([]);
+    setLastConvertedTargets({});
     setFileProgresses({});
     setIsProcessing(false);
     setCurrentLogs([]);
@@ -969,7 +971,17 @@ export default function ConversionPanel({
   };
 
   const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles(prev => {
+      const removed = prev[index];
+      if (removed) {
+        setLastConvertedTargets(t => {
+          if (!(removed.name in t)) return t;
+          const { [removed.name]: _drop, ...rest } = t;
+          return rest;
+        });
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   // Live Screen Recorder Feature (Actual browser Screen Recording!)
@@ -1058,7 +1070,13 @@ export default function ConversionPanel({
       ? files.filter(file => {
           if (forceAll) return true;
           const progress = fileProgresses[file.name];
-          return !progress || progress.status !== 'completed';
+          const isCompleted = progress?.status === 'completed';
+          // Never converted -> process.
+          if (!isCompleted) return true;
+          // Already converted -> only process if the target format changed since last run.
+          const currentTarget = targetFormats[file.name] || outputs[0];
+          const lastTarget = lastConvertedTargets[file.name];
+          return lastTarget !== currentTarget;
         })
       : [
           new File([selectedTool.name === 'Text to Speech' ? ttsText : mdText],
@@ -1362,6 +1380,16 @@ export default function ConversionPanel({
       onConversionCompleted(newConversion);
     }
 
+    // Record the target format we actually used for each processed file so the next
+    // Convert click can detect when the user changed TO via the picker and re-process.
+    setLastConvertedTargets(prev => {
+      const next = { ...prev };
+      itemsToConvert.forEach(file => {
+        next[file.name] = targetFormats[file.name] || outputs[0];
+      });
+      return next;
+    });
+
     setConversions(prev => [...prev, ...processingOutputs]);
     setIsProcessing(false);
 
@@ -1545,26 +1573,29 @@ export default function ConversionPanel({
                   onClick={() => {
                     setFiles([]);
                     setConversions([]);
+                    setLastConvertedTargets({});
                     setFileProgresses({});
                     setCadFileReadiness({});
                   }}
-                  className="min-h-10 rounded-lg border border-rose-200 px-3 text-xs font-black text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-4 focus-visible:ring-rose-100"
+                  className="btn-primary min-h-10 rounded-xl px-4 text-xs font-black text-white outline-none active:scale-[0.97]"
                 >
                   Clear all
                 </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadAllAsZip}
+                  disabled={!allConverted}
+                  className={cls(
+                    'inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-xs font-black outline-none active:scale-[0.97]',
+                    allConverted
+                      ? 'btn-primary text-white'
+                      : 'cursor-not-allowed bg-slate-200 text-slate-400'
+                  )}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download all
+                </button>
               </div>
-              {allConverted && (
-                <div className="flex justify-end px-5 pb-3">
-                  <button
-                    type="button"
-                    onClick={handleDownloadAllAsZip}
-                    className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black text-blue-700 outline-none hover:bg-blue-100 focus-visible:ring-4 focus-visible:ring-blue-100"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    Download all
-                  </button>
-                </div>
-              )}
 
               <div
                 onMouseLeave={() => {
