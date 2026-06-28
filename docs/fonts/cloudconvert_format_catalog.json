@@ -1,0 +1,1752 @@
+{
+  "categories": [
+    {
+      "id": "documents",
+      "name": "Documents",
+      "icon": "\ud83d\udcc4",
+      "description": "Word processing and text documents",
+      "format_count": 23,
+      "formats": [
+        {
+          "ext": "pdf",
+          "name": "PDF",
+          "full_name": "Portable Document Format",
+          "mime": "application/pdf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "docx",
+          "name": "DOCX",
+          "full_name": "Microsoft Word Document",
+          "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "doc",
+          "name": "DOC",
+          "full_name": "Microsoft Word 97-2003",
+          "mime": "application/msword",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "odt",
+          "name": "ODT",
+          "full_name": "OpenDocument Text",
+          "mime": "application/vnd.oasis.opendocument.text",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "txt",
+          "name": "TXT",
+          "full_name": "Plain Text",
+          "mime": "text/plain",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "rtf",
+          "name": "RTF",
+          "full_name": "Rich Text Format",
+          "mime": "application/rtf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "html",
+          "name": "HTML",
+          "full_name": "HyperText Markup Language",
+          "mime": "text/html",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "xps",
+          "name": "XPS",
+          "full_name": "XML Paper Specification",
+          "mime": "application/vnd.ms-xpsdocument",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "tex",
+          "name": "TEX",
+          "full_name": "LaTeX Source",
+          "mime": "application/x-tex",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ps",
+          "name": "PS",
+          "full_name": "PostScript",
+          "mime": "application/postscript",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "epub",
+          "name": "EPUB",
+          "full_name": "Electronic Publication",
+          "mime": "application/epub+zip",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mobi",
+          "name": "MOBI",
+          "full_name": "Mobipocket eBook",
+          "mime": "application/x-mobipocket-ebook",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "azw3",
+          "name": "AZW3",
+          "full_name": "Amazon Kindle eBook",
+          "mime": "application/vnd.amazon.ebook",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "fb2",
+          "name": "FB2",
+          "full_name": "FictionBook 2.0",
+          "mime": "application/x-fictionbook+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "djvu",
+          "name": "DJVU",
+          "full_name": "DjVu Document",
+          "mime": "image/vnd.djvu",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "pages",
+          "name": "PAGES",
+          "full_name": "Apple Pages",
+          "mime": "application/x-iwork-pages-sffpages",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "wpd",
+          "name": "WPD",
+          "full_name": "WordPerfect Document",
+          "mime": "application/vnd.wordperfect",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "md",
+          "name": "MD",
+          "full_name": "Markdown",
+          "mime": "text/markdown",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "csv",
+          "name": "CSV",
+          "full_name": "Comma-Separated Values",
+          "mime": "text/csv",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "xml",
+          "name": "XML",
+          "full_name": "eXtensible Markup Language",
+          "mime": "application/xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "json",
+          "name": "JSON",
+          "full_name": "JavaScript Object Notation",
+          "mime": "application/json",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wps",
+          "name": "WPS",
+          "full_name": "Microsoft Works",
+          "mime": "application/vnd.ms-works",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "hwp",
+          "name": "HWP",
+          "full_name": "Hangul Word Processor",
+          "mime": "application/x-hwp",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "spreadsheets",
+      "name": "Spreadsheets",
+      "icon": "\ud83d\udcca",
+      "description": "Spreadsheet and data files",
+      "format_count": 12,
+      "formats": [
+        {
+          "ext": "xlsx",
+          "name": "XLSX",
+          "full_name": "Microsoft Excel",
+          "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "xls",
+          "name": "XLS",
+          "full_name": "Microsoft Excel 97-2003",
+          "mime": "application/vnd.ms-excel",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ods",
+          "name": "ODS",
+          "full_name": "OpenDocument Spreadsheet",
+          "mime": "application/vnd.oasis.opendocument.spreadsheet",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "csv",
+          "name": "CSV",
+          "full_name": "Comma-Separated Values",
+          "mime": "text/csv",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "tsv",
+          "name": "TSV",
+          "full_name": "Tab-Separated Values",
+          "mime": "text/tab-separated-values",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "numbers",
+          "name": "NUMBERS",
+          "full_name": "Apple Numbers",
+          "mime": "application/x-iwork-numbers-sffnumbers",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "dbf",
+          "name": "DBF",
+          "full_name": "dBase Database",
+          "mime": "application/dbf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "dif",
+          "name": "DIF",
+          "full_name": "Data Interchange Format",
+          "mime": "application/x-dif",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "slk",
+          "name": "SLK",
+          "full_name": "Symbolic Link",
+          "mime": "application/vnd.ms-excel",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "fods",
+          "name": "FODS",
+          "full_name": "Flat XML ODF Spreadsheet",
+          "mime": "application/vnd.oasis.opendocument.spreadsheet-flat-xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "et",
+          "name": "ET",
+          "full_name": "WPS Spreadsheet",
+          "mime": "application/wps-office.et",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "sxc",
+          "name": "SXC",
+          "full_name": "StarOffice Calc",
+          "mime": "application/vnd.sun.xml.calc",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "presentations",
+      "name": "Presentations",
+      "icon": "\ud83c\udfa8",
+      "description": "Presentation and slide files",
+      "format_count": 10,
+      "formats": [
+        {
+          "ext": "pptx",
+          "name": "PPTX",
+          "full_name": "Microsoft PowerPoint",
+          "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ppt",
+          "name": "PPT",
+          "full_name": "Microsoft PowerPoint 97-2003",
+          "mime": "application/vnd.ms-powerpoint",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "odp",
+          "name": "ODP",
+          "full_name": "OpenDocument Presentation",
+          "mime": "application/vnd.oasis.opendocument.presentation",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "key",
+          "name": "KEY",
+          "full_name": "Apple Keynote",
+          "mime": "application/x-iwork-keynote-sffkey",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "pps",
+          "name": "PPS",
+          "full_name": "PowerPoint Show",
+          "mime": "application/vnd.ms-powerpoint",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "ppsx",
+          "name": "PPSX",
+          "full_name": "PowerPoint Show (OpenXML)",
+          "mime": "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "otp",
+          "name": "OTP",
+          "full_name": "OpenDocument Presentation Template",
+          "mime": "application/vnd.oasis.opendocument.presentation-template",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "potx",
+          "name": "POTX",
+          "full_name": "PowerPoint Template",
+          "mime": "application/vnd.openxmlformats-officedocument.presentationml.template",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "dps",
+          "name": "DPS",
+          "full_name": "WPS Presentation",
+          "mime": "application/wps-office.dps",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "sxi",
+          "name": "SXI",
+          "full_name": "StarOffice Impress",
+          "mime": "application/vnd.sun.xml.impress",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "images",
+      "name": "Images",
+      "icon": "\ud83d\uddbc\ufe0f",
+      "description": "Raster and vector image formats",
+      "format_count": 35,
+      "formats": [
+        {
+          "ext": "jpg",
+          "name": "JPG",
+          "full_name": "JPEG Image",
+          "mime": "image/jpeg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "jpeg",
+          "name": "JPEG",
+          "full_name": "Joint Photographic Experts Group",
+          "mime": "image/jpeg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "png",
+          "name": "PNG",
+          "full_name": "Portable Network Graphics",
+          "mime": "image/png",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "gif",
+          "name": "GIF",
+          "full_name": "Graphics Interchange Format",
+          "mime": "image/gif",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "bmp",
+          "name": "BMP",
+          "full_name": "Bitmap Image",
+          "mime": "image/bmp",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "tiff",
+          "name": "TIFF",
+          "full_name": "Tagged Image File Format",
+          "mime": "image/tiff",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "tif",
+          "name": "TIF",
+          "full_name": "Tagged Image File Format",
+          "mime": "image/tiff",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "webp",
+          "name": "WEBP",
+          "full_name": "Web Picture Format",
+          "mime": "image/webp",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "svg",
+          "name": "SVG",
+          "full_name": "Scalable Vector Graphics",
+          "mime": "image/svg+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ico",
+          "name": "ICO",
+          "full_name": "Windows Icon",
+          "mime": "image/x-icon",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "heic",
+          "name": "HEIC",
+          "full_name": "High Efficiency Image Container",
+          "mime": "image/heic",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "heif",
+          "name": "HEIF",
+          "full_name": "High Efficiency Image Format",
+          "mime": "image/heif",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "raw",
+          "name": "RAW",
+          "full_name": "Camera Raw Image",
+          "mime": "image/x-raw",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "cr2",
+          "name": "CR2",
+          "full_name": "Canon Raw 2",
+          "mime": "image/x-canon-cr2",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "nef",
+          "name": "NEF",
+          "full_name": "Nikon Electronic Format",
+          "mime": "image/x-nikon-nef",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "arw",
+          "name": "ARW",
+          "full_name": "Sony Alpha Raw",
+          "mime": "image/x-sony-arw",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "dng",
+          "name": "DNG",
+          "full_name": "Digital Negative",
+          "mime": "image/x-adobe-dng",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "orf",
+          "name": "ORF",
+          "full_name": "Olympus Raw Format",
+          "mime": "image/x-olympus-orf",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "raf",
+          "name": "RAF",
+          "full_name": "Fuji RAW",
+          "mime": "image/x-fuji-raf",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "pef",
+          "name": "PEF",
+          "full_name": "Pentax Electronic Format",
+          "mime": "image/x-pentax-pef",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "rw2",
+          "name": "RW2",
+          "full_name": "Panasonic RAW",
+          "mime": "image/x-panasonic-rw2",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "nrw",
+          "name": "NRW",
+          "full_name": "Nikon RAW (NRW)",
+          "mime": "image/x-nikon-nrw",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "sr2",
+          "name": "SR2",
+          "full_name": "Sony RAW 2",
+          "mime": "image/x-sony-sr2",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "srf",
+          "name": "SRF",
+          "full_name": "Sony RAW Format",
+          "mime": "image/x-sony-srf",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "3fr",
+          "name": "3FR",
+          "full_name": "Hasselblad 3F RAW",
+          "mime": "image/x-hasselblad-3fr",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "erf",
+          "name": "ERF",
+          "full_name": "Epson RAW Format",
+          "mime": "image/x-epson-erf",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "kdc",
+          "name": "KDC",
+          "full_name": "Kodak Digital Camera",
+          "mime": "image/x-kodak-kdc",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "mos",
+          "name": "MOS",
+          "full_name": "Leaf RAW",
+          "mime": "image/x-leaf-mos",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "mef",
+          "name": "MEF",
+          "full_name": "Mamiya RAW",
+          "mime": "image/x-mamiya-mef",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "x3f",
+          "name": "X3F",
+          "full_name": "Sigma RAW",
+          "mime": "image/x-sigma-x3f",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "ppm",
+          "name": "PPM",
+          "full_name": "Portable Pixmap",
+          "mime": "image/x-portable-pixmap",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "pgm",
+          "name": "PGM",
+          "full_name": "Portable Graymap",
+          "mime": "image/x-portable-graymap",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "pbm",
+          "name": "PBM",
+          "full_name": "Portable Bitmap",
+          "mime": "image/x-portable-bitmap",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "xpm",
+          "name": "XPM",
+          "full_name": "X PixMap",
+          "mime": "image/x-xpixmap",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "xbm",
+          "name": "XBM",
+          "full_name": "X BitMap",
+          "mime": "image/x-xbitmap",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "pcx",
+          "name": "PCX",
+          "full_name": "PiCture eXchange",
+          "mime": "image/x-pcx",
+          "can_read": true,
+          "can_write": true
+        }
+      ]
+    },
+    {
+      "id": "audio",
+      "name": "Audio",
+      "icon": "\ud83c\udfb5",
+      "description": "Audio and music files",
+      "format_count": 22,
+      "formats": [
+        {
+          "ext": "mp3",
+          "name": "MP3",
+          "full_name": "MPEG Audio Layer III",
+          "mime": "audio/mpeg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wav",
+          "name": "WAV",
+          "full_name": "Waveform Audio",
+          "mime": "audio/wav",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "aac",
+          "name": "AAC",
+          "full_name": "Advanced Audio Coding",
+          "mime": "audio/aac",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "flac",
+          "name": "FLAC",
+          "full_name": "Free Lossless Audio Codec",
+          "mime": "audio/flac",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ogg",
+          "name": "OGG",
+          "full_name": "Ogg Vorbis",
+          "mime": "audio/ogg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "m4a",
+          "name": "M4A",
+          "full_name": "MPEG-4 Audio",
+          "mime": "audio/mp4",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wma",
+          "name": "WMA",
+          "full_name": "Windows Media Audio",
+          "mime": "audio/x-ms-wma",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "aiff",
+          "name": "AIFF",
+          "full_name": "Audio Interchange File Format",
+          "mime": "audio/aiff",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "au",
+          "name": "AU",
+          "full_name": "Sun Audio",
+          "mime": "audio/basic",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "amr",
+          "name": "AMR",
+          "full_name": "Adaptive Multi-Rate",
+          "mime": "audio/amr",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ac3",
+          "name": "AC3",
+          "full_name": "Dolby Digital",
+          "mime": "audio/ac3",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "opus",
+          "name": "OPUS",
+          "full_name": "Opus Audio",
+          "mime": "audio/opus",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mka",
+          "name": "MKA",
+          "full_name": "Matroska Audio",
+          "mime": "audio/x-matroska",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ra",
+          "name": "RA",
+          "full_name": "RealAudio",
+          "mime": "audio/vnd.rn-realaudio",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "voc",
+          "name": "VOC",
+          "full_name": "Creative Voice",
+          "mime": "audio/x-voc",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "snd",
+          "name": "SND",
+          "full_name": "Sound File",
+          "mime": "audio/basic",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "spx",
+          "name": "SPX",
+          "full_name": "Speex",
+          "mime": "audio/speex",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "tta",
+          "name": "TTA",
+          "full_name": "True Audio",
+          "mime": "audio/x-tta",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wv",
+          "name": "WV",
+          "full_name": "WavPack",
+          "mime": "audio/x-wavpack",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "dts",
+          "name": "DTS",
+          "full_name": "Digital Theater Systems",
+          "mime": "audio/vnd.dts",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "eac3",
+          "name": "EAC3",
+          "full_name": "Enhanced AC-3",
+          "mime": "audio/eac3",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mlp",
+          "name": "MLP",
+          "full_name": "Meridian Lossless Packing",
+          "mime": "audio/vnd.mlp",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "video",
+      "name": "Video",
+      "icon": "\ud83c\udfac",
+      "description": "Video and movie files",
+      "format_count": 28,
+      "formats": [
+        {
+          "ext": "mp4",
+          "name": "MP4",
+          "full_name": "MPEG-4 Part 14",
+          "mime": "video/mp4",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "avi",
+          "name": "AVI",
+          "full_name": "Audio Video Interleave",
+          "mime": "video/x-msvideo",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mov",
+          "name": "MOV",
+          "full_name": "QuickTime Movie",
+          "mime": "video/quicktime",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wmv",
+          "name": "WMV",
+          "full_name": "Windows Media Video",
+          "mime": "video/x-ms-wmv",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mkv",
+          "name": "MKV",
+          "full_name": "Matroska Video",
+          "mime": "video/x-matroska",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "flv",
+          "name": "FLV",
+          "full_name": "Flash Video",
+          "mime": "video/x-flv",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "webm",
+          "name": "WEBM",
+          "full_name": "WebM Video",
+          "mime": "video/webm",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "m4v",
+          "name": "M4V",
+          "full_name": "MPEG-4 Video",
+          "mime": "video/x-m4v",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "3gp",
+          "name": "3GP",
+          "full_name": "3GPP Multimedia",
+          "mime": "video/3gpp",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ogv",
+          "name": "OGV",
+          "full_name": "Ogg Video",
+          "mime": "video/ogg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mpeg",
+          "name": "MPEG",
+          "full_name": "Moving Picture Experts Group",
+          "mime": "video/mpeg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mpg",
+          "name": "MPG",
+          "full_name": "MPEG-1",
+          "mime": "video/mpeg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "m2v",
+          "name": "M2V",
+          "full_name": "MPEG-2 Video",
+          "mime": "video/mpeg2",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mts",
+          "name": "MTS",
+          "full_name": "AVCHD Video",
+          "mime": "video/mp2t",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ts",
+          "name": "TS",
+          "full_name": "MPEG Transport Stream",
+          "mime": "video/mp2t",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "vob",
+          "name": "VOB",
+          "full_name": "DVD Video Object",
+          "mime": "video/dvd",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "dv",
+          "name": "DV",
+          "full_name": "Digital Video",
+          "mime": "video/x-dv",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "gxf",
+          "name": "GXF",
+          "full_name": "General eXchange Format",
+          "mime": "application/gxf",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "mxf",
+          "name": "MXF",
+          "full_name": "Material eXchange Format",
+          "mime": "application/mxf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "roq",
+          "name": "ROQ",
+          "full_name": "Id RoQ Video",
+          "mime": "video/x-roq",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "nsv",
+          "name": "NSV",
+          "full_name": "Nullsoft Streaming Video",
+          "mime": "video/x-nsv",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "f4v",
+          "name": "F4V",
+          "full_name": "Flash MP4 Video",
+          "mime": "video/mp4",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "swf",
+          "name": "SWF",
+          "full_name": "Shockwave Flash",
+          "mime": "application/x-shockwave-flash",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "rm",
+          "name": "RM",
+          "full_name": "RealMedia",
+          "mime": "application/vnd.rn-realmedia",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "rmvb",
+          "name": "RMVB",
+          "full_name": "RealMedia Variable Bitrate",
+          "mime": "application/vnd.rn-realmedia-vbr",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "divx",
+          "name": "DIVX",
+          "full_name": "DivX Video",
+          "mime": "video/x-divx",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "asf",
+          "name": "ASF",
+          "full_name": "Advanced Systems Format",
+          "mime": "video/x-ms-asf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wtv",
+          "name": "WTV",
+          "full_name": "Windows Recorded TV Show",
+          "mime": "video/wtv",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "m2ts",
+          "name": "M2TS",
+          "full_name": "BDAV MPEG-2 Transport Stream",
+          "mime": "video/mp2t",
+          "can_read": true,
+          "can_write": true
+        }
+      ]
+    },
+    {
+      "id": "archives",
+      "name": "Archives",
+      "icon": "\ud83d\udce6",
+      "description": "Compressed archive files",
+      "format_count": 15,
+      "formats": [
+        {
+          "ext": "zip",
+          "name": "ZIP",
+          "full_name": "ZIP Archive",
+          "mime": "application/zip",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "rar",
+          "name": "RAR",
+          "full_name": "Roshal Archive",
+          "mime": "application/x-rar-compressed",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "7z",
+          "name": "7Z",
+          "full_name": "7-Zip Archive",
+          "mime": "application/x-7z-compressed",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "tar",
+          "name": "TAR",
+          "full_name": "Tape Archive",
+          "mime": "application/x-tar",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "gz",
+          "name": "GZ",
+          "full_name": "Gzip Compressed",
+          "mime": "application/gzip",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "bz2",
+          "name": "BZ2",
+          "full_name": "Bzip2 Compressed",
+          "mime": "application/x-bzip2",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "xz",
+          "name": "XZ",
+          "full_name": "XZ Compressed",
+          "mime": "application/x-xz",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "lz",
+          "name": "LZ",
+          "full_name": "Lzip Compressed",
+          "mime": "application/x-lzip",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "lzma",
+          "name": "LZMA",
+          "full_name": "LZMA Compressed",
+          "mime": "application/x-lzma",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "cab",
+          "name": "CAB",
+          "full_name": "Windows Cabinet",
+          "mime": "application/vnd.ms-cab-compressed",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "arj",
+          "name": "ARJ",
+          "full_name": "ARJ Archive",
+          "mime": "application/x-arj",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "lzh",
+          "name": "LZH",
+          "full_name": "LHA Archive",
+          "mime": "application/x-lzh-compressed",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "z",
+          "name": "Z",
+          "full_name": "Unix Compress",
+          "mime": "application/x-compress",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "cpio",
+          "name": "CPIO",
+          "full_name": "CPIO Archive",
+          "mime": "application/x-cpio",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ace",
+          "name": "ACE",
+          "full_name": "ACE Archive",
+          "mime": "application/x-ace-compressed",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "cad",
+      "name": "CAD",
+      "icon": "\ud83c\udfd7\ufe0f",
+      "description": "Computer-Aided Design files",
+      "format_count": 18,
+      "formats": [
+        {
+          "ext": "dwg",
+          "name": "DWG",
+          "full_name": "AutoCAD Drawing",
+          "mime": "image/vnd.dwg",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "dxf",
+          "name": "DXF",
+          "full_name": "Drawing Exchange Format",
+          "mime": "image/vnd.dxf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "step",
+          "name": "STEP",
+          "full_name": "ISO 10303-21",
+          "mime": "application/step",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "stp",
+          "name": "STP",
+          "full_name": "STEP (Alternate Extension)",
+          "mime": "application/step",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "iges",
+          "name": "IGES",
+          "full_name": "Initial Graphics Exchange",
+          "mime": "model/iges",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "igs",
+          "name": "IGS",
+          "full_name": "IGES (Alternate Extension)",
+          "mime": "model/iges",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "stl",
+          "name": "STL",
+          "full_name": "STereoLithography",
+          "mime": "model/stl",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "obj",
+          "name": "OBJ",
+          "full_name": "Wavefront OBJ",
+          "mime": "model/obj",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "3ds",
+          "name": "3DS",
+          "full_name": "3D Studio",
+          "mime": "image/x-3ds",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "dae",
+          "name": "DAE",
+          "full_name": "COLLADA",
+          "mime": "model/vnd.collada+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "fbx",
+          "name": "FBX",
+          "full_name": "Filmbox",
+          "mime": "application/octet-stream",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ply",
+          "name": "PLY",
+          "full_name": "Polygon File Format",
+          "mime": "application/ply",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ifc",
+          "name": "IFC",
+          "full_name": "Industry Foundation Classes",
+          "mime": "application/x-step",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "skp",
+          "name": "SKP",
+          "full_name": "SketchUp",
+          "mime": "application/vnd.sketchup.skp",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "vsd",
+          "name": "VSD",
+          "full_name": "Visio Drawing",
+          "mime": "application/vnd.visio",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "vsdx",
+          "name": "VSDX",
+          "full_name": "Visio Drawing (OpenXML)",
+          "mime": "application/vnd.ms-visio.drawing",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "svgz",
+          "name": "SVGZ",
+          "full_name": "Compressed SVG",
+          "mime": "image/svg+xml-compressed",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "cgm",
+          "name": "CGM",
+          "full_name": "Computer Graphics Metafile",
+          "mime": "image/cgm",
+          "can_read": true,
+          "can_write": true
+        }
+      ]
+    },
+    {
+      "id": "ebooks",
+      "name": "eBooks",
+      "icon": "\ud83d\udcda",
+      "description": "Electronic book formats",
+      "format_count": 8,
+      "formats": [
+        {
+          "ext": "epub",
+          "name": "EPUB",
+          "full_name": "Electronic Publication",
+          "mime": "application/epub+zip",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "mobi",
+          "name": "MOBI",
+          "full_name": "Mobipocket eBook",
+          "mime": "application/x-mobipocket-ebook",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "azw3",
+          "name": "AZW3",
+          "full_name": "Amazon Kindle eBook",
+          "mime": "application/vnd.amazon.ebook",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "azw",
+          "name": "AZW",
+          "full_name": "Amazon Kindle",
+          "mime": "application/vnd.amazon.ebook",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "fb2",
+          "name": "FB2",
+          "full_name": "FictionBook 2.0",
+          "mime": "application/x-fictionbook+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "lit",
+          "name": "LIT",
+          "full_name": "Microsoft Reader",
+          "mime": "application/x-ms-reader",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "lrf",
+          "name": "LRF",
+          "full_name": "Sony BroadBand eBook",
+          "mime": "application/x-sony-bbe",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "pdb",
+          "name": "PDB",
+          "full_name": "Palm Database",
+          "mime": "application/x-palm-database",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "vectors",
+      "name": "Vectors",
+      "icon": "\u270f\ufe0f",
+      "description": "Vector graphics and drawing files",
+      "format_count": 12,
+      "formats": [
+        {
+          "ext": "svg",
+          "name": "SVG",
+          "full_name": "Scalable Vector Graphics",
+          "mime": "image/svg+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ai",
+          "name": "AI",
+          "full_name": "Adobe Illustrator",
+          "mime": "application/postscript",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "eps",
+          "name": "EPS",
+          "full_name": "Encapsulated PostScript",
+          "mime": "application/postscript",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "cdr",
+          "name": "CDR",
+          "full_name": "CorelDRAW",
+          "mime": "application/coreldraw",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "emf",
+          "name": "EMF",
+          "full_name": "Enhanced Metafile",
+          "mime": "image/emf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wmf",
+          "name": "WMF",
+          "full_name": "Windows Metafile",
+          "mime": "image/wmf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "fig",
+          "name": "FIG",
+          "full_name": "Xfig Drawing",
+          "mime": "application/x-xfig",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "sxd",
+          "name": "SXD",
+          "full_name": "StarOffice Draw",
+          "mime": "application/vnd.sun.xml.draw",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "odg",
+          "name": "ODG",
+          "full_name": "OpenDocument Graphics",
+          "mime": "application/vnd.oasis.opendocument.graphics",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "vss",
+          "name": "VSS",
+          "full_name": "Visio Stencil",
+          "mime": "application/vnd.visio",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "vst",
+          "name": "VST",
+          "full_name": "Visio Template",
+          "mime": "application/vnd.visio",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "cgm",
+          "name": "CGM",
+          "full_name": "Computer Graphics Metafile",
+          "mime": "image/cgm",
+          "can_read": true,
+          "can_write": true
+        }
+      ]
+    },
+    {
+      "id": "fonts",
+      "name": "Fonts",
+      "icon": "\ud83d\udd24",
+      "description": "Font and typeface files",
+      "format_count": 9,
+      "formats": [
+        {
+          "ext": "ttf",
+          "name": "TTF",
+          "full_name": "TrueType Font",
+          "mime": "font/ttf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "otf",
+          "name": "OTF",
+          "full_name": "OpenType Font",
+          "mime": "font/otf",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "woff",
+          "name": "WOFF",
+          "full_name": "Web Open Font Format",
+          "mime": "font/woff",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "woff2",
+          "name": "WOFF2",
+          "full_name": "Web Open Font Format 2",
+          "mime": "font/woff2",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "eot",
+          "name": "EOT",
+          "full_name": "Embedded OpenType",
+          "mime": "application/vnd.ms-fontobject",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "pfa",
+          "name": "PFA",
+          "full_name": "PostScript Font ASCII",
+          "mime": "application/x-font-type1",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "pfb",
+          "name": "PFB",
+          "full_name": "PostScript Font Binary",
+          "mime": "application/x-font-type1",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "pcf",
+          "name": "PCF",
+          "full_name": "Portable Compiled Format",
+          "mime": "application/x-font-pcf",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "ext": "snf",
+          "name": "SNF",
+          "full_name": "Server Normal Format",
+          "mime": "application/x-font-snf",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    },
+    {
+      "id": "3d",
+      "name": "3D Models",
+      "icon": "\ud83e\uddca",
+      "description": "3D model and mesh files",
+      "format_count": 11,
+      "formats": [
+        {
+          "ext": "stl",
+          "name": "STL",
+          "full_name": "STereoLithography",
+          "mime": "model/stl",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "obj",
+          "name": "OBJ",
+          "full_name": "Wavefront OBJ",
+          "mime": "model/obj",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "3ds",
+          "name": "3DS",
+          "full_name": "3D Studio",
+          "mime": "image/x-3ds",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "dae",
+          "name": "DAE",
+          "full_name": "COLLADA",
+          "mime": "model/vnd.collada+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "fbx",
+          "name": "FBX",
+          "full_name": "Filmbox",
+          "mime": "application/octet-stream",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "ply",
+          "name": "PLY",
+          "full_name": "Polygon File Format",
+          "mime": "application/ply",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "gltf",
+          "name": "GLTF",
+          "full_name": "GL Transmission Format",
+          "mime": "model/gltf+json",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "glb",
+          "name": "GLB",
+          "full_name": "GL Binary",
+          "mime": "model/gltf-binary",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "x3d",
+          "name": "X3D",
+          "full_name": "Extensible 3D",
+          "mime": "model/x3d+xml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "wrl",
+          "name": "WRL",
+          "full_name": "VRML",
+          "mime": "model/vrml",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "ext": "iv",
+          "name": "IV",
+          "full_name": "Open Inventor",
+          "mime": "application/x-inventor",
+          "can_read": true,
+          "can_write": false
+        }
+      ]
+    }
+  ]
+}

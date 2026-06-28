@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniConvert Centered Tool Page Concepts</title>
+    <style>
+      :root {
+        --ink: #171b24;
+        --muted: #5f6878;
+        --line: rgba(100, 116, 139, 0.18);
+        --panel: rgba(255, 255, 255, 0.78);
+        --shadow: 0 22px 70px rgba(31, 41, 55, 0.12);
+        --blue: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background:
+          radial-gradient(circle at 10% 8%, rgba(14, 165, 233, 0.16), transparent 30rem),
+          radial-gradient(circle at 88% 12%, rgba(22, 163, 74, 0.12), transparent 30rem),
+          linear-gradient(135deg, #f8fbff 0%, #f7faf6 48%, #fffaf4 100%);
+      }
+
+      button,
+      select {
+        font: inherit;
+      }
+
+      .page {
+        width: min(100% - 32px, 1580px);
+        margin: 0 auto;
+        padding: 30px 0 74px;
+      }
+
+      .intro,
+      .concept-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .intro {
+        margin-bottom: 22px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .intro h1 {
+        margin-top: 8px;
+        font-size: clamp(32px, 4.6vw, 60px);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      .intro p {
+        max-width: 620px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .concept {
+        margin-top: 28px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .concept-head {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .concept-head h2 {
+        margin-top: 4px;
+        font-size: 24px;
+        letter-spacing: 0;
+      }
+
+      .note {
+        max-width: 570px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .hero {
+        position: relative;
+        padding: clamp(28px, 4vw, 54px);
+        text-align: center;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(37, 99, 235, 0.032) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(37, 99, 235, 0.032) 1px, transparent 1px);
+        background-size: 26px 26px;
+        pointer-events: none;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 1160px;
+        margin: 0 auto;
+      }
+
+      .converter-hook {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        margin: 0 auto;
+        text-align: left;
+      }
+
+      .converter-mark {
+        display: grid;
+        width: 70px;
+        height: 70px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+        border-radius: 20px;
+        background:
+          linear-gradient(145deg, color-mix(in srgb, var(--accent-soft) 78%, white), #ffffff);
+        color: var(--accent-strong);
+        box-shadow: 0 18px 42px color-mix(in srgb, var(--accent) 13%, transparent);
+        font-size: 15px;
+        font-weight: 950;
+      }
+
+      .hero h3 {
+        margin: 0;
+        color: #171b24;
+        font-size: clamp(34px, 4vw, 52px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .hero p {
+        margin: 8px 0 0;
+        color: #4f5665;
+        font-size: clamp(16px, 1.5vw, 21px);
+        line-height: 1.45;
+      }
+
+      .intent-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .intent-chip {
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.8);
+        color: #394150;
+        padding: 0 13px;
+        cursor: pointer;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        font-weight: 850;
+        transition:
+          transform 150ms ease,
+          background 150ms ease,
+          border-color 150ms ease,
+          color 150ms ease;
+      }
+
+      .intent-chip:hover,
+      .intent-chip.is-active {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+        background: color-mix(in srgb, var(--accent-soft) 88%, white);
+        color: var(--accent-strong);
+      }
+
+      .upload-panel {
+        position: relative;
+        margin: 28px auto 0;
+        max-width: 1120px;
+        overflow: hidden;
+        border: 1px solid rgba(100, 116, 139, 0.18);
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.86)),
+          #ffffff;
+        box-shadow: 0 26px 70px rgba(31, 41, 55, 0.12);
+      }
+
+      .upload-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(color-mix(in srgb, var(--accent) 6%, transparent) 1px, transparent 1px),
+          linear-gradient(90deg, color-mix(in srgb, var(--accent) 6%, transparent) 1px, transparent 1px);
+        background-size: 25px 25px;
+        pointer-events: none;
+      }
+
+      .upload-band {
+        position: relative;
+        padding: 20px 24px;
+        background: color-mix(in srgb, var(--accent) 16%, white);
+        border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+      }
+
+      .upload-band span {
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .upload-band strong {
+        display: block;
+        margin-top: 5px;
+        color: #222836;
+        font-size: 22px;
+      }
+
+      .credit-strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .credit-copy {
+        color: #263244;
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .credit-copy strong {
+        display: inline;
+        color: var(--accent-strong);
+        font-size: inherit;
+      }
+
+      .refer-link {
+        border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--accent-strong);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 950;
+        padding: 8px 12px;
+      }
+
+      .share-row {
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .share-row.is-visible {
+        display: flex;
+      }
+
+      .share-icon {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--accent-strong);
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 950;
+      }
+
+      .drop-zone {
+        position: relative;
+        display: grid;
+        min-height: 288px;
+        place-items: center;
+        padding: 34px;
+      }
+
+      .drop-inner {
+        width: min(760px, 100%);
+      }
+
+      .url-panel {
+        display: none;
+        gap: 8px;
+        margin: 16px auto 0;
+        max-width: 620px;
+      }
+
+      .url-panel.is-visible {
+        display: flex;
+      }
+
+      .url-input {
+        min-height: 42px;
+        flex: 1;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #202838;
+        font-size: 13px;
+        padding: 0 12px;
+      }
+
+      .url-add {
+        min-height: 42px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        font-weight: 950;
+        padding: 0 14px;
+      }
+
+      .route-line {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 42px;
+        margin-bottom: 16px;
+        border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        color: #2d3545;
+        padding: 0 16px;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .route-line span {
+        color: var(--accent-strong);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        text-transform: uppercase;
+      }
+
+      .source-bar {
+        display: inline-flex;
+        align-items: stretch;
+        min-height: 76px;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 20px 50px color-mix(in srgb, var(--accent) 20%, transparent);
+      }
+
+      .choose-btn {
+        min-width: 292px;
+        border: 0;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 950;
+      }
+
+      .source-icon {
+        display: grid;
+        width: 78px;
+        place-items: center;
+        border: 0;
+        border-left: 1px solid rgba(255, 255, 255, 0.18);
+        background: var(--accent);
+        color: rgba(255, 255, 255, 0.94);
+        cursor: pointer;
+        transition:
+          background 150ms ease,
+          transform 150ms ease;
+      }
+
+      .source-icon svg {
+        width: 27px;
+        height: 27px;
+      }
+
+      .source-icon:hover,
+      .choose-btn:hover {
+        background: var(--accent-strong);
+      }
+
+      .source-icon:hover {
+        transform: translateY(-1px);
+      }
+
+      .queue {
+        position: relative;
+        display: none;
+        padding: 20px;
+        text-align: left;
+      }
+
+      .queue.is-visible {
+        display: block;
+      }
+
+      .queue-toolbar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .add-more,
+      .clear-all,
+      .convert-btn {
+        min-height: 42px;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 950;
+      }
+
+      .queue-left,
+      .queue-center,
+      .queue-right {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .queue-left {
+        justify-content: flex-start;
+      }
+
+      .queue-center {
+        justify-content: center;
+      }
+
+      .queue-right {
+        justify-content: flex-end;
+      }
+
+      .add-more,
+      .clear-all {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        color: #2c3445;
+        padding: 0 14px;
+      }
+
+      .clear-all {
+        color: #8a3342;
+      }
+
+      .batch-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .batch-controls label,
+      .save-destinations span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      select {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #202838;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 850;
+        padding: 0 10px;
+      }
+
+      .convert-btn {
+        background: var(--accent);
+        color: #ffffff;
+        padding: 0 18px;
+      }
+
+      .download-all {
+        display: none;
+        min-height: 42px;
+        align-items: center;
+        border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--accent-soft) 80%, white);
+        color: var(--accent-strong);
+        cursor: pointer;
+        font-weight: 950;
+        padding: 0 14px;
+      }
+
+      .queue.is-converted .download-all {
+        display: inline-flex;
+      }
+
+      .save-destinations {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .save-icon {
+        display: grid;
+        width: 46px;
+        height: 42px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+        border-radius: 10px;
+        background: #ffffff;
+        color: var(--accent-strong);
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(31, 41, 55, 0.08);
+      }
+
+      .save-icon svg {
+        width: 25px;
+        height: 25px;
+      }
+
+      .save-icon.is-selected {
+        border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+        background: color-mix(in srgb, var(--accent-soft) 82%, white);
+      }
+
+      .file-table {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .file-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 74px 22px minmax(140px, 170px) 94px 98px 44px;
+        align-items: center;
+        gap: 12px;
+        min-height: 70px;
+        padding: 10px 12px;
+        border-top: 1px solid var(--line);
+      }
+
+      .file-row:first-child {
+        border-top: 0;
+      }
+
+      .file-name {
+        color: #202737;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .file-meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .format-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent-soft) 76%, white);
+        color: var(--accent-strong);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        font-weight: 950;
+        text-transform: uppercase;
+      }
+
+      .to-label {
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 950;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .status {
+        color: #16a34a;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .status.is-analyzing {
+        color: #d97706;
+      }
+
+      .progress-track {
+        height: 4px;
+        margin-top: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent-soft) 70%, white);
+      }
+
+      .progress-bar {
+        width: 42%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        animation: analyze 950ms ease-in-out infinite alternate;
+      }
+
+      @keyframes analyze {
+        from {
+          transform: translateX(-22%);
+        }
+        to {
+          transform: translateX(138%);
+        }
+      }
+
+      .download-link {
+        display: none;
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 950;
+        text-decoration: none;
+      }
+
+      .file-row.is-converted .download-link {
+        display: inline-flex;
+      }
+
+      .remove-file {
+        width: 34px;
+        height: 34px;
+        justify-self: end;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #70798a;
+        cursor: pointer;
+        font-size: 18px;
+      }
+
+      .blue {
+        --accent: #2563eb;
+        --accent-strong: #1d4ed8;
+        --accent-soft: #dbeafe;
+      }
+
+      .teal {
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+        --accent-soft: #ccfbf1;
+      }
+
+      .green {
+        --accent: #0891b2;
+        --accent-strong: #0e7490;
+        --accent-soft: #cffafe;
+      }
+
+      .amber {
+        --accent: #64748b;
+        --accent-strong: #475569;
+        --accent-soft: #e2e8f0;
+      }
+
+      .rose {
+        --accent: #f97361;
+        --accent-strong: #e5483f;
+        --accent-soft: #ffe4df;
+      }
+
+      .mock-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 40;
+        min-width: 320px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 18px 45px rgba(31, 41, 55, 0.16);
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 950;
+        opacity: 0;
+        padding: 12px 16px;
+        text-align: center;
+        transform: translate(-50%, 18px);
+        transition:
+          opacity 160ms ease,
+          transform 160ms ease;
+      }
+
+      .mock-toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      @media (max-width: 860px) {
+        .intro,
+        .concept-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .converter-hook {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .source-bar {
+          display: grid;
+          width: 100%;
+          grid-template-columns: 1fr repeat(5, 54px);
+        }
+
+        .choose-btn,
+        .source-icon {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .file-row {
+          grid-template-columns: 1fr;
+        }
+
+        .queue-toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .queue-left,
+        .queue-center,
+        .queue-right,
+        .batch-controls {
+          justify-content: flex-start;
+        }
+
+        .batch-controls {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="intro">
+        <div>
+          <p class="eyebrow">Centered Tool Page Redesign Board</p>
+          <h1>Five full-width upload concepts</h1>
+        </div>
+        <p>
+          Each concept uses a simple pre-upload state and a post-upload conversion queue with
+          per-file target formats, batch target selection, and save destination before Convert.
+        </p>
+      </header>
+
+      <section class="concept blue" data-default-from="DWG, DXF" data-default-to="PDF">
+        <div class="concept-head">
+          <div>
+            <p class="eyebrow">Design 01</p>
+            <h2>Cloud Blue Format OS</h2>
+          </div>
+          <p class="note">My choice for CAD: calm, trustworthy, and closest to the current OmniConvert light system.</p>
+        </div>
+        <div class="hero"></div>
+      </section>
+
+      <section class="concept teal" data-default-from="AutoCAD DWG" data-default-to="PDF">
+        <div class="concept-head">
+          <div>
+            <p class="eyebrow">Design 02</p>
+            <h2>Blueprint Teal</h2>
+          </div>
+          <p class="note">A CAD-specific flavor that stays light and gives a subtle engineering signal.</p>
+        </div>
+        <div class="hero"></div>
+      </section>
+
+      <section class="concept green" data-default-from="DWG drawing" data-default-to="PDF">
+        <div class="concept-head">
+          <div>
+            <p class="eyebrow">Design 03</p>
+            <h2>Cyan Preview Lab</h2>
+          </div>
+          <p class="note">A clean cyan direction for technical previews without leaning into green.</p>
+        </div>
+        <div class="hero"></div>
+      </section>
+
+      <section class="concept amber" data-default-from="DWG, DXF" data-default-to="PDF">
+        <div class="concept-head">
+          <div>
+            <p class="eyebrow">Design 04</p>
+            <h2>Slate Glass Desk</h2>
+          </div>
+          <p class="note">A neutral slate-blue system for dense queues and review workflows.</p>
+        </div>
+        <div class="hero"></div>
+      </section>
+
+      <section class="concept rose" data-default-from="DWG, DXF" data-default-to="PDF">
+        <div class="concept-head">
+          <div>
+            <p class="eyebrow">Design 05</p>
+            <h2>High-Contrast CTA Coral</h2>
+          </div>
+          <p class="note">Closest to the reference screenshot's red CTA, softened into the light Format OS surface.</p>
+        </div>
+        <div class="hero"></div>
+      </section>
+    </main>
+
+    <div class="mock-toast" id="toast">Route updated</div>
+
+    <script>
+      const iconSvgs = {
+        computer:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v1.5H3z"/><path d="M3 10.5h18l-1.6 7a2 2 0 0 1-2 1.5H6.6a2 2 0 0 1-2-1.5z"/></svg>',
+        drive:
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#34a853" d="M8.2 3h7.6l-3.9 6.8H4.3z"/><path fill="#fbbc04" d="M15.8 3 22 13.7h-7.8L11.9 9.8z"/><path fill="#4285f4" d="M4.3 9.8 1.9 13.9 6 21h12l-3.8-7.3H6.6z"/></svg>',
+        dropbox:
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="m6.2 3.7 5.8 3.7-5.8 3.7L.5 7.4zm11.6 0 5.7 3.7-5.7 3.7L12 7.4zM.5 14.8l5.7-3.7 5.8 3.7-5.8 3.7zm17.3-3.7 5.7 3.7-5.7 3.7-5.8-3.7zm-11.6 8.7 5.8-3.7 5.8 3.7-5.8 3.5z"/></svg>',
+        onedrive:
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M9.2 9.4a5.6 5.6 0 0 1 10.5 1.9 4.2 4.2 0 0 1-.4 8.4H7.4a4.9 4.9 0 0 1 1.8-10.3z" opacity=".92"/><path fill="#cfe5ff" d="M4.6 12.6a5.1 5.1 0 0 1 8.7-2.9 6 6 0 0 1 2.3 4.7H4.4z"/></svg>',
+        url:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>',
+      };
+
+      const sources = [
+        { id: "computer", label: "From Computer", icon: iconSvgs.computer },
+        { id: "url", label: "From URL", icon: iconSvgs.url },
+        { id: "drive", label: "From Google Drive", icon: iconSvgs.drive },
+        { id: "dropbox", label: "From Dropbox", icon: iconSvgs.dropbox },
+        { id: "onedrive", label: "From OneDrive", icon: iconSvgs.onedrive },
+      ];
+
+      const saveDestinations = [
+        { id: "drive", label: "Save to Google Drive", auth: "Google Drive requires sign in", icon: iconSvgs.drive },
+        { id: "dropbox", label: "Save to Dropbox", auth: "Dropbox requires sign in", icon: iconSvgs.dropbox },
+        { id: "onedrive", label: "Save to OneDrive", auth: "OneDrive requires sign in", icon: iconSvgs.onedrive },
+      ];
+
+      const targetMatrix = {
+        dwg: ["PDF", "DXF", "SVG", "PNG", "JPG", "STL", "OBJ", "STEP"],
+        dxf: ["PDF", "DWG", "SVG", "PNG", "JPG", "STL"],
+        step: ["STL", "OBJ", "GLB", "FBX", "3MF", "PDF"],
+        stl: ["STEP", "OBJ", "GLB", "FBX", "3MF", "PNG"],
+        iges: ["STEP", "STL", "OBJ", "PDF"],
+        svg: ["PDF", "PNG", "DXF", "JPG"],
+        png: ["PDF", "SVG", "JPG", "DXF"],
+        default: ["PDF", "DXF", "SVG", "PNG", "JPG", "STL", "OBJ"],
+      };
+
+      const sampleFiles = [
+        { name: "site-plan.dwg", ext: "dwg", size: "18.4 MB", state: "analyzing" },
+        { name: "mechanical-bracket.step", ext: "step", size: "7.2 MB", state: "analyzing" },
+      ];
+
+      const toast = document.querySelector("#toast");
+      let toastTimer;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 1400);
+      }
+
+      function fileExtension(name) {
+        const parts = name.toLowerCase().split(".");
+        return parts.length > 1 ? parts.pop() : "dwg";
+      }
+
+      function formatSize(bytes) {
+        if (!bytes) return "Sample";
+        if (bytes > 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+        return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+      }
+
+      function targetOptions(ext, selected) {
+        const options = targetMatrix[ext] || targetMatrix.default;
+        return options
+          .map((format) => `<option value="${format}" ${format === selected ? "selected" : ""}>${format}</option>`)
+          .join("");
+      }
+
+      function renderFileRow(file, index, defaultTarget) {
+        const selected = (targetMatrix[file.ext] || targetMatrix.default).includes(defaultTarget)
+          ? defaultTarget
+          : (targetMatrix[file.ext] || targetMatrix.default)[0];
+        const isAnalyzing = file.state === "analyzing";
+        const isConverted = file.state === "converted";
+
+        return `
+          <div class="file-row ${isConverted ? "is-converted" : ""}" data-index="${index}" data-ext="${file.ext}">
+            <div>
+              <div class="file-name">${file.name}</div>
+              <div class="file-meta">${file.size} - ${isAnalyzing ? "analyzing file" : isConverted ? "conversion complete" : "ready to convert"}</div>
+              ${isAnalyzing ? '<div class="progress-track"><div class="progress-bar"></div></div>' : ""}
+            </div>
+            <span class="format-pill">${file.ext}</span>
+            <span class="to-label">to</span>
+            <select class="row-target" aria-label="Target format for ${file.name}" ${isAnalyzing ? "disabled" : ""}>
+              ${targetOptions(file.ext, selected)}
+            </select>
+            <span class="status ${isAnalyzing ? "is-analyzing" : ""}">${isAnalyzing ? "Analyzing..." : isConverted ? "Converted" : "Ready"}</span>
+            <a class="download-link" href="#" aria-label="Download ${file.name}">Download</a>
+            <button class="remove-file" type="button" aria-label="Remove ${file.name}">x</button>
+          </div>
+        `;
+      }
+
+      function createPanel(concept) {
+        const defaultFrom = concept.dataset.defaultFrom || "DWG, DXF";
+        const defaultTo = concept.dataset.defaultTo || "PDF";
+        const hero = concept.querySelector(".hero");
+
+        hero.innerHTML = `
+          <div class="hero-content">
+            <div class="converter-hook">
+              <span class="converter-mark">CAD</span>
+              <div>
+                <h3>CAD File Converter</h3>
+                <p>Convert your files to any format</p>
+              </div>
+            </div>
+            <div class="intent-row">
+              <button class="intent-chip is-active" type="button" data-from="DWG, DXF" data-to="PDF">convert dwg to pdf online</button>
+              <button class="intent-chip" type="button" data-from="AutoCAD DWG" data-to="PDF">autocad to pdf</button>
+              <button class="intent-chip" type="button" data-from="DWG drawing" data-to="PDF">dwg drawing to pdf</button>
+            </div>
+            <div class="upload-panel">
+              <div class="upload-band">
+                <div class="credit-strip">
+                  <div class="credit-copy"><strong>125 credits available</strong> - refer a teammate with your unique link to earn more credits when they register.</div>
+                  <div class="share-row">
+                    <button class="share-icon" type="button" aria-label="Share to Reddit">RD</button>
+                    <button class="share-icon" type="button" aria-label="Share to LinkedIn">IN</button>
+                    <button class="share-icon" type="button" aria-label="Share to Instagram">IG</button>
+                  </div>
+                  <button class="refer-link" type="button">Copy referral link</button>
+                </div>
+              </div>
+              <div class="drop-zone">
+                <div class="drop-inner">
+                  <div class="route-line">Converting <span class="route-from">${defaultFrom}</span> to <span class="route-to">${defaultTo}</span></div>
+                  <div class="source-bar">
+                    <button class="choose-btn" type="button" data-default-label="Choose Files">Choose Files</button>
+                    ${sources
+                      .map(
+                        (source) =>
+                          `<button class="source-icon" type="button" data-source="${source.id}" data-label="${source.label}" aria-label="${source.label}" title="${source.label.replace("From ", "")}">${source.icon}</button>`,
+                      )
+                      .join("")}
+                  </div>
+                  <input class="file-input" type="file" multiple />
+                  <div class="url-panel">
+                    <input class="url-input" type="url" placeholder="Paste file URL, for example https://example.com/model.dwg" />
+                    <button class="url-add" type="button">Add URL</button>
+                  </div>
+                </div>
+              </div>
+              <div class="queue">
+                <div class="queue-toolbar">
+                  <div class="queue-left">
+                    <button class="add-more" type="button">+ Add more files</button>
+                    <button class="clear-all" type="button">Clear all</button>
+                  </div>
+                  <div class="queue-center batch-controls">
+                    <label>Convert all to</label>
+                    <select class="convert-all">${targetOptions("default", defaultTo)}</select>
+                  </div>
+                  <div class="queue-right batch-controls">
+                    <div class="save-destinations">
+                      <span>Save to</span>
+                      ${saveDestinations
+                        .map(
+                          (destination) =>
+                            `<button class="save-icon" type="button" data-destination="${destination.id}" data-auth="${destination.auth}" aria-label="${destination.label}" title="${destination.label}">${destination.icon}</button>`,
+                        )
+                        .join("")}
+                    </div>
+                    <button class="convert-btn" type="button">Convert</button>
+                    <button class="download-all" type="button">Download all</button>
+                  </div>
+                </div>
+                <div class="file-table"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function wirePanel(concept) {
+        const from = concept.querySelector(".route-from");
+        const to = concept.querySelector(".route-to");
+        const band = concept.querySelector(".upload-band strong");
+        const chooseBtn = concept.querySelector(".choose-btn");
+        const fileInput = concept.querySelector(".file-input");
+        const dropZone = concept.querySelector(".drop-zone");
+        const queue = concept.querySelector(".queue");
+        const fileTable = concept.querySelector(".file-table");
+        const addMore = concept.querySelector(".add-more");
+        const convertAll = concept.querySelector(".convert-all");
+        const convertBtn = concept.querySelector(".convert-btn");
+        const downloadAll = concept.querySelector(".download-all");
+        const clearAll = concept.querySelector(".clear-all");
+        const urlPanel = concept.querySelector(".url-panel");
+        const urlInput = concept.querySelector(".url-input");
+        const urlAdd = concept.querySelector(".url-add");
+        const referLink = concept.querySelector(".refer-link");
+        const shareRow = concept.querySelector(".share-row");
+        let saveDestination = "";
+        let files = [];
+
+        function renderQueue() {
+          fileTable.innerHTML = files
+            .map((file, index) => renderFileRow(file, index, to.textContent))
+            .join("");
+          queue.classList.toggle("is-visible", files.length > 0);
+          queue.classList.toggle("is-converted", files.length > 0 && files.every((file) => file.state === "converted"));
+          dropZone.style.minHeight = files.length > 0 ? "210px" : "";
+
+          fileTable.querySelectorAll(".remove-file").forEach((button) => {
+            button.addEventListener("click", () => {
+              const row = button.closest(".file-row");
+              files = files.filter((_, index) => index !== Number(row.dataset.index));
+              renderQueue();
+            });
+          });
+        }
+
+        function settleAnalyzingFiles() {
+          setTimeout(() => {
+            let changed = false;
+            files = files.map((file) => {
+              if (file.state !== "analyzing") return file;
+              changed = true;
+              return { ...file, state: "ready" };
+            });
+            if (changed) {
+              renderQueue();
+              showToast("Analysis complete. Target formats are ready.");
+            }
+          }, 1100);
+        }
+
+        function addFiles(selectedFiles) {
+          const nextFiles = Array.from(selectedFiles).map((file) => ({
+            name: file.name,
+            ext: file.ext || fileExtension(file.name),
+            size: typeof file.size === "string" ? file.size : formatSize(file.size),
+            state: "analyzing",
+          }));
+
+          files = [...files, ...nextFiles];
+          renderQueue();
+          showToast(`${nextFiles.length || 0} file${nextFiles.length === 1 ? "" : "s"} added. Analyzing...`);
+          settleAnalyzingFiles();
+        }
+
+        chooseBtn.addEventListener("click", () => fileInput.click());
+        addMore.addEventListener("click", () => fileInput.click());
+
+        fileInput.addEventListener("change", () => {
+          if (fileInput.files.length > 0) addFiles(fileInput.files);
+          fileInput.value = "";
+        });
+
+        concept.querySelectorAll(".source-icon").forEach((icon) => {
+          const label = icon.dataset.label;
+
+          icon.addEventListener("mouseenter", () => {
+            chooseBtn.textContent = label;
+          });
+          icon.addEventListener("focus", () => {
+            chooseBtn.textContent = label;
+          });
+          icon.addEventListener("mouseleave", () => {
+            chooseBtn.textContent = chooseBtn.dataset.defaultLabel;
+          });
+          icon.addEventListener("blur", () => {
+            chooseBtn.textContent = chooseBtn.dataset.defaultLabel;
+          });
+          icon.addEventListener("click", () => {
+            chooseBtn.textContent = label;
+            if (icon.dataset.source === "url") {
+              urlPanel.classList.toggle("is-visible");
+              urlInput.focus();
+              showToast("Paste a file URL to add it to the queue.");
+            } else {
+              if (icon.dataset.source !== "computer") showToast(`${label} requires sign in. Showing sample queue.`);
+              addFiles(sampleFiles);
+            }
+          });
+        });
+
+        urlAdd.addEventListener("click", () => {
+          const url = urlInput.value.trim() || "https://example.com/site-plan.dwg";
+          const name = url.split("/").pop() || "remote-file.dwg";
+          addFiles([{ name, size: 0 }]);
+          urlInput.value = "";
+        });
+
+        convertAll.addEventListener("change", () => {
+          fileTable.querySelectorAll(".row-target").forEach((select) => {
+            const row = select.closest(".file-row");
+            const options = targetMatrix[row.dataset.ext] || targetMatrix.default;
+            if (options.includes(convertAll.value)) select.value = convertAll.value;
+          });
+        });
+
+        convertBtn.addEventListener("click", () => {
+          files = files.map((file) => ({ ...file, state: "converted" }));
+          renderQueue();
+          const destination = saveDestination ? ` and save to ${saveDestination}` : "";
+          showToast(`Converted ${files.length || 0} file${files.length === 1 ? "" : "s"}${destination}`);
+        });
+
+        downloadAll.addEventListener("click", () => {
+          showToast("Downloading all converted files to local computer");
+        });
+
+        clearAll.addEventListener("click", () => {
+          files = [];
+          renderQueue();
+          showToast("Queue cleared");
+        });
+
+        referLink.addEventListener("click", () => {
+          shareRow.classList.add("is-visible");
+          showToast("Referral link copied: omniconvert.app/r/your-code");
+        });
+
+        concept.querySelectorAll(".share-icon").forEach((button) => {
+          button.addEventListener("click", () => {
+            showToast(`${button.getAttribute("aria-label")} with your referral link`);
+          });
+        });
+
+        concept.querySelectorAll(".save-icon").forEach((button) => {
+          button.addEventListener("click", () => {
+            concept.querySelectorAll(".save-icon").forEach((item) => item.classList.remove("is-selected"));
+            button.classList.add("is-selected");
+            saveDestination = button.getAttribute("aria-label").replace("Save to ", "");
+            showToast(button.dataset.auth);
+          });
+        });
+
+        concept.querySelectorAll(".intent-chip").forEach((chip) => {
+          chip.addEventListener("click", () => {
+            concept.querySelectorAll(".intent-chip").forEach((item) => item.classList.remove("is-active"));
+            chip.classList.add("is-active");
+            from.textContent = chip.dataset.from;
+            to.textContent = chip.dataset.to;
+            convertAll.value = chip.dataset.to;
+            renderQueue();
+            showToast(`Route updated: ${chip.dataset.from} to ${chip.dataset.to}`);
+          });
+        });
+      }
+
+      document.querySelectorAll(".concept").forEach((concept) => {
+        createPanel(concept);
+        wirePanel(concept);
+      });
+    </script>
+  </body>
+</html>

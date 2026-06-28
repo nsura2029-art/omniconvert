@@ -1,4 +1,4 @@
-﻿# OmniConvert DOX
+# OmniConvert DOX
 
 ## Purpose
 - OmniConvert is a Vite + React 19 file-conversion SaaS prototype.
@@ -41,6 +41,7 @@
 - Run `npm run lint` for TypeScript, prop, data-shape, and component behavior changes.
 - Use browser verification for user-facing interactions, layout changes, theme changes, upload flows, auth modals, dashboard tabs, billing flows, and navigation changes.
 - When changing deployment or CI, validate referenced scripts and secret names, and inspect workflow/config syntax.
+- When changing programmatic SEO pages, verify keyword bundles, unique metadata, canonical URLs, static page content, structured data, sitemap coverage, robots access, internal links, and unknown-slug 404/noindex behavior.
 - When adding testable business logic, prefer adding or updating focused tests if a test framework exists; if no test framework exists, document the manual verification performed and avoid introducing an unused test stack without explicit direction.
 - If a relevant check cannot be run, state why and include the remaining risk in the final response.
 

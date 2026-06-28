@@ -1,0 +1,7 @@
+OmniConvert synthetic IGES seed                                             S      1
+1H,,1H;,4HSEED,11HOMNICONVERT,32,38,6,308,15,                G      1
+13HSAMPLE_PLATE,1.0,1,4HINCH,1,0.08,13H20260626.000000;       G      2
+     116       1       0       1       0       0       0       000000D      1
+     116       0       0       1       0                               D      2
+116,0.0,0.0,0.0;                                               P      1
+S      1G      2D      2P      1                                        T      1

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud } from 'lucide-react';
+import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
 import confetti from 'canvas-confetti';
@@ -37,6 +37,375 @@ const ONEDRIVE_MOCK_FILES = [
   { name: 'Archived_Logs_June.zip', size: 16777216, ext: 'zip' },
   { name: 'Tutorial_Guide_V1.txt', size: 35000, ext: 'txt' },
 ];
+
+const CAD_TARGET_MATRIX: Record<string, string[]> = {
+  dwg: ['PDF', 'DXF', 'SVG', 'PNG', 'JPG', 'STL', 'OBJ', 'STEP'],
+  dxf: ['PDF', 'DWG', 'SVG', 'PNG', 'JPG', 'STL'],
+  step: ['STL', 'OBJ', 'GLB', 'FBX', '3MF', 'PDF'],
+  stp: ['STL', 'OBJ', 'GLB', 'FBX', '3MF', 'PDF'],
+  stl: ['STEP', 'OBJ', 'GLB', 'FBX', '3MF', 'PNG'],
+  iges: ['STEP', 'STL', 'OBJ', 'PDF'],
+  igs: ['STEP', 'STL', 'OBJ', 'PDF'],
+  svg: ['PDF', 'PNG', 'DXF', 'JPG'],
+  png: ['PDF', 'SVG', 'JPG', 'DXF'],
+  default: ['PDF', 'DXF', 'SVG', 'PNG', 'JPG', 'STL', 'OBJ'],
+};
+
+const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || 'cad';
+
+const getCadTargetOptions = (fileName: string, fallbackOutput: string[]) => {
+  const ext = getFileExtension(fileName);
+  return CAD_TARGET_MATRIX[ext] || fallbackOutput || CAD_TARGET_MATRIX.default;
+};
+
+function ProviderIcon({ provider }: { provider: 'computer' | 'url' | 'gdrive' | 'dropbox' | 'onedrive' }) {
+  if (provider === 'gdrive') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+        <path fill="#34a853" d="M8.2 3h7.6l-3.9 6.8H4.3z" />
+        <path fill="#fbbc04" d="M15.8 3 22 13.7h-7.8L11.9 9.8z" />
+        <path fill="#4285f4" d="M4.3 9.8 1.9 13.9 6 21h12l-3.8-7.3H6.6z" />
+      </svg>
+    );
+  }
+
+  if (provider === 'dropbox') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+        <path fill="currentColor" d="m6.2 3.7 5.8 3.7-5.8 3.7L.5 7.4zm11.6 0 5.7 3.7-5.7 3.7L12 7.4zM.5 14.8l5.7-3.7 5.8 3.7-5.8 3.7zm17.3-3.7 5.7 3.7-5.7 3.7-5.8-3.7zm-11.6 8.7 5.8-3.7 5.8 3.7-5.8 3.5z" />
+      </svg>
+    );
+  }
+
+  if (provider === 'onedrive') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+        <path fill="currentColor" d="M9.2 9.4a5.6 5.6 0 0 1 10.5 1.9 4.2 4.2 0 0 1-.4 8.4H7.4a4.9 4.9 0 0 1 1.8-10.3z" opacity=".9" />
+        <path fill="#bfdbfe" d="M4.6 12.6a5.1 5.1 0 0 1 8.7-2.9 6 6 0 0 1 2.3 4.7H4.4z" />
+      </svg>
+    );
+  }
+
+  if (provider === 'url') {
+    return <Link className="h-5 w-5" />;
+  }
+
+  return <FolderOpen className="h-5 w-5" />;
+}
+
+type UploadSourceId = 'computer' | 'url' | 'gdrive' | 'dropbox' | 'onedrive';
+
+type UploadProgressState = {
+  status: 'pending' | 'uploading' | 'processing' | 'saving' | 'completed' | 'failed';
+  progress: number;
+  statusText: string;
+};
+
+const formatReadableFileSize = (size: number) => {
+  if (!size) return '0 KB';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const unitIndex = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+  const value = size / Math.pow(1024, unitIndex);
+  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+};
+
+function UploadProgressBar({ value, label }: { value: number; label?: string }) {
+  const safeValue = Math.max(0, Math.min(100, value));
+
+  return (
+    <div className="space-y-1.5" aria-label={label || `Upload progress ${safeValue}%`}>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-400"
+          initial={{ width: 0 }}
+          animate={{ width: `${safeValue}%` }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+        />
+      </div>
+      {label && <p className="text-xs font-bold text-slate-500">{label}</p>}
+    </div>
+  );
+}
+
+function UploadButton({
+  label,
+  onClick,
+  disabled,
+  loading,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={disabled ? undefined : { y: -2 }}
+      whileTap={disabled ? undefined : { scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+      className="inline-flex min-h-14 min-w-[230px] items-center justify-center gap-2 bg-blue-600 px-7 text-base font-black text-white outline-none transition-colors hover:bg-blue-700 focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300"
+    >
+      {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+      {loading ? 'Uploading...' : label}
+    </motion.button>
+  );
+}
+
+function UploadError({ message }: { message: string }) {
+  return (
+    <motion.p
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto mt-4 flex max-w-2xl items-center justify-center gap-2 rounded-full border border-blue-100 bg-white/90 px-4 py-2 text-xs font-bold text-blue-700"
+      role="status"
+      aria-live="polite"
+    >
+      <AlertTriangle className="h-4 w-4" />
+      {message}
+    </motion.p>
+  );
+}
+
+function UploadZone({
+  dragActive,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  children,
+}: {
+  dragActive: boolean;
+  onDragEnter: React.DragEventHandler<HTMLDivElement>;
+  onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onDragLeave: React.DragEventHandler<HTMLDivElement>;
+  onDrop: React.DragEventHandler<HTMLDivElement>;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      onDragEnter={onDragEnter}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      animate={{
+        borderColor: dragActive ? 'rgba(37, 99, 235, 0.58)' : 'rgba(191, 219, 254, 0.85)',
+        backgroundColor: dragActive ? 'rgba(219, 234, 254, 0.92)' : 'rgba(239, 246, 255, 0.62)',
+      }}
+      transition={{ duration: 0.18 }}
+      className="relative overflow-hidden rounded-[18px] border border-dashed bg-[linear-gradient(rgba(37,99,235,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.045)_1px,transparent_1px)] bg-[length:24px_24px]"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function UploadPlaceholder({
+  dragActive,
+  inputFormat,
+  outputFormat,
+  title,
+  subtitle,
+  buttonLabel,
+  isProcessing,
+  onBrowse,
+  sourceActions,
+  children,
+}: {
+  dragActive: boolean;
+  inputFormat: string;
+  outputFormat: string;
+  title: string;
+  subtitle: string;
+  buttonLabel: string;
+  isProcessing: boolean;
+  onBrowse: () => void;
+  sourceActions: Array<{
+    id: UploadSourceId;
+    label: string;
+    onClick: () => void;
+    onEnter: () => void;
+    onLeave: () => void;
+  }>;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="relative mx-auto flex min-h-[250px] w-full flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-10">
+      <div className="mb-8 space-y-2">
+        <p className="text-2xl font-extrabold tracking-tight text-blue-600 sm:text-3xl">{title}</p>
+        <p className="text-sm font-semibold text-slate-600">{subtitle}</p>
+      </div>
+
+      <motion.div
+        animate={{ scale: dragActive ? 1.02 : 1 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+        className="inline-flex max-w-full overflow-hidden rounded-xl bg-blue-600 shadow-[0_18px_42px_rgba(37,99,235,0.22)]"
+      >
+        <UploadButton label={isProcessing ? 'Uploading...' : buttonLabel} loading={isProcessing} disabled={isProcessing} onClick={onBrowse} />
+        {sourceActions.map(source => (
+          <motion.button
+            key={source.id}
+            type="button"
+            aria-label={source.label}
+            title={source.label}
+            onMouseEnter={source.onEnter}
+            onFocus={source.onEnter}
+            onMouseLeave={source.onLeave}
+            onBlur={source.onLeave}
+            onClick={source.onClick}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className="grid h-14 w-16 place-items-center border-l border-white/20 bg-blue-600 text-white/90 outline-none transition-colors hover:bg-blue-700 hover:text-white focus-visible:ring-4 focus-visible:ring-blue-200"
+          >
+            <ProviderIcon provider={source.id} />
+          </motion.button>
+        ))}
+      </motion.div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
+        <Lock className="h-3.5 w-3.5 text-slate-400" />
+        <span>{dragActive ? 'Drop files here' : 'Drop files here.'}</span>
+        <span>1 GB maximum file size.</span>
+        <span>Supports {inputFormat} CAD files.</span>
+      </div>
+
+      <div className="mt-3 inline-flex min-h-8 items-center justify-center gap-2 rounded-full bg-white/70 px-4 text-[11px] font-black text-slate-600">
+        Converting <span className="font-mono uppercase text-blue-700">{inputFormat}</span> to <span className="font-mono uppercase text-blue-700">{outputFormat}</span>
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+type UploadedFileRowProps = {
+  file: File;
+  readiness: 'analyzing' | 'ready';
+  progress?: UploadProgressState;
+  converted: boolean;
+  conversion?: FileConversion;
+  currentTarget: string;
+  targetOptions: string[];
+  isProcessing: boolean;
+  onTargetChange: (format: string) => void;
+  onRemove: () => void;
+  onDownload: () => void;
+};
+
+const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
+  file,
+  readiness,
+  progress,
+  converted,
+  conversion,
+  currentTarget,
+  targetOptions,
+  isProcessing,
+  onTargetChange,
+  onRemove,
+  onDownload,
+}) => {
+  const extension = getFileExtension(file.name);
+  const isAnalyzing = readiness === 'analyzing' && !progress;
+  const progressValue = progress?.progress ?? (converted ? 100 : isAnalyzing ? 44 : 0);
+  const statusText = converted ? 'Ready to download' : progress?.statusText || (isAnalyzing ? 'Analyzing file...' : 'Ready to convert');
+
+  return (
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      className="border-b border-slate-100 bg-white px-4 py-3 last:border-b-0"
+    >
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_auto] lg:items-center">
+        <div className="flex min-w-0 gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">
+            <File className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <p className="truncate text-sm font-black text-slate-900">{file.name}</p>
+              <span className="rounded-full bg-blue-50 px-2 py-1 font-mono text-[10px] font-black uppercase text-blue-700">
+                {extension}
+              </span>
+            </div>
+            <p className="mt-1 text-xs font-semibold text-slate-500">{statusText}</p>
+          </div>
+        </div>
+
+        <div className="flex min-h-11 items-center justify-center gap-2 justify-self-center text-center">
+          <span className="text-xs font-black uppercase text-slate-500">TO</span>
+          <select
+            value={currentTarget}
+            disabled={readiness === 'analyzing' || isProcessing}
+            onChange={(event) => onTargetChange(event.target.value)}
+            className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 disabled:opacity-50"
+            aria-label={`Target format for ${file.name}`}
+          >
+            {[...new Set([currentTarget, ...targetOptions])].map(format => (
+              <option key={format} value={format}>{format}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="min-w-[150px]">
+          <UploadProgressBar
+            value={progressValue}
+            label={converted ? 'Complete 100%' : progress ? `${progress.statusText} ${progress.progress}%` : isAnalyzing ? 'Analyzing...' : 'Ready'}
+          />
+        </div>
+
+        <div className="text-center text-xs font-semibold text-slate-500 lg:text-right">
+          {formatReadableFileSize(file.size)}
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          {converted && conversion ? (
+            <span className="rounded-full bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-600">Converted</span>
+          ) : (
+            <span className="rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-slate-500">Pending</span>
+          )}
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Remove ${file.name}`}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 outline-none hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-4 focus-visible:ring-rose-100"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {converted && conversion && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-black uppercase text-emerald-600">
+              Finished
+            </span>
+            <span className="truncate text-sm font-black text-slate-800">{conversion.fileName}</span>
+            <span className="text-xs font-semibold text-slate-500">{formatReadableFileSize(conversion.fileSize)}</span>
+          </div>
+          <button
+            type="button"
+            onClick={onDownload}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-100"
+          >
+            <Download className="h-4 w-4" />
+            Download
+          </button>
+        </motion.div>
+      )}
+    </motion.article>
+  );
+};
 
 const isCompatibleExtension = (fileName: string, toolInput: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
@@ -103,9 +472,19 @@ export default function ConversionPanel({
   const [selectedCloudFiles, setSelectedCloudFiles] = useState<string[]>([]);
   const [cloudSearchQuery, setCloudSearchQuery] = useState('');
   const [copiedLinkInPanel, setCopiedLinkInPanel] = useState(false);
+  const [cadFileReadiness, setCadFileReadiness] = useState<Record<string, 'analyzing' | 'ready'>>({});
+  const [cadUploadButtonLabel, setCadUploadButtonLabel] = useState('Choose Files');
+  const [cadSaveDestination, setCadSaveDestination] = useState<'gdrive' | 'dropbox' | 'onedrive' | null>(null);
+  const [cadNotice, setCadNotice] = useState('');
+  const [showCadShareOptions, setShowCadShareOptions] = useState(false);
+  const [showCadAddSources, setShowCadAddSources] = useState(false);
+  const [cadAddSourcesPinned, setCadAddSourcesPinned] = useState(false);
 
   // Available Outputs list
   const outputs = selectedTool.output.split(',').map(s => s.trim());
+  const isCadTool = selectedTool.category === 'CAD';
+  const availableCredits = currentUser?.credits ?? 15;
+  const referralUrl = `${window.location.origin}/?ref=${currentUser?.id || 'cad-preview'}`;
 
   useEffect(() => {
     // Reset file state on tool change
@@ -115,7 +494,42 @@ export default function ConversionPanel({
     setIsProcessing(false);
     setCurrentLogs([]);
     setShowUploadDropdown(false);
+    setCadFileReadiness({});
+    setCadSaveDestination(null);
+    setCadNotice('');
+    setShowCadShareOptions(false);
+    setCadUploadButtonLabel('Choose Files');
+    setShowCadAddSources(false);
+    setCadAddSourcesPinned(false);
   }, [selectedTool]);
+
+  useEffect(() => {
+    if (!isCadTool) return;
+
+    files.forEach(file => {
+      if (cadFileReadiness[file.name]) return;
+
+      setCadFileReadiness(prev => ({ ...prev, [file.name]: 'analyzing' }));
+      window.setTimeout(() => {
+        setCadFileReadiness(prev => {
+          if (!prev[file.name]) return prev;
+          return { ...prev, [file.name]: 'ready' };
+        });
+      }, 1800);
+    });
+
+    setCadFileReadiness(prev => {
+      const next = { ...prev };
+      let changed = false;
+      Object.keys(next).forEach(fileName => {
+        if (!files.some(file => file.name === fileName)) {
+          delete next[fileName];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [cadFileReadiness, files, isCadTool]);
 
   // Drag and Drop handlers
   const handleDrag = (e: React.DragEvent) => {
@@ -562,6 +976,317 @@ export default function ConversionPanel({
     document.body.removeChild(link);
   };
 
+  const handleDownloadAll = () => {
+    conversions.forEach(conversion => {
+      handleDownloadSingle(conversion.downloadUrl || '#', conversion.fileName);
+    });
+    setCadNotice('Downloading all converted files to your computer.');
+  };
+
+  const handleCadCopyReferral = () => {
+    navigator.clipboard?.writeText(referralUrl);
+    setShowCadShareOptions(true);
+    setCadNotice('Referral link copied. Share it to earn credits when a referred user registers.');
+  };
+
+  const applyCadConvertAll = (format: string) => {
+    const nextTargets = { ...targetFormats };
+    files.forEach(file => {
+      nextTargets[file.name] = format;
+    });
+    setTargetFormats(nextTargets);
+  };
+
+  if (isCadTool) {
+    const allConverted = files.length > 0 && conversions.length >= files.length && !isProcessing;
+    const primaryFile = files[0];
+    const primarySourceFormat = primaryFile ? getFileExtension(primaryFile.name).toUpperCase() : selectedTool.input.split(',')[0].trim();
+    const primaryTargetFormat = primaryFile
+      ? (targetFormats[primaryFile.name] || outputs[0] || selectedTool.output).toUpperCase()
+      : (outputs[0] || selectedTool.output).toUpperCase();
+    const cadConvertAllTarget = primaryFile ? (targetFormats[primaryFile.name] || outputs[0] || 'PDF') : (outputs[0] || 'PDF');
+    const converterTitle = `${primarySourceFormat} to ${primaryTargetFormat} Converter`;
+    const converterSubtitle = primaryFile
+      ? `Transform ${primarySourceFormat} files into ${primaryTargetFormat} online`
+      : 'Convert your files to any format';
+
+    const addCadSampleFiles = (source: string) => {
+      const sampleFiles = [
+        new File(['cad-cloud-payload'], 'site-plan.dwg', { type: 'application/octet-stream' }),
+        new File(['cad-cloud-payload'], 'mechanical-bracket.step', { type: 'application/octet-stream' }),
+      ];
+      setFiles(prev => [...prev, ...sampleFiles]);
+      setTargetFormats(prev => ({
+        ...prev,
+        'site-plan.dwg': outputs[0] || 'PDF',
+        'mechanical-bracket.step': 'STL',
+      }));
+      setCadNotice(`${source} requires sign in. Added sample CAD files to preview the queue.`);
+    };
+
+    const addCadUrlFile = () => {
+      const rawUrl = urlInput.trim() || 'https://example.com/site-plan.dwg';
+      const filename = rawUrl.split('/').pop() || 'remote-cad-file.dwg';
+      const virtualFile = new File(['url-cad-payload'], filename.includes('.') ? filename : 'remote-cad-file.dwg', { type: 'application/octet-stream' });
+      setFiles(prev => [...prev, virtualFile]);
+      setTargetFormats(prev => ({ ...prev, [virtualFile.name]: outputs[0] || 'PDF' }));
+      setUrlInput('');
+      setActiveUploadSource('menu');
+      setCadNotice('URL file added. Analyzing source format...');
+    };
+
+    const cadSourceActions = ([
+      ['computer', 'From Computer'],
+      ['url', 'From URL'],
+      ['gdrive', 'From Google Drive'],
+      ['dropbox', 'From Dropbox'],
+      ['onedrive', 'From OneDrive'],
+    ] as Array<[UploadSourceId, string]>).map(([source, label]) => ({
+      id: source,
+      label,
+      onEnter: () => setCadUploadButtonLabel(label),
+      onLeave: () => setCadUploadButtonLabel('Choose Files'),
+      onClick: () => {
+        setCadUploadButtonLabel(label);
+        setShowCadAddSources(false);
+        setCadAddSourcesPinned(false);
+        if (source === 'computer') fileInputRef.current?.click();
+        else if (source === 'url') setActiveUploadSource(activeUploadSource === 'url' ? 'menu' : 'url');
+        else addCadSampleFiles(label);
+      },
+    }));
+
+    return (
+      <div className="w-full" id="cad-conversion-workspace">
+        <div className="w-full bg-white">
+          {files.length > 0 && (
+            <div className="bg-white">
+              <div className="px-5 pb-7 pt-1 text-center">
+                <h2 className="text-2xl font-extrabold tracking-tight text-blue-600 sm:text-3xl">{converterTitle}</h2>
+                <p className="mt-2 text-sm font-semibold text-slate-600">{converterSubtitle}</p>
+              </div>
+
+              <div className="border-y border-slate-100">
+                <AnimatePresence initial={false}>
+                  {files.map((file, index) => {
+                    const readiness = cadFileReadiness[file.name] || 'analyzing';
+                    const progress = fileProgresses[file.name];
+                    const baseName = file.name.includes('.') ? file.name.slice(0, file.name.lastIndexOf('.')) : file.name;
+                    const conversion = conversions.find(item => item.fileName.startsWith(baseName));
+                    const converted = Boolean(conversion);
+                    const targetOptions = getCadTargetOptions(file.name, outputs);
+                    const currentTarget = targetFormats[file.name] || outputs[0] || targetOptions[0];
+
+                    return (
+                      <UploadedFileRow
+                        key={`${file.name}-${index}`}
+                        file={file}
+                        readiness={readiness}
+                        progress={progress}
+                        converted={converted}
+                        conversion={conversion}
+                        currentTarget={currentTarget}
+                        targetOptions={targetOptions}
+                        isProcessing={isProcessing}
+                        onTargetChange={(format) => setTargetFormats(prev => ({ ...prev, [file.name]: format }))}
+                        onRemove={() => removeFile(index)}
+                        onDownload={() => conversion && handleDownloadSingle(conversion.downloadUrl || '#', conversion.fileName)}
+                      />
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+
+              <div className="flex min-h-16 flex-wrap items-center justify-center gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                <label className="mr-2 text-xs font-semibold text-slate-400">Convert all to</label>
+                <select
+                  value={cadConvertAllTarget}
+                  onChange={(event) => applyCadConvertAll(event.target.value)}
+                  className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                >
+                  {[...new Set([cadConvertAllTarget, ...CAD_TARGET_MATRIX.default])].map(format => (
+                    <option key={format} value={format}>{format}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFiles([]);
+                    setConversions([]);
+                    setFileProgresses({});
+                    setCadFileReadiness({});
+                  }}
+                  className="min-h-10 rounded-lg px-3 text-xs font-black text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-4 focus-visible:ring-rose-100"
+                >
+                  Clear all
+                </button>
+              </div>
+
+              <div
+                onMouseLeave={() => {
+                  if (!cadAddSourcesPinned) setShowCadAddSources(false);
+                }}
+                className="border-b border-slate-100"
+              >
+              <div className="grid min-h-16 grid-cols-1 items-stretch bg-blue-50/40 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="flex flex-wrap items-center gap-4 px-5 py-3">
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setShowCadAddSources(true)}
+                  >
+                    <AnimatePresence>
+                      {showCadAddSources && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                          transition={{ duration: 0.16 }}
+                          className="absolute bottom-[calc(100%+10px)] left-0 z-30 w-[230px] overflow-hidden rounded-xl border border-blue-100 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.18)]"
+                        >
+                          {[
+                            cadSourceActions.find(source => source.id === 'gdrive'),
+                            cadSourceActions.find(source => source.id === 'dropbox'),
+                            cadSourceActions.find(source => source.id === 'computer'),
+                          ].filter(Boolean).map(source => (
+                            <button
+                              key={source!.id}
+                              type="button"
+                              onMouseEnter={source!.onEnter}
+                              onFocus={source!.onEnter}
+                              onMouseLeave={source!.onLeave}
+                              onBlur={source!.onLeave}
+                              onClick={source!.onClick}
+                              className="flex min-h-14 w-full items-center gap-3 border-b border-slate-100 px-4 text-left text-sm font-black text-slate-800 outline-none last:border-b-0 hover:bg-blue-50 focus-visible:ring-4 focus-visible:ring-blue-100"
+                            >
+                              <span className="grid h-8 w-8 place-items-center text-blue-700">
+                                <ProviderIcon provider={source!.id} />
+                              </span>
+                              {source!.id === 'computer' ? 'Choose Files' : source!.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCadAddSourcesPinned(prev => {
+                          const next = !prev;
+                          setShowCadAddSources(next);
+                          return next;
+                        });
+                      }}
+                      className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-black text-slate-900 outline-none hover:bg-blue-50 focus-visible:ring-4 focus-visible:ring-blue-100"
+                    >
+                      <span className="text-lg font-light text-blue-600">+</span>
+                      Add more files
+                    </button>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500">Use Ctrl or Shift to add several files at once</span>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 px-5 py-3">
+                  {(['gdrive', 'dropbox', 'onedrive'] as const).map(provider => (
+                    <button
+                      key={provider}
+                      type="button"
+                      title={`Save to ${provider}`}
+                      onClick={() => {
+                        setCadSaveDestination(provider);
+                        setCadNotice(`${provider === 'gdrive' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive'} save requires sign in.`);
+                      }}
+                      className={`grid h-11 w-12 place-items-center rounded-xl border outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${cadSaveDestination === provider ? 'border-blue-300 bg-white text-blue-700' : 'border-blue-100 bg-white/80 text-blue-700 hover:bg-white'}`}
+                    >
+                      <ProviderIcon provider={provider} />
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleConvert}
+                  disabled={isProcessing}
+                  className="inline-flex min-h-16 items-center justify-center gap-3 bg-blue-600 px-10 text-base font-black text-white outline-none hover:bg-blue-700 focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {isProcessing && <Loader2 className="h-5 w-5 animate-spin" />}
+                  {isProcessing ? 'Converting...' : 'Convert'}
+                  <ArrowRight className="h-5 w-5" />
+                </button>
+              </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3 px-5 py-3">
+                {allConverted && (
+                  <button type="button" onClick={handleDownloadAll} className="min-h-10 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black text-blue-700 outline-none hover:bg-blue-100 focus-visible:ring-4 focus-visible:ring-blue-100">
+                    Download all
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+            id="cad-file-upload-input"
+          />
+
+          {files.length === 0 && (
+            <UploadZone
+              dragActive={dragActive}
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+            >
+              <UploadPlaceholder
+                dragActive={dragActive}
+                inputFormat={selectedTool.input}
+                outputFormat={selectedTool.output}
+                title={converterTitle}
+                subtitle={converterSubtitle}
+                buttonLabel={cadUploadButtonLabel}
+                isProcessing={isProcessing}
+                onBrowse={() => fileInputRef.current?.click()}
+                sourceActions={cadSourceActions}
+              >
+                <AnimatePresence>
+                  {activeUploadSource === 'url' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="mx-auto mt-4 flex w-full max-w-xl flex-col gap-2 sm:flex-row"
+                    >
+                      <input
+                        type="url"
+                        value={urlInput}
+                        onChange={(event) => setUrlInput(event.target.value)}
+                        placeholder="Paste file URL, for example https://example.com/model.dwg"
+                        className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                      />
+                      <button type="button" onClick={addCadUrlFile} className="min-h-11 rounded-xl bg-blue-600 px-4 text-xs font-black text-white outline-none hover:bg-blue-700 focus-visible:ring-4 focus-visible:ring-blue-200">
+                        Add URL
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {cadNotice && <UploadError message={cadNotice} />}
+              </UploadPlaceholder>
+            </UploadZone>
+          )}
+
+          {files.length > 0 && cadNotice && <UploadError message={cadNotice} />}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6" id="conversion-workspace">
       
@@ -655,47 +1380,50 @@ export default function ConversionPanel({
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.16 }}
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute top-[136px] left-1/2 z-20 w-[min(320px,calc(100%-32px))] -translate-x-1/2 rounded-2xl glass border border-zinc-200 dark:border-white/10 p-3 text-left shadow-2xl"
+                      className="absolute top-[136px] left-1/2 z-20 w-[min(420px,calc(100%-32px))] -translate-x-1/2 rounded-2xl glass border border-zinc-200 dark:border-white/10 p-3 text-left shadow-2xl"
                     >
                       <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono">
                         Upload source
                       </label>
-                      <select
-                        defaultValue=""
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          const source = e.currentTarget.value;
-                          e.currentTarget.value = '';
-                          setShowUploadDropdown(false);
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                        {[
+                          ['computer', 'Computer'],
+                          ['url', 'URL'],
+                          ['gdrive', 'Google Drive'],
+                          ['dropbox', 'Dropbox'],
+                          ['onedrive', 'OneDrive'],
+                        ].map(([source, label]) => (
+                          <button
+                            key={source}
+                            type="button"
+                            onClick={() => {
+                              setShowUploadDropdown(false);
 
-                          if (source === 'computer') {
-                            fileInputRef.current?.click();
-                            return;
-                          }
+                              if (source === 'computer') {
+                                fileInputRef.current?.click();
+                                return;
+                              }
 
-                          if (source === 'url') {
-                            setShowSourceModal(true);
-                            setActiveUploadSource('url');
-                            return;
-                          }
+                              if (source === 'url') {
+                                setShowSourceModal(true);
+                                setActiveUploadSource('url');
+                                return;
+                              }
 
-                          if (source === 'gdrive' || source === 'dropbox' || source === 'onedrive') {
-                            setShowSourceModal(true);
-                            setActiveUploadSource(source);
-                            setSelectedCloudFiles([]);
-                            setCloudSearchQuery('');
-                          }
-                        }}
-                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-xs font-bold text-zinc-800 shadow-sm outline-none transition-colors hover:border-indigo-500/40 focus:border-indigo-500 dark:border-white/10 dark:bg-slate-900 dark:text-zinc-100"
-                      >
-                        <option value="" disabled>Choose upload source...</option>
-                        <option value="computer">From my computer</option>
-                        <option value="url">By URL</option>
-                        <option value="gdrive">From Google Drive</option>
-                        <option value="dropbox">From Dropbox</option>
-                        <option value="onedrive">From OneDrive</option>
-                      </select>
+                              if (source === 'gdrive' || source === 'dropbox' || source === 'onedrive') {
+                                setShowSourceModal(true);
+                                setActiveUploadSource(source);
+                                setSelectedCloudFiles([]);
+                                setCloudSearchQuery('');
+                              }
+                            }}
+                            className="flex min-h-[72px] flex-col items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white/85 px-2 py-2 text-center text-[10px] font-black text-zinc-700 transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/80 dark:text-zinc-200 dark:hover:border-blue-300/30 dark:hover:bg-blue-400/10 dark:hover:text-blue-200"
+                          >
+                            <ProviderIcon provider={source as 'computer' | 'url' | 'gdrive' | 'dropbox' | 'onedrive'} />
+                            <span>{label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

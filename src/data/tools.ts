@@ -113,11 +113,11 @@ export const CATEGORIES: Category[] = [
   {
     id: 'CAD',
     name: 'CAD',
-    count: 9,
+    count: 21,
     icon: 'Compass',
     color: 'from-sky-500/20 to-teal-500/10 hover:border-sky-500/30 text-sky-400',
     accent: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-    description: 'DWG to DXF, DWG to PDF, and 3D printing STEP to STL files.'
+    description: 'DWG, DXF, PDF, STEP, STL, SVG, viewer, and 3D model CAD tools.'
   }
 ];
 
@@ -291,14 +291,26 @@ export const TOOLS: Tool[] = [
   { id: 148, name: 'SVG to PNG', category: 'Vectors', description: 'Convert vector SVG coordinates to solid pixel PNG or JPG frames', input: 'SVG', output: 'PNG, JPG', creditCost: 2 },
   { id: 149, name: 'PLT to SVG', category: 'Vectors', description: 'Convert HPGL Hewlett-Packard plotter files into scaleable vectors', input: 'PLT, HPGL', output: 'SVG', creditCost: 4 },
 
-  // --- CAD (9 Tools) ---
-  { id: 150, name: 'DWG to DXF', category: 'CAD', description: 'Convert standard AutoCAD binary design drawings to drawing exchange text outlines', input: 'DWG', output: 'DXF', creditCost: 5, popular: true },
-  { id: 151, name: 'DWG to PDF', category: 'CAD', description: 'Render high-precision blueprints and layers of AutoCAD drawing as vector PDF', input: 'DWG', output: 'PDF', creditCost: 5, popular: true },
-  { id: 152, name: 'STEP to STL', category: 'CAD', description: 'Convert parametric engineering solid models to 3D printable meshes', input: 'STEP', output: 'STL', creditCost: 6, popular: true },
-  { id: 153, name: 'DXF to DWG', category: 'CAD', description: 'Convert DXF exchange files back to standard AutoCAD DWG archives', input: 'DXF', output: 'DWG', creditCost: 5 },
-  { id: 154, name: 'IGES to STEP', category: 'CAD', description: 'Convert legacy IGES files to modern standard STEP mechanical solid models', input: 'IGES, IGS', output: 'STEP', creditCost: 6 },
+  // --- CAD (21 Tools, ordered by research popularity) ---
+  { id: 150, name: 'DWG to DXF', category: 'CAD', description: 'Convert AutoCAD DWG drawings to interoperable DXF exchange files', input: 'DWG', output: 'DXF', creditCost: 5, popular: true },
+  { id: 153, name: 'DXF to DWG', category: 'CAD', description: 'Convert DXF exchange files back to standard AutoCAD DWG archives', input: 'DXF', output: 'DWG', creditCost: 5, popular: true },
+  { id: 151, name: 'DWG to PDF', category: 'CAD', description: 'Render DWG and DXF CAD drawings as shareable vector PDF files', input: 'DWG, DXF', output: 'PDF', creditCost: 5, popular: true },
+  { id: 224, name: 'CAD File Viewer', category: 'CAD', description: 'Preview CAD drawings and 3D model files online before converting', input: 'DWG, DXF, STEP, STL', output: 'Web preview', creditCost: 2, popular: true },
+  { id: 217, name: 'PDF to DWG', category: 'CAD', description: 'Convert PDF drawing references into editable DWG or DXF CAD formats', input: 'PDF', output: 'DWG, DXF', creditCost: 6, popular: true },
+  { id: 152, name: 'STEP to STL', category: 'CAD', description: 'Convert STEP and STP engineering solid models to 3D printable STL meshes', input: 'STEP, STP', output: 'STL', creditCost: 6, popular: true },
+  { id: 223, name: 'DWG Version Converter', category: 'CAD', description: 'Convert DWG files between AutoCAD version targets for compatibility', input: 'DWG', output: 'DWG', creditCost: 4, popular: true },
+  { id: 225, name: 'OBJ to STL', category: 'CAD', description: 'Convert Wavefront OBJ models to 3D printing ready STL meshes', input: 'OBJ', output: 'STL', creditCost: 4, popular: true },
+  { id: 228, name: '3D Model Converter', category: 'CAD', description: 'Convert common 3D model formats for design, printing, and visualization', input: 'OBJ, FBX, STL, STEP, DAE', output: 'OBJ, FBX, STL, STEP, DAE', creditCost: 6, popular: true },
+  { id: 219, name: 'STL to STEP', category: 'CAD', description: 'Convert 3D printing STL meshes back into STEP CAD interchange files', input: 'STL', output: 'STEP', creditCost: 6 },
+  { id: 220, name: 'IGES to STL', category: 'CAD', description: 'Convert IGES and IGS CAD models to STL files for 3D printing workflows', input: 'IGES, IGS', output: 'STL', creditCost: 6 },
+  { id: 221, name: 'DWG to SVG', category: 'CAD', description: 'Convert DWG or DXF drawings to scalable SVG vector graphics', input: 'DWG, DXF', output: 'SVG', creditCost: 4 },
+  { id: 222, name: 'DXF to SVG', category: 'CAD', description: 'Convert DXF drawings to browser-friendly scalable SVG vectors', input: 'DXF', output: 'SVG', creditCost: 4 },
   { id: 155, name: 'STL to OBJ', category: 'CAD', description: 'Convert STL rapid-prototyping triangles to standard textured OBJ meshes', input: 'STL', output: 'OBJ', creditCost: 4 },
+  { id: 227, name: 'FBX to OBJ', category: 'CAD', description: 'Convert Autodesk FBX 3D assets into Wavefront OBJ model files', input: 'FBX', output: 'OBJ', creditCost: 5 },
+  { id: 229, name: 'CAD Drawing Compress', category: 'CAD', description: 'Reduce DWG and DXF drawing file sizes while preserving structure', input: 'DWG, DXF', output: 'DWG, DXF', creditCost: 3 },
+  { id: 230, name: 'CAD Layer Extractor', category: 'CAD', description: 'Export selected layers from DWG or DXF drawings to CAD or PDF outputs', input: 'DWG, DXF', output: 'DWG, DXF, PDF', creditCost: 5 },
+  { id: 154, name: 'IGES to STEP', category: 'CAD', description: 'Convert legacy IGES files to modern standard STEP mechanical solid models', input: 'IGES, IGS', output: 'STEP', creditCost: 6 },
   { id: 156, name: 'DWG to Image', category: 'CAD', description: 'Render blueprint CAD documents as high resolution viewable JPG/PNGs', input: 'DWG', output: 'PNG, JPG', creditCost: 4 },
-  { id: 157, name: '3DS to OBJ', category: 'CAD', description: 'Convert legacy 3D Studio Max files into standard wave OBJ models', input: '3DS', output: 'OBJ', creditCost: 5 },
+  { id: 157, name: '3DS to OBJ', category: 'CAD', description: 'Convert legacy 3D Studio Max files into standard Wavefront OBJ models', input: '3DS', output: 'OBJ', creditCost: 5 },
   { id: 158, name: 'CAD Compress', category: 'CAD', description: 'Optimize vertices, compact coordinate indices, and reduce 3D mesh files', input: 'STEP, STL, OBJ, DWG', output: 'Same', creditCost: 4 }
 ];

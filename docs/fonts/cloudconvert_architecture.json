@@ -1,0 +1,211 @@
+{
+  "architecture_overview": {
+    "name": "CloudConvert-Style Format Conversion Platform",
+    "version": "1.0",
+    "total_categories": 12,
+    "total_formats": 203,
+    "estimated_conversion_pairs": "~4,000+ (based on supported read/write combinations)"
+  },
+  "page_flow": {
+    "home_page": {
+      "sections": [
+        "Hero with drag-drop file upload",
+        "Format Catalog (category tabs + format grid)",
+        "Common Conversion Types (popular pairs)",
+        "API & Integrations CTA"
+      ],
+      "interactions": {
+        "file_drop": "Auto-detects format \u2192 redirects to /convert/{detected-format}",
+        "format_click": "Navigates to /convert/{source-format} \u2192 shows all 'convert to' options",
+        "category_tab": "Filters format grid by category",
+        "common_pair_click": "Directly opens converter with pre-selected source/target"
+      }
+    },
+    "converter_page": {
+      "url_pattern": "/convert/{source-format}-to-{target-format}",
+      "sections": [
+        "Source format selector (convert FROM)",
+        "Target format selector (convert TO)",
+        "File upload wizard (drag-drop, URL, cloud storage)",
+        "Conversion options (quality, engine, etc.)",
+        "Convert button + progress indicator"
+      ],
+      "dynamic_behavior": {
+        "source_change": "Updates target dropdown to only valid conversions",
+        "target_change": "Updates URL to /convert/{source}-to-{target}",
+        "file_upload": "Validates file type matches source format"
+      }
+    }
+  },
+  "database_schema": {
+    "categories": {
+      "table": "categories",
+      "columns": [
+        "id",
+        "name",
+        "slug",
+        "icon",
+        "description",
+        "sort_order",
+        "is_active",
+        "created_at"
+      ]
+    },
+    "formats": {
+      "table": "formats",
+      "columns": [
+        "id",
+        "ext",
+        "name",
+        "full_name",
+        "slug",
+        "mime_type",
+        "category_id",
+        "can_read",
+        "can_write",
+        "is_popular",
+        "icon_url",
+        "description",
+        "sort_order",
+        "is_active",
+        "created_at"
+      ]
+    },
+    "conversions": {
+      "table": "conversions",
+      "columns": [
+        "id",
+        "source_format_id",
+        "target_format_id",
+        "engine",
+        "engine_version",
+        "credits_cost",
+        "is_popular",
+        "conversion_time_avg_sec",
+        "options_schema",
+        "is_active",
+        "created_at"
+      ],
+      "indexes": [
+        "source_format_id",
+        "target_format_id",
+        "(source_format_id, target_format_id)"
+      ]
+    },
+    "conversion_options": {
+      "table": "conversion_options",
+      "columns": [
+        "id",
+        "conversion_id",
+        "option_name",
+        "option_type",
+        "default_value",
+        "min_value",
+        "max_value",
+        "choices",
+        "description",
+        "is_required"
+      ]
+    },
+    "jobs": {
+      "table": "jobs",
+      "columns": [
+        "id",
+        "user_id",
+        "status",
+        "source_format",
+        "target_format",
+        "input_url",
+        "output_url",
+        "file_size_bytes",
+        "credits_used",
+        "engine_used",
+        "error_message",
+        "created_at",
+        "started_at",
+        "completed_at"
+      ]
+    },
+    "engines": {
+      "table": "engines",
+      "columns": [
+        "id",
+        "name",
+        "version",
+        "description",
+        "is_active",
+        "created_at"
+      ]
+    }
+  },
+  "api_endpoints": {
+    "public": [
+      {
+        "method": "GET",
+        "path": "/api/v1/categories",
+        "description": "List all categories with format counts"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/categories/{id}/formats",
+        "description": "List formats in a category"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/formats",
+        "description": "List all formats with filtering"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/formats/{slug}",
+        "description": "Get format details + popular conversions"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/formats/{slug}/conversions",
+        "description": "All valid 'convert to' targets for source format"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/conversions/popular",
+        "description": "Most common conversion pairs"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/conversions/{source}/{target}",
+        "description": "Specific conversion details + options"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/operations",
+        "description": "List all supported operations (like CloudConvert /v2/operations)"
+      }
+    ],
+    "authenticated": [
+      {
+        "method": "POST",
+        "path": "/api/v1/jobs",
+        "description": "Create conversion job"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/jobs/{id}",
+        "description": "Get job status"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/jobs/{id}/download",
+        "description": "Download converted file"
+      }
+    ]
+  },
+  "url_routing": {
+    "home": "/",
+    "format_catalog": "/formats",
+    "category_formats": "/formats/{category-slug}",
+    "converter": "/convert/{source-format}",
+    "converter_pair": "/convert/{source-format}-to-{target-format}",
+    "api_docs": "/docs",
+    "pricing": "/pricing"
+  }
+}

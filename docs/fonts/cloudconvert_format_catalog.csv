@@ -1,0 +1,206 @@
+category_id,category_name,category_icon,format_ext,format_name,format_full_name,mime_type,can_read,can_write,is_source,is_target
+documents,Documents,📄,pdf,PDF,Portable Document Format,application/pdf,True,True,True,True
+documents,Documents,📄,docx,DOCX,Microsoft Word Document,application/vnd.openxmlformats-officedocument.wordprocessingml.document,True,True,True,True
+documents,Documents,📄,doc,DOC,Microsoft Word 97-2003,application/msword,True,True,True,True
+documents,Documents,📄,odt,ODT,OpenDocument Text,application/vnd.oasis.opendocument.text,True,True,True,True
+documents,Documents,📄,txt,TXT,Plain Text,text/plain,True,True,True,True
+documents,Documents,📄,rtf,RTF,Rich Text Format,application/rtf,True,True,True,True
+documents,Documents,📄,html,HTML,HyperText Markup Language,text/html,True,True,True,True
+documents,Documents,📄,xps,XPS,XML Paper Specification,application/vnd.ms-xpsdocument,True,False,True,False
+documents,Documents,📄,tex,TEX,LaTeX Source,application/x-tex,True,True,True,True
+documents,Documents,📄,ps,PS,PostScript,application/postscript,True,False,True,False
+documents,Documents,📄,epub,EPUB,Electronic Publication,application/epub+zip,True,True,True,True
+documents,Documents,📄,mobi,MOBI,Mobipocket eBook,application/x-mobipocket-ebook,True,True,True,True
+documents,Documents,📄,azw3,AZW3,Amazon Kindle eBook,application/vnd.amazon.ebook,True,False,True,False
+documents,Documents,📄,fb2,FB2,FictionBook 2.0,application/x-fictionbook+xml,True,True,True,True
+documents,Documents,📄,djvu,DJVU,DjVu Document,image/vnd.djvu,True,False,True,False
+documents,Documents,📄,pages,PAGES,Apple Pages,application/x-iwork-pages-sffpages,True,False,True,False
+documents,Documents,📄,wpd,WPD,WordPerfect Document,application/vnd.wordperfect,True,False,True,False
+documents,Documents,📄,md,MD,Markdown,text/markdown,True,True,True,True
+documents,Documents,📄,csv,CSV,Comma-Separated Values,text/csv,True,True,True,True
+documents,Documents,📄,xml,XML,eXtensible Markup Language,application/xml,True,True,True,True
+documents,Documents,📄,json,JSON,JavaScript Object Notation,application/json,True,True,True,True
+documents,Documents,📄,wps,WPS,Microsoft Works,application/vnd.ms-works,True,False,True,False
+documents,Documents,📄,hwp,HWP,Hangul Word Processor,application/x-hwp,True,False,True,False
+spreadsheets,Spreadsheets,📊,xlsx,XLSX,Microsoft Excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,True,True,True,True
+spreadsheets,Spreadsheets,📊,xls,XLS,Microsoft Excel 97-2003,application/vnd.ms-excel,True,True,True,True
+spreadsheets,Spreadsheets,📊,ods,ODS,OpenDocument Spreadsheet,application/vnd.oasis.opendocument.spreadsheet,True,True,True,True
+spreadsheets,Spreadsheets,📊,csv,CSV,Comma-Separated Values,text/csv,True,True,True,True
+spreadsheets,Spreadsheets,📊,tsv,TSV,Tab-Separated Values,text/tab-separated-values,True,True,True,True
+spreadsheets,Spreadsheets,📊,numbers,NUMBERS,Apple Numbers,application/x-iwork-numbers-sffnumbers,True,False,True,False
+spreadsheets,Spreadsheets,📊,dbf,DBF,dBase Database,application/dbf,True,True,True,True
+spreadsheets,Spreadsheets,📊,dif,DIF,Data Interchange Format,application/x-dif,True,False,True,False
+spreadsheets,Spreadsheets,📊,slk,SLK,Symbolic Link,application/vnd.ms-excel,True,False,True,False
+spreadsheets,Spreadsheets,📊,fods,FODS,Flat XML ODF Spreadsheet,application/vnd.oasis.opendocument.spreadsheet-flat-xml,True,True,True,True
+spreadsheets,Spreadsheets,📊,et,ET,WPS Spreadsheet,application/wps-office.et,True,False,True,False
+spreadsheets,Spreadsheets,📊,sxc,SXC,StarOffice Calc,application/vnd.sun.xml.calc,True,False,True,False
+presentations,Presentations,🎨,pptx,PPTX,Microsoft PowerPoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,True,True,True,True
+presentations,Presentations,🎨,ppt,PPT,Microsoft PowerPoint 97-2003,application/vnd.ms-powerpoint,True,True,True,True
+presentations,Presentations,🎨,odp,ODP,OpenDocument Presentation,application/vnd.oasis.opendocument.presentation,True,True,True,True
+presentations,Presentations,🎨,key,KEY,Apple Keynote,application/x-iwork-keynote-sffkey,True,False,True,False
+presentations,Presentations,🎨,pps,PPS,PowerPoint Show,application/vnd.ms-powerpoint,True,False,True,False
+presentations,Presentations,🎨,ppsx,PPSX,PowerPoint Show (OpenXML),application/vnd.openxmlformats-officedocument.presentationml.slideshow,True,False,True,False
+presentations,Presentations,🎨,otp,OTP,OpenDocument Presentation Template,application/vnd.oasis.opendocument.presentation-template,True,False,True,False
+presentations,Presentations,🎨,potx,POTX,PowerPoint Template,application/vnd.openxmlformats-officedocument.presentationml.template,True,False,True,False
+presentations,Presentations,🎨,dps,DPS,WPS Presentation,application/wps-office.dps,True,False,True,False
+presentations,Presentations,🎨,sxi,SXI,StarOffice Impress,application/vnd.sun.xml.impress,True,False,True,False
+images,Images,🖼️,jpg,JPG,JPEG Image,image/jpeg,True,True,True,True
+images,Images,🖼️,jpeg,JPEG,Joint Photographic Experts Group,image/jpeg,True,True,True,True
+images,Images,🖼️,png,PNG,Portable Network Graphics,image/png,True,True,True,True
+images,Images,🖼️,gif,GIF,Graphics Interchange Format,image/gif,True,True,True,True
+images,Images,🖼️,bmp,BMP,Bitmap Image,image/bmp,True,True,True,True
+images,Images,🖼️,tiff,TIFF,Tagged Image File Format,image/tiff,True,True,True,True
+images,Images,🖼️,tif,TIF,Tagged Image File Format,image/tiff,True,True,True,True
+images,Images,🖼️,webp,WEBP,Web Picture Format,image/webp,True,True,True,True
+images,Images,🖼️,svg,SVG,Scalable Vector Graphics,image/svg+xml,True,True,True,True
+images,Images,🖼️,ico,ICO,Windows Icon,image/x-icon,True,True,True,True
+images,Images,🖼️,heic,HEIC,High Efficiency Image Container,image/heic,True,True,True,True
+images,Images,🖼️,heif,HEIF,High Efficiency Image Format,image/heif,True,True,True,True
+images,Images,🖼️,raw,RAW,Camera Raw Image,image/x-raw,True,False,True,False
+images,Images,🖼️,cr2,CR2,Canon Raw 2,image/x-canon-cr2,True,False,True,False
+images,Images,🖼️,nef,NEF,Nikon Electronic Format,image/x-nikon-nef,True,False,True,False
+images,Images,🖼️,arw,ARW,Sony Alpha Raw,image/x-sony-arw,True,False,True,False
+images,Images,🖼️,dng,DNG,Digital Negative,image/x-adobe-dng,True,True,True,True
+images,Images,🖼️,orf,ORF,Olympus Raw Format,image/x-olympus-orf,True,False,True,False
+images,Images,🖼️,raf,RAF,Fuji RAW,image/x-fuji-raf,True,False,True,False
+images,Images,🖼️,pef,PEF,Pentax Electronic Format,image/x-pentax-pef,True,False,True,False
+images,Images,🖼️,rw2,RW2,Panasonic RAW,image/x-panasonic-rw2,True,False,True,False
+images,Images,🖼️,nrw,NRW,Nikon RAW (NRW),image/x-nikon-nrw,True,False,True,False
+images,Images,🖼️,sr2,SR2,Sony RAW 2,image/x-sony-sr2,True,False,True,False
+images,Images,🖼️,srf,SRF,Sony RAW Format,image/x-sony-srf,True,False,True,False
+images,Images,🖼️,3fr,3FR,Hasselblad 3F RAW,image/x-hasselblad-3fr,True,False,True,False
+images,Images,🖼️,erf,ERF,Epson RAW Format,image/x-epson-erf,True,False,True,False
+images,Images,🖼️,kdc,KDC,Kodak Digital Camera,image/x-kodak-kdc,True,False,True,False
+images,Images,🖼️,mos,MOS,Leaf RAW,image/x-leaf-mos,True,False,True,False
+images,Images,🖼️,mef,MEF,Mamiya RAW,image/x-mamiya-mef,True,False,True,False
+images,Images,🖼️,x3f,X3F,Sigma RAW,image/x-sigma-x3f,True,False,True,False
+images,Images,🖼️,ppm,PPM,Portable Pixmap,image/x-portable-pixmap,True,True,True,True
+images,Images,🖼️,pgm,PGM,Portable Graymap,image/x-portable-graymap,True,True,True,True
+images,Images,🖼️,pbm,PBM,Portable Bitmap,image/x-portable-bitmap,True,True,True,True
+images,Images,🖼️,xpm,XPM,X PixMap,image/x-xpixmap,True,True,True,True
+images,Images,🖼️,xbm,XBM,X BitMap,image/x-xbitmap,True,True,True,True
+images,Images,🖼️,pcx,PCX,PiCture eXchange,image/x-pcx,True,True,True,True
+audio,Audio,🎵,mp3,MP3,MPEG Audio Layer III,audio/mpeg,True,True,True,True
+audio,Audio,🎵,wav,WAV,Waveform Audio,audio/wav,True,True,True,True
+audio,Audio,🎵,aac,AAC,Advanced Audio Coding,audio/aac,True,True,True,True
+audio,Audio,🎵,flac,FLAC,Free Lossless Audio Codec,audio/flac,True,True,True,True
+audio,Audio,🎵,ogg,OGG,Ogg Vorbis,audio/ogg,True,True,True,True
+audio,Audio,🎵,m4a,M4A,MPEG-4 Audio,audio/mp4,True,True,True,True
+audio,Audio,🎵,wma,WMA,Windows Media Audio,audio/x-ms-wma,True,True,True,True
+audio,Audio,🎵,aiff,AIFF,Audio Interchange File Format,audio/aiff,True,True,True,True
+audio,Audio,🎵,au,AU,Sun Audio,audio/basic,True,True,True,True
+audio,Audio,🎵,amr,AMR,Adaptive Multi-Rate,audio/amr,True,True,True,True
+audio,Audio,🎵,ac3,AC3,Dolby Digital,audio/ac3,True,True,True,True
+audio,Audio,🎵,opus,OPUS,Opus Audio,audio/opus,True,True,True,True
+audio,Audio,🎵,mka,MKA,Matroska Audio,audio/x-matroska,True,True,True,True
+audio,Audio,🎵,ra,RA,RealAudio,audio/vnd.rn-realaudio,True,False,True,False
+audio,Audio,🎵,voc,VOC,Creative Voice,audio/x-voc,True,True,True,True
+audio,Audio,🎵,snd,SND,Sound File,audio/basic,True,False,True,False
+audio,Audio,🎵,spx,SPX,Speex,audio/speex,True,True,True,True
+audio,Audio,🎵,tta,TTA,True Audio,audio/x-tta,True,True,True,True
+audio,Audio,🎵,wv,WV,WavPack,audio/x-wavpack,True,True,True,True
+audio,Audio,🎵,dts,DTS,Digital Theater Systems,audio/vnd.dts,True,True,True,True
+audio,Audio,🎵,eac3,EAC3,Enhanced AC-3,audio/eac3,True,True,True,True
+audio,Audio,🎵,mlp,MLP,Meridian Lossless Packing,audio/vnd.mlp,True,False,True,False
+video,Video,🎬,mp4,MP4,MPEG-4 Part 14,video/mp4,True,True,True,True
+video,Video,🎬,avi,AVI,Audio Video Interleave,video/x-msvideo,True,True,True,True
+video,Video,🎬,mov,MOV,QuickTime Movie,video/quicktime,True,True,True,True
+video,Video,🎬,wmv,WMV,Windows Media Video,video/x-ms-wmv,True,True,True,True
+video,Video,🎬,mkv,MKV,Matroska Video,video/x-matroska,True,True,True,True
+video,Video,🎬,flv,FLV,Flash Video,video/x-flv,True,True,True,True
+video,Video,🎬,webm,WEBM,WebM Video,video/webm,True,True,True,True
+video,Video,🎬,m4v,M4V,MPEG-4 Video,video/x-m4v,True,True,True,True
+video,Video,🎬,3gp,3GP,3GPP Multimedia,video/3gpp,True,True,True,True
+video,Video,🎬,ogv,OGV,Ogg Video,video/ogg,True,True,True,True
+video,Video,🎬,mpeg,MPEG,Moving Picture Experts Group,video/mpeg,True,True,True,True
+video,Video,🎬,mpg,MPG,MPEG-1,video/mpeg,True,True,True,True
+video,Video,🎬,m2v,M2V,MPEG-2 Video,video/mpeg2,True,True,True,True
+video,Video,🎬,mts,MTS,AVCHD Video,video/mp2t,True,True,True,True
+video,Video,🎬,ts,TS,MPEG Transport Stream,video/mp2t,True,True,True,True
+video,Video,🎬,vob,VOB,DVD Video Object,video/dvd,True,True,True,True
+video,Video,🎬,dv,DV,Digital Video,video/x-dv,True,True,True,True
+video,Video,🎬,gxf,GXF,General eXchange Format,application/gxf,True,False,True,False
+video,Video,🎬,mxf,MXF,Material eXchange Format,application/mxf,True,True,True,True
+video,Video,🎬,roq,ROQ,Id RoQ Video,video/x-roq,True,False,True,False
+video,Video,🎬,nsv,NSV,Nullsoft Streaming Video,video/x-nsv,True,False,True,False
+video,Video,🎬,f4v,F4V,Flash MP4 Video,video/mp4,True,True,True,True
+video,Video,🎬,swf,SWF,Shockwave Flash,application/x-shockwave-flash,True,True,True,True
+video,Video,🎬,rm,RM,RealMedia,application/vnd.rn-realmedia,True,False,True,False
+video,Video,🎬,rmvb,RMVB,RealMedia Variable Bitrate,application/vnd.rn-realmedia-vbr,True,False,True,False
+video,Video,🎬,divx,DIVX,DivX Video,video/x-divx,True,True,True,True
+video,Video,🎬,asf,ASF,Advanced Systems Format,video/x-ms-asf,True,True,True,True
+video,Video,🎬,wtv,WTV,Windows Recorded TV Show,video/wtv,True,False,True,False
+video,Video,🎬,m2ts,M2TS,BDAV MPEG-2 Transport Stream,video/mp2t,True,True,True,True
+archives,Archives,📦,zip,ZIP,ZIP Archive,application/zip,True,True,True,True
+archives,Archives,📦,rar,RAR,Roshal Archive,application/x-rar-compressed,True,False,True,False
+archives,Archives,📦,7z,7Z,7-Zip Archive,application/x-7z-compressed,True,True,True,True
+archives,Archives,📦,tar,TAR,Tape Archive,application/x-tar,True,True,True,True
+archives,Archives,📦,gz,GZ,Gzip Compressed,application/gzip,True,True,True,True
+archives,Archives,📦,bz2,BZ2,Bzip2 Compressed,application/x-bzip2,True,True,True,True
+archives,Archives,📦,xz,XZ,XZ Compressed,application/x-xz,True,True,True,True
+archives,Archives,📦,lz,LZ,Lzip Compressed,application/x-lzip,True,True,True,True
+archives,Archives,📦,lzma,LZMA,LZMA Compressed,application/x-lzma,True,True,True,True
+archives,Archives,📦,cab,CAB,Windows Cabinet,application/vnd.ms-cab-compressed,True,False,True,False
+archives,Archives,📦,arj,ARJ,ARJ Archive,application/x-arj,True,False,True,False
+archives,Archives,📦,lzh,LZH,LHA Archive,application/x-lzh-compressed,True,False,True,False
+archives,Archives,📦,z,Z,Unix Compress,application/x-compress,True,False,True,False
+archives,Archives,📦,cpio,CPIO,CPIO Archive,application/x-cpio,True,True,True,True
+archives,Archives,📦,ace,ACE,ACE Archive,application/x-ace-compressed,True,False,True,False
+cad,CAD,🏗️,dwg,DWG,AutoCAD Drawing,image/vnd.dwg,True,True,True,True
+cad,CAD,🏗️,dxf,DXF,Drawing Exchange Format,image/vnd.dxf,True,True,True,True
+cad,CAD,🏗️,step,STEP,ISO 10303-21,application/step,True,True,True,True
+cad,CAD,🏗️,stp,STP,STEP (Alternate Extension),application/step,True,True,True,True
+cad,CAD,🏗️,iges,IGES,Initial Graphics Exchange,model/iges,True,True,True,True
+cad,CAD,🏗️,igs,IGS,IGES (Alternate Extension),model/iges,True,True,True,True
+cad,CAD,🏗️,stl,STL,STereoLithography,model/stl,True,True,True,True
+cad,CAD,🏗️,obj,OBJ,Wavefront OBJ,model/obj,True,True,True,True
+cad,CAD,🏗️,3ds,3DS,3D Studio,image/x-3ds,True,True,True,True
+cad,CAD,🏗️,dae,DAE,COLLADA,model/vnd.collada+xml,True,True,True,True
+cad,CAD,🏗️,fbx,FBX,Filmbox,application/octet-stream,True,True,True,True
+cad,CAD,🏗️,ply,PLY,Polygon File Format,application/ply,True,True,True,True
+cad,CAD,🏗️,ifc,IFC,Industry Foundation Classes,application/x-step,True,True,True,True
+cad,CAD,🏗️,skp,SKP,SketchUp,application/vnd.sketchup.skp,True,False,True,False
+cad,CAD,🏗️,vsd,VSD,Visio Drawing,application/vnd.visio,True,False,True,False
+cad,CAD,🏗️,vsdx,VSDX,Visio Drawing (OpenXML),application/vnd.ms-visio.drawing,True,True,True,True
+cad,CAD,🏗️,svgz,SVGZ,Compressed SVG,image/svg+xml-compressed,True,True,True,True
+cad,CAD,🏗️,cgm,CGM,Computer Graphics Metafile,image/cgm,True,True,True,True
+ebooks,eBooks,📚,epub,EPUB,Electronic Publication,application/epub+zip,True,True,True,True
+ebooks,eBooks,📚,mobi,MOBI,Mobipocket eBook,application/x-mobipocket-ebook,True,True,True,True
+ebooks,eBooks,📚,azw3,AZW3,Amazon Kindle eBook,application/vnd.amazon.ebook,True,False,True,False
+ebooks,eBooks,📚,azw,AZW,Amazon Kindle,application/vnd.amazon.ebook,True,False,True,False
+ebooks,eBooks,📚,fb2,FB2,FictionBook 2.0,application/x-fictionbook+xml,True,True,True,True
+ebooks,eBooks,📚,lit,LIT,Microsoft Reader,application/x-ms-reader,True,False,True,False
+ebooks,eBooks,📚,lrf,LRF,Sony BroadBand eBook,application/x-sony-bbe,True,False,True,False
+ebooks,eBooks,📚,pdb,PDB,Palm Database,application/x-palm-database,True,False,True,False
+vectors,Vectors,✏️,svg,SVG,Scalable Vector Graphics,image/svg+xml,True,True,True,True
+vectors,Vectors,✏️,ai,AI,Adobe Illustrator,application/postscript,True,False,True,False
+vectors,Vectors,✏️,eps,EPS,Encapsulated PostScript,application/postscript,True,True,True,True
+vectors,Vectors,✏️,cdr,CDR,CorelDRAW,application/coreldraw,True,False,True,False
+vectors,Vectors,✏️,emf,EMF,Enhanced Metafile,image/emf,True,True,True,True
+vectors,Vectors,✏️,wmf,WMF,Windows Metafile,image/wmf,True,True,True,True
+vectors,Vectors,✏️,fig,FIG,Xfig Drawing,application/x-xfig,True,False,True,False
+vectors,Vectors,✏️,sxd,SXD,StarOffice Draw,application/vnd.sun.xml.draw,True,False,True,False
+vectors,Vectors,✏️,odg,ODG,OpenDocument Graphics,application/vnd.oasis.opendocument.graphics,True,True,True,True
+vectors,Vectors,✏️,vss,VSS,Visio Stencil,application/vnd.visio,True,False,True,False
+vectors,Vectors,✏️,vst,VST,Visio Template,application/vnd.visio,True,False,True,False
+vectors,Vectors,✏️,cgm,CGM,Computer Graphics Metafile,image/cgm,True,True,True,True
+fonts,Fonts,🔤,ttf,TTF,TrueType Font,font/ttf,True,True,True,True
+fonts,Fonts,🔤,otf,OTF,OpenType Font,font/otf,True,True,True,True
+fonts,Fonts,🔤,woff,WOFF,Web Open Font Format,font/woff,True,True,True,True
+fonts,Fonts,🔤,woff2,WOFF2,Web Open Font Format 2,font/woff2,True,True,True,True
+fonts,Fonts,🔤,eot,EOT,Embedded OpenType,application/vnd.ms-fontobject,True,True,True,True
+fonts,Fonts,🔤,pfa,PFA,PostScript Font ASCII,application/x-font-type1,True,False,True,False
+fonts,Fonts,🔤,pfb,PFB,PostScript Font Binary,application/x-font-type1,True,False,True,False
+fonts,Fonts,🔤,pcf,PCF,Portable Compiled Format,application/x-font-pcf,True,False,True,False
+fonts,Fonts,🔤,snf,SNF,Server Normal Format,application/x-font-snf,True,False,True,False
+3d,3D Models,🧊,stl,STL,STereoLithography,model/stl,True,True,True,True
+3d,3D Models,🧊,obj,OBJ,Wavefront OBJ,model/obj,True,True,True,True
+3d,3D Models,🧊,3ds,3DS,3D Studio,image/x-3ds,True,True,True,True
+3d,3D Models,🧊,dae,DAE,COLLADA,model/vnd.collada+xml,True,True,True,True
+3d,3D Models,🧊,fbx,FBX,Filmbox,application/octet-stream,True,True,True,True
+3d,3D Models,🧊,ply,PLY,Polygon File Format,application/ply,True,True,True,True
+3d,3D Models,🧊,gltf,GLTF,GL Transmission Format,model/gltf+json,True,True,True,True
+3d,3D Models,🧊,glb,GLB,GL Binary,model/gltf-binary,True,True,True,True
+3d,3D Models,🧊,x3d,X3D,Extensible 3D,model/x3d+xml,True,True,True,True
+3d,3D Models,🧊,wrl,WRL,VRML,model/vrml,True,True,True,True
+3d,3D Models,🧊,iv,IV,Open Inventor,application/x-inventor,True,False,True,False

@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OmniConvert Security Concept 02</title>
+  <style>
+    :root {
+      --ink: #101114;
+      --muted: #6b7280;
+      --line: rgba(16, 17, 20, 0.1);
+      --blue: #1368ff;
+      --aqua: #dff6ff;
+      --lime: #e8f8ed;
+      --cream: #ffffff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #ffffff;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    header {
+      height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      font-size: 16px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.76);
+      border-radius: 999px;
+      padding: 9px 14px;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 850;
+      backdrop-filter: blur(16px);
+    }
+
+    .hero {
+      display: grid;
+      align-items: center;
+      padding: 16px 0 40px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .label {
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 10px;
+      font-weight: 950;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 30px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      font-weight: 850;
+      max-width: 860px;
+    }
+
+    .sub {
+      margin: 20px 0 0;
+      max-width: 680px;
+      color: #4b5563;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .orbital {
+      min-height: 260px;
+      border-radius: 24px;
+      border: 1px solid rgba(16, 17, 20, 0.08);
+      background:
+        radial-gradient(circle at 50% 38%, rgba(19, 104, 255, 0.12), transparent 11rem),
+        linear-gradient(145deg, rgba(223, 246, 255, 0.95), rgba(255, 255, 255, 0.9) 48%, rgba(232, 248, 237, 0.96));
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 30px 90px rgba(19, 104, 255, 0.11);
+      animation: panelFloat 9s ease-in-out infinite;
+    }
+
+    .file-stack {
+      position: absolute;
+      inset: 50%;
+      width: min(250px, 76%);
+      height: 170px;
+      transform: translate(-50%, -50%);
+    }
+
+    .file-card {
+      position: absolute;
+      width: 178px;
+      min-height: 116px;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .file-card span {
+      display: block;
+      height: 7px;
+      border-radius: 999px;
+      background: #dbeafe;
+    }
+
+    .file-card::before {
+      content: "";
+      width: 22px;
+      height: 26px;
+      border: 2px solid var(--blue);
+      border-radius: 5px;
+      display: block;
+    }
+
+    .file-one { left: 0; top: 18px; transform: rotate(-5deg); }
+    .file-two { right: 0; bottom: 12px; transform: rotate(5deg); }
+    .file-two span { background: #ccfbf1; }
+
+    .agent {
+      position: absolute;
+      left: 36px;
+      bottom: 8px;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 16px;
+      background: #ffffff;
+      color: var(--blue);
+      border: 1px solid rgba(19, 104, 255, 0.16);
+      box-shadow: 0 18px 40px rgba(19, 104, 255, 0.12);
+      animation: agentNod 4.8s ease-in-out infinite;
+      font-weight: 950;
+    }
+
+    .search-lens {
+      position: absolute;
+      right: 40px;
+      top: 22px;
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--blue);
+      border: 2px solid rgba(19, 104, 255, 0.22);
+      box-shadow: 0 22px 50px rgba(19, 104, 255, 0.16);
+      animation: searchSweep 5.8s ease-in-out infinite;
+    }
+
+    .search-lens::before {
+      content: "";
+      width: 26px;
+      height: 26px;
+      border: 3px solid currentColor;
+      border-radius: 999px;
+    }
+
+    .search-lens::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 3px;
+      border-radius: 999px;
+      background: currentColor;
+      transform: translate(18px, 18px) rotate(45deg);
+    }
+
+    .orbit-line,
+    .vault {
+      display: none;
+    }
+
+    .chip {
+      position: absolute;
+      border: 1px solid rgba(16, 17, 20, 0.1);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 8px 11px;
+      color: #374151;
+      font-size: 11px;
+      font-weight: 900;
+      box-shadow: 0 16px 35px rgba(16, 17, 20, 0.08);
+      animation: chipFloat 6s ease-in-out infinite;
+    }
+
+    .chip.one { top: 20px; left: 20px; }
+    .chip.two { top: 58px; right: 18px; animation-delay: -1.5s; }
+    .chip.three { bottom: 28px; left: 24px; animation-delay: -3s; }
+    .chip.four { bottom: 18px; right: 26px; animation-delay: -4.5s; }
+
+    .story {
+      padding: 40px 0;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 40px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sticky {
+      position: sticky;
+      top: 30px;
+      align-self: start;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+      font-weight: 800;
+    }
+
+    .sticky p {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .body {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 44px 150px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+      padding: 26px 0;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      border: 1px solid rgba(19, 104, 255, 0.16);
+      color: var(--blue);
+    }
+
+    .icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .row p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    .scanner {
+      display: none;
+    }
+
+    .row-copy {
+      position: relative;
+      padding-right: 0;
+    }
+
+    .scan-real {
+      position: absolute;
+      left: 0;
+      top: -28px;
+      bottom: -28px;
+      width: 2px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(13, 148, 136, 0), rgba(13, 148, 136, 0.92), rgba(13, 148, 136, 0));
+      opacity: 0;
+      box-shadow: 0 0 18px rgba(13, 148, 136, 0.28);
+    }
+
+    .rubber-stamp {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 104px;
+      height: 104px;
+      border-radius: 999px;
+      color: #0d9488;
+      background: rgba(255, 255, 255, 0.92);
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(-11deg) scale(1.34);
+      box-shadow: 0 18px 36px rgba(13, 148, 136, 0.14);
+    }
+
+    .rubber-stamp svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 2px 0 rgba(19, 104, 255, 0.08));
+    }
+
+    .stamp-ring,
+    .stamp-inner {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-dasharray: 2 3;
+    }
+
+    .stamp-inner {
+      stroke-width: 2;
+      opacity: 0.72;
+    }
+
+    .stamp-arc,
+    .stamp-center {
+      fill: currentColor;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .stamp-arc { font-size: 8px; }
+    .stamp-arc-bottom { font-size: 8px; }
+    .stamp-center {
+      fill: white;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .stamp-band {
+      fill: currentColor;
+    }
+
+    .stamp-band-line {
+      stroke: currentColor;
+      stroke-width: 3;
+    }
+
+    .certified-text {
+      display: none;
+    }
+
+    .cert-row .scan-real { animation: scanText 2.2s ease-in-out forwards; }
+    .cert-row .rubber-stamp { animation: stampHit 0.62s cubic-bezier(.16, 1.1, .32, 1) forwards; animation-delay: 2.15s; }
+    .cert-row .certified-text { animation: none; }
+    .cert-row.privacy .scan-real,
+    .cert-row.privacy .rubber-stamp { animation-delay: 4.95s; }
+    .cert-row.privacy .scan-real { animation-delay: 2.8s; }
+    .cert-row.compliance .scan-real,
+    .cert-row.compliance .rubber-stamp { animation-delay: 7.75s; }
+    .cert-row.compliance .scan-real { animation-delay: 5.6s; }
+
+    @keyframes panelFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes agentNod {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-5px) rotate(2deg); }
+    }
+
+    @keyframes searchSweep {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+      32% { transform: translate3d(-94px, 56px, 0) scale(0.96); }
+      64% { transform: translate3d(-32px, 92px, 0) scale(1.02); }
+    }
+
+    @keyframes chipFloat {
+      0%, 100% { transform: translate3d(0, 0, 0); }
+      50% { transform: translate3d(0, -8px, 0); }
+    }
+
+    @keyframes scanText {
+      0%, 100% { opacity: 0; left: 0; }
+      6% { opacity: 1; left: 0; }
+      28% { opacity: 1; left: calc(100% - 2px); }
+      50% { opacity: 1; left: 0; }
+      72% { opacity: 1; left: calc(100% - 2px); }
+      94% { opacity: 1; left: 0; }
+    }
+
+    @keyframes stampHit {
+      0% { opacity: 0; transform: translate(-50%, -68%) rotate(-11deg) scale(1.34); }
+      48% { opacity: 1; transform: translate(-50%, -50%) rotate(-11deg) scale(0.9); }
+      72%, 100% { opacity: 1; transform: translate(-50%, -50%) rotate(-11deg) scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orbital, .agent, .search-lens, .chip, .scan-real, .rubber-stamp, .certified-text { animation: none; }
+      .rubber-stamp { opacity: 1; transform: translate(-50%, -50%) rotate(-11deg) scale(1); }
+    }
+
+    .closing {
+      padding: 40px 0 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      align-items: center;
+    }
+
+    .quote {
+      border-left: 4px solid var(--blue);
+      padding-left: 24px;
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+    }
+
+    .fineprint {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner, .story, .closing { grid-template-columns: 1fr; gap: 38px; }
+      .row { grid-template-columns: 42px 1fr; gap: 14px; }
+      .row h3 { grid-column: 2; }
+      .row p { grid-column: 2; }
+      .row-copy { grid-column: 2; padding-right: 0; padding-top: 38px; }
+      .scan-real { height: 100%; }
+      .rubber-stamp { left: 52%; top: 56%; }
+      .hero { min-height: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .orbital { min-height: 250px; }
+      .chip { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">OmniConvert</div>
+      <div class="pill">Security & Compliance</div>
+    </header>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div>
+          <div class="label">Designed for trust</div>
+          <h1>Files in. Files out. Nothing extra.</h1>
+          <p class="sub">A simple security promise for file conversion: process the job you asked for, protect the transfer, remove temporary files, and keep the business model away from customer data.</p>
+        </div>
+        <div class="orbital" aria-hidden="true">
+          <div class="orbit-line"></div>
+          <div class="vault">◎</div>
+          <div class="file-stack">
+            <div class="file-card file-one"><span></span><span style="width: 66%"></span><span style="width: 80%"></span></div>
+            <div class="file-card file-two"><span style="width: 80%"></span><span></span><span style="width: 60%"></span></div>
+            <div class="agent">AI</div>
+            <div class="search-lens"></div>
+          </div>
+          <div class="chip one">TLS transfer</div>
+          <div class="chip two">Job isolation</div>
+          <div class="chip three">No data selling</div>
+          <div class="chip four">Retention policy</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap story">
+      <div class="sticky">
+        <div class="label">Security model</div>
+        <h2>Simple checks. Clear proof.</h2>
+        <p>Each point is written like a security page, not a landing page. The animation only reinforces what the text already promises.</p>
+        <div class="scanner" aria-hidden="true">
+          <div class="scanner-stage">
+            <div class="scan-copy">
+              <div class="scan-line mid"></div>
+              <div class="scan-line"></div>
+              <div class="scan-line short"></div>
+              <div class="scan-line mid"></div>
+              <div class="scan-line"></div>
+              <div class="scan-line short"></div>
+              <div class="scan-line"></div>
+            </div>
+            <div class="beam"></div>
+            <div class="mascot">O</div>
+            <div class="stamp temporary">Temporary</div>
+            <div class="stamp privacy">Privacy</div>
+            <div class="stamp compliance">Compliance</div>
+          </div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="row">
+          <div class="icon">⌁</div>
+          <h3>Storage</h3>
+          <p>Production files should be retained only as long as needed for conversion, download, and recovery. Exact deletion windows should be published before launch.</p>
+        </div>
+        <div class="row">
+          <div class="icon">□</div>
+          <h3>Isolation</h3>
+          <p>Conversion jobs should be scoped by user or session so source files, outputs, logs, and result links do not leak between customers.</p>
+        </div>
+        <div class="row">
+          <div class="icon">↔</div>
+          <h3>Transfer</h3>
+          <p>Uploads, downloads, OAuth callbacks, and dashboard sessions should use HTTPS/TLS. Storage paths should never become the public security boundary.</p>
+        </div>
+        <div class="row">
+          <div class="icon">○</div>
+          <h3>Privacy</h3>
+          <p>OmniConvert should not sell, lease, or mine uploaded files. Privacy policy, subprocessors, GDPR request handling, and DPA support should be ready for business users.</p>
+        </div>
+        <div class="row">
+          <div class="icon">✓</div>
+          <h3>Compliance</h3>
+          <p>ISO 27001 and SOC 2 should remain roadmap items until independent audits are complete. The page should explain what is real now and what is planned next.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap closing">
+      <div class="quote">A security page should make users calmer, not make the product look louder.</div>
+      <p class="fineprint">This concept borrows Family-style confidence through scale, spacing, and direct language, while keeping the content closer to Convertio and CloudConvert: simple sections, practical controls, and no false certification claims.</p>
+    </section>
+  </main>
+  <script>
+    const icons = {
+      storage: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7c0-2 3.6-3.5 8-3.5S20 5 20 7s-3.6 3.5-8 3.5S4 9 4 7Z"/><path d="M4 7v5c0 2 3.6 3.5 8 3.5s8-1.5 8-3.5V7"/><path d="M4 12v5c0 2 3.6 3.5 8 3.5s8-1.5 8-3.5v-5"/></svg>',
+      isolation: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 4v16M15 4v16M4 9h16M4 15h16"/></svg>',
+      transfer: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3"/><path d="M18 7l-3 3"/><path d="M17 17H6l3 3"/><path d="M6 17l3-3"/></svg>',
+      privacy: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.7-2.8 8.1-7 10-4.2-1.9-7-5.3-7-10V6l7-3Z"/><path d="M9.5 12l1.7 1.7L15 10"/></svg>',
+      compliance: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4Z"/><path d="M5 6H3v2a4 4 0 0 0 4 4"/><path d="M19 6h2v2a4 4 0 0 1-4 4"/></svg>'
+    };
+
+    const stampSvg = (stampId) => `
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <path id="stamp-top-${stampId}" d="M 22 50 A 28 28 0 0 1 78 50" />
+          <path id="stamp-bottom-${stampId}" d="M 22 58 A 28 28 0 0 0 78 58" />
+        </defs>
+        <circle class="stamp-ring" cx="50" cy="50" r="42" />
+        <circle class="stamp-inner" cx="50" cy="50" r="30" />
+        <text class="stamp-arc"><textPath href="#stamp-top-${stampId}" startOffset="50%" text-anchor="middle">QUALITY</textPath></text>
+        <text class="stamp-arc stamp-arc-bottom"><textPath href="#stamp-bottom-${stampId}" startOffset="50%" text-anchor="middle">CONTROL</textPath></text>
+        <rect class="stamp-band" x="14" y="39" width="72" height="22" rx="2" />
+        <line class="stamp-band-line" x1="12" y1="36" x2="88" y2="36" />
+        <line class="stamp-band-line" x1="12" y1="64" x2="88" y2="64" />
+        <text class="stamp-center" x="50" y="55" text-anchor="middle">APPROVED</text>
+      </svg>`;
+
+    const proofRows = {
+      Storage: { icon: icons.storage, className: "storage", stamp: stampSvg("storage"), label: "Approved storage" },
+      Isolation: { icon: icons.isolation },
+      Transfer: { icon: icons.transfer },
+      Privacy: { icon: icons.privacy, className: "privacy", stamp: stampSvg("privacy"), label: "Approved privacy" },
+      Compliance: { icon: icons.compliance, className: "compliance", stamp: stampSvg("compliance"), label: "Approved compliance" }
+    };
+
+    document.querySelector(".sticky p").textContent =
+      "Each point is written like a security page, not a landing page. The animation scans the real proof text, stamps it, then leaves the certified state visible.";
+
+    document.querySelectorAll(".row").forEach(row => {
+      const title = row.querySelector("h3")?.textContent?.trim();
+      const config = title ? proofRows[title] : null;
+      const icon = row.querySelector(".icon");
+      const paragraph = row.querySelector("p");
+      if (!config || !icon || !paragraph) return;
+
+      icon.innerHTML = config.icon;
+
+      const copy = document.createElement("div");
+      copy.className = "row-copy";
+      paragraph.replaceWith(copy);
+      copy.append(paragraph);
+
+      if (config.className && config.stamp && config.label) {
+        row.classList.add("cert-row", config.className);
+        copy.insertAdjacentHTML(
+          "beforeend",
+          `<span class="scan-real"></span><span class="rubber-stamp">${config.stamp}</span><span class="certified-text">${config.label}</span>`
+        );
+      }
+    });
+  </script>
+</body>
+</html>

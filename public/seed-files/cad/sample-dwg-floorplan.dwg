@@ -1,0 +1,5 @@
+OMNICONVERT_DWG_SANDBOX_PLACEHOLDER
+This is a synthetic placeholder with a .dwg extension for client-side upload QA only.
+It is not a real AutoCAD DWG binary and should not be used to test production CAD fidelity.
+Route: DWG to PDF / DWG to DXF / DWG Version Converter
+Geometry note: simple floorplan placeholder, 120x80 room, one circular opening.

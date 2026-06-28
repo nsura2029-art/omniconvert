@@ -59,9 +59,9 @@ export default function InteractiveHeroSelector({
   };
 
   // Find all available output extensions for a selected input extension
-  const getOutputsForInput = (inputExt: string) => {
+  const getOutputsForInput = (inputExt: string, category = cyberCategory) => {
     const outputSet = new Set<string>();
-    TOOLS.forEach(t => {
+    TOOLS.filter(t => t.category === category).forEach(t => {
       const inputs = t.input.split(',').map(s => s.trim().toUpperCase());
       if (inputs.includes(inputExt.toUpperCase())) {
         t.output.split(',').forEach(out => {
@@ -91,15 +91,15 @@ export default function InteractiveHeroSelector({
   };
 
   // Handle Input Extension Change
-  const handleInputExtChange = (inputExt: string) => {
+  const handleInputExtChange = (inputExt: string, category = cyberCategory) => {
     setSelectedInputExt(inputExt);
-    const availableOutputs = getOutputsForInput(inputExt);
+    const availableOutputs = getOutputsForInput(inputExt, category);
     if (availableOutputs.length > 0) {
       // Find matching output, prefer current selectedOutputExt if available
       if (availableOutputs.includes(selectedOutputExt)) {
-        triggerSync(inputExt, selectedOutputExt);
+        triggerSync(inputExt, selectedOutputExt, category);
       } else {
-        triggerSync(inputExt, availableOutputs[0]);
+        triggerSync(inputExt, availableOutputs[0], category);
       }
     }
   };
@@ -107,13 +107,14 @@ export default function InteractiveHeroSelector({
   // Handle Output Extension Change
   const handleOutputExtChange = (outputExt: string) => {
     setSelectedOutputExt(outputExt);
-    triggerSync(selectedInputExt, outputExt);
+    triggerSync(selectedInputExt, outputExt, cyberCategory);
   };
 
   // Trigger state sync and flash visual transcode triggers
-  const triggerSync = (inputVal: string, outputVal: string) => {
+  const triggerSync = (inputVal: string, outputVal: string, category = cyberCategory) => {
     // Find matching tool
     const matchingTool = TOOLS.find(t => {
+      if (t.category !== category) return false;
       const inputs = t.input.split(',').map(s => s.trim().toUpperCase());
       const outputs = t.output.split(',').map(s => s.trim().toUpperCase());
       return inputs.includes(inputVal.toUpperCase()) && outputs.includes(outputVal.toUpperCase());
@@ -338,6 +339,17 @@ export default function InteractiveHeroSelector({
   }, [selectedTool]);
 
   const activeCategoryObject = CATEGORIES.find(c => c.id === cyberCategory) || CATEGORIES[0];
+  const activeCategoryTools = TOOLS.filter(tool => tool.category === cyberCategory);
+
+  const handleToolRouteSelect = (tool: Tool) => {
+    const input = tool.input.split(',')[0]?.trim().toUpperCase();
+    const output = tool.output.split(',')[0]?.trim().toUpperCase();
+    setCyberCategory(tool.category);
+    if (input) setSelectedInputExt(input);
+    if (output) setSelectedOutputExt(output);
+    onSelectTool(tool);
+    triggerTranscodeAnimation();
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6" id="interactive-selector-stage">
@@ -402,7 +414,7 @@ export default function InteractiveHeroSelector({
                         setCyberCategory(cat.id);
                         const exts = getInputExtsForCategory(cat.id);
                         if (exts.length > 0) {
-                          handleInputExtChange(exts[0]);
+                          handleInputExtChange(exts[0], cat.id);
                         }
                       }}
                       className={`p-2 rounded-xl text-left text-[11px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer border ${
@@ -508,7 +520,7 @@ export default function InteractiveHeroSelector({
                     setCyberCategory(catId);
                     const exts = getInputExtsForCategory(catId);
                     if (exts.length > 0) {
-                      handleInputExtChange(exts[0]);
+                      handleInputExtChange(exts[0], catId);
                     }
                   }}
                   className="w-full appearance-none bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 px-4 py-2.5 rounded-xl text-zinc-800 dark:text-zinc-200 font-semibold focus:outline-none focus:border-indigo-500 font-mono text-xs cursor-pointer pr-10"
@@ -626,6 +638,42 @@ export default function InteractiveHeroSelector({
               <div>COMPRESS TYPE: <span className="text-zinc-700 dark:text-zinc-300 font-bold">Multi-Stream LZMA</span></div>
               <div>SPEED FACTOR: <span className="text-purple-600 dark:text-purple-400 font-bold">10x Speed Booster</span></div>
               <div>CLOUD DISPATCH: <span className="text-emerald-600 dark:text-emerald-400 font-bold">ENABLED</span></div>
+            </div>
+          </div>
+
+          <div className="md:col-span-3 p-5 rounded-3xl glass-card border border-zinc-300 dark:border-white/10 bg-white dark:bg-[#0f172a]/30 shadow-md shadow-zinc-100 dark:shadow-none space-y-3" id="home-category-route-list">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20 uppercase">Category routes</span>
+                <h3 className="text-sm font-extrabold text-zinc-800 dark:text-white mt-2">All {activeCategoryObject.name} conversions</h3>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">{activeCategoryTools.length} routes</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[260px] overflow-y-auto pr-1">
+              {activeCategoryTools.map(tool => {
+                const isSelected = selectedTool.id === tool.id;
+                return (
+                  <button
+                    key={`home-route-${tool.id}`}
+                    type="button"
+                    onClick={() => handleToolRouteSelect(tool)}
+                    className={`rounded-xl border px-3 py-2 text-left transition-colors ${
+                      isSelected
+                        ? 'border-indigo-400/70 bg-indigo-500/10 text-indigo-700 dark:text-indigo-200'
+                        : 'border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="min-w-0">
+                        <span className="block text-xs font-extrabold truncate">{tool.name}</span>
+                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 font-mono truncate">{tool.input} to {tool.output}</span>
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

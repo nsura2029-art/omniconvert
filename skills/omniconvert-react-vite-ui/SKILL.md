@@ -16,7 +16,7 @@ description: Use when working on OmniConvert React/Vite application code, top-le
 
 - `src/App.tsx`: app state, in-app page routing, localStorage persistence, shell composition.
 - `src/main.tsx`: React mount only.
-- `src/components/`: UI components and interaction surfaces.
+- `src/components/`: UI components and interaction surfaces, including `CategoryPage.tsx` for dynamic category converter pages.
 - `src/data/tools.ts`: conversion tool catalog.
 - `src/types/index.ts`: shared TypeScript types.
 - `vite.config.ts`: Vite plugins, aliases, dev server settings.
@@ -25,6 +25,8 @@ description: Use when working on OmniConvert React/Vite application code, top-le
 
 - Prefer small edits over broad rewrites.
 - Keep UI dense, product-like, and consistent with the current Format OS light aesthetic.
+- Header category menu items should route to dedicated category converter pages instead of only scrolling users to the generic directory.
+- For category-page cards, use the chosen design systems from `design-mockups/card-systems-5.html`: 3D Tilt Conversion Cards, Format Rail Cards, and Dense Utility Cards. Use Dense Utility Cards for CAD category grids with no visible credit label and light arrow affordances.
 - Reuse `lucide-react`, `motion/react`, existing CSS utilities, and existing state conventions.
 - Treat auth, billing, database, cloud storage, and conversion backends as simulated unless production wiring is explicitly requested.
 

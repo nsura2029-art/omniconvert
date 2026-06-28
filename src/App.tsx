@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { Sparkles, Library, Search, Sliders, Play, CheckCircle2, AlertTriangle, ShieldCheck, Mail, ArrowRight, UserPlus, Heart, FileCode2, HelpCircle } from 'lucide-react';
 import { User, FileConversion, CloudIntegration, PlanType } from './types';
 import { Tool, TOOLS, CATEGORIES } from './data/tools';
+import { CAD_SEO_CANONICAL_BASE_URL, CAD_SEO_PAGES, getCadSeoPageBySlug, getCadSeoPageByToolId } from './data/cadSeoPages';
 import Navbar from './components/Navbar';
+import CategoryPage from './components/CategoryPage';
+import CadSeoPage from './components/CadSeoPage';
 import AuthModal from './components/AuthModal';
 import ConversionPanel from './components/ConversionPanel';
 import Dashboard from './components/Dashboard';
@@ -11,6 +14,46 @@ import Billing from './components/Billing';
 import AdminDashboard from './components/AdminDashboard';
 import OnboardingTour from './components/OnboardingTour';
 import InteractiveHeroSelector from './components/InteractiveHeroSelector';
+import SecurityPage from './components/SecurityPage';
+import SecurityTrustBand from './components/SecurityTrustBand';
+
+const categoryPath = (categoryId: string) => `/${categoryId.toLowerCase()}-converter/`;
+const cadSeoPath = (slug: string) => `/cad/${slug}`;
+
+const upsertMeta = (name: string, content: string) => {
+  let tag = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.name = name;
+    document.head.appendChild(tag);
+  }
+  tag.content = content;
+};
+
+const removeMeta = (name: string) => {
+  document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.remove();
+};
+
+const upsertCanonical = (href: string) => {
+  let tag = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!tag) {
+    tag = document.createElement('link');
+    tag.rel = 'canonical';
+    document.head.appendChild(tag);
+  }
+  tag.href = href;
+};
+
+const upsertJsonLd = (id: string, payload: unknown) => {
+  let tag = document.querySelector<HTMLScriptElement>(`#${id}`);
+  if (!tag) {
+    tag = document.createElement('script');
+    tag.id = id;
+    tag.type = 'application/ld+json';
+    document.head.appendChild(tag);
+  }
+  tag.textContent = JSON.stringify(payload);
+};
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -18,6 +61,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<string>('tools');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCadSlug, setSelectedCadSlug] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool>(TOOLS[0]); // Default: PDF to Word
   
@@ -126,6 +170,35 @@ export default function App() {
     const onboarded = localStorage.getItem('omni_onboarded');
     if (onboarded !== 'true') {
       setOnboardingOpen(true);
+    }
+
+    if (window.location.pathname.toLowerCase() === '/security/') {
+      setCurrentPage('security');
+      return;
+    }
+
+    const cadSlug = window.location.pathname.toLowerCase().match(/^\/cad\/([^/]+)\/?$/)?.[1];
+    if (cadSlug) {
+      const cadPage = getCadSeoPageBySlug(cadSlug);
+      setSelectedCategory('CAD');
+      setSelectedCadSlug(cadSlug);
+      if (cadPage) {
+        setSelectedTool(cadPage.tool);
+        setCurrentPage('cad-detail');
+      } else {
+        setCurrentPage('cad-not-found');
+      }
+      return;
+    }
+
+    const matchedCategory = CATEGORIES.find(cat => window.location.pathname.toLowerCase() === categoryPath(cat.id));
+    if (matchedCategory) {
+      const firstCategoryTool = TOOLS.find(tool => tool.category === matchedCategory.id);
+      setSelectedCategory(matchedCategory.id);
+      setCurrentPage('category');
+      if (firstCategoryTool) {
+        setSelectedTool(firstCategoryTool);
+      }
     }
   }, []);
 
@@ -288,6 +361,90 @@ export default function App() {
   const remainingDailyLimit = getRemainingDailyLimit();
   const limitExceeded = remainingDailyLimit <= 0 && currentUser?.plan !== 'enterprise';
 
+  const handleChangePage = (page: string) => {
+    setCurrentPage(page);
+    setSelectedCadSlug(null);
+    if (page === 'tools') {
+      setSelectedCategory('All');
+      window.history.pushState({}, '', '/');
+    } else if (page === 'security') {
+      window.history.pushState({}, '', '/security/');
+    }
+  };
+
+  const handleSelectToolCategory = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedCadSlug(null);
+    setSearchQuery('');
+
+    if (category === 'All') {
+      setCurrentPage('tools');
+      window.history.pushState({}, '', '/');
+      return;
+    }
+
+    const firstCategoryTool = TOOLS.find(tool => tool.category === category);
+    if (firstCategoryTool) {
+      setSelectedTool(firstCategoryTool);
+    }
+    setCurrentPage('category');
+    window.history.pushState({}, '', categoryPath(category));
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
+  const handleOpenCadSeoPage = (slug: string) => {
+    const cadPage = getCadSeoPageBySlug(slug);
+    setSelectedCategory('CAD');
+    setSelectedCadSlug(slug);
+
+    if (cadPage) {
+      setSelectedTool(cadPage.tool);
+      setCurrentPage('cad-detail');
+      window.history.pushState({}, '', cadSeoPath(slug));
+    } else {
+      setCurrentPage('cad-not-found');
+      window.history.pushState({}, '', cadSeoPath(slug));
+    }
+
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
+  const handleOpenPopularTool = (tool: Tool) => {
+    setSelectedCategory(tool.category);
+    setSelectedCadSlug(null);
+    setSearchQuery('');
+    setSelectedTool(tool);
+    setCurrentPage('category');
+    window.history.pushState({}, '', categoryPath(tool.category));
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
+  const activeCategory = CATEGORIES.find(cat => cat.id === selectedCategory);
+  const categoryTools = activeCategory ? TOOLS.filter(tool => tool.category === activeCategory.id) : [];
+  const activeCadSeoPage = selectedCadSlug ? getCadSeoPageBySlug(selectedCadSlug) : undefined;
+  const relatedCadSeoPages = activeCadSeoPage
+    ? Array.from(
+        new Map(
+          [
+            ...activeCadSeoPage.relatedSlugs.map(slug => getCadSeoPageBySlug(slug)).filter(Boolean),
+            ...CAD_SEO_PAGES.filter(page => page.slug !== activeCadSeoPage.slug)
+          ].map(page => [page.slug, page])
+        ).values()
+      ).slice(0, 6)
+    : [];
+  const popularCategorySections = CATEGORIES.filter(category => category.id !== 'CAD')
+    .map(category => {
+      const popularTools = TOOLS.filter(tool => tool.category === category.id && tool.popular).slice(0, 3);
+      const fallbackTools = TOOLS.filter(tool => tool.category === category.id).slice(0, 3);
+
+      return {
+        category,
+        tools: popularTools.length >= 3 ? popularTools : fallbackTools
+      };
+    })
+    .filter(section => section.tools.length > 0)
+    .slice(0, 3);
+
   // Filter tools based on query and selected category
   const filteredTools = TOOLS.filter(tool => {
     const matchesCategory = selectedCategory === 'All' || tool.category === selectedCategory;
@@ -297,6 +454,98 @@ export default function App() {
                           tool.output.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  useEffect(() => {
+    document.querySelector<HTMLScriptElement>('#cad-seo-jsonld')?.remove();
+    removeMeta('robots');
+
+    if (currentPage === 'cad-detail' && activeCadSeoPage) {
+      const canonical = `${CAD_SEO_CANONICAL_BASE_URL}${cadSeoPath(activeCadSeoPage.slug)}`;
+      document.title = activeCadSeoPage.title;
+      upsertMeta('description', activeCadSeoPage.metaDescription);
+      upsertCanonical(canonical);
+      upsertJsonLd('cad-seo-jsonld', {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': activeCadSeoPage.schemaType,
+            name: activeCadSeoPage.tool.name,
+            applicationCategory: 'FileConverter',
+            operatingSystem: 'Web',
+            url: canonical,
+            description: activeCadSeoPage.metaDescription,
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD'
+            }
+          },
+          {
+            '@type': 'FAQPage',
+            mainEntity: activeCadSeoPage.faqs.map(faq => ({
+              '@type': 'Question',
+              name: faq.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: faq.answer
+              }
+            }))
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: CAD_SEO_CANONICAL_BASE_URL
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'CAD Converter',
+                item: `${CAD_SEO_CANONICAL_BASE_URL}/cad-converter/`
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: activeCadSeoPage.tool.name,
+                item: canonical
+              }
+            ]
+          }
+        ]
+      });
+      return;
+    }
+
+    if (currentPage === 'cad-not-found') {
+      document.title = 'CAD converter page not found | OmniConvert';
+      upsertMeta('description', 'The requested OmniConvert CAD converter page was not found.');
+      upsertMeta('robots', 'noindex,nofollow');
+      upsertCanonical(`${CAD_SEO_CANONICAL_BASE_URL}/cad-converter/`);
+      return;
+    }
+
+    if (currentPage === 'category' && activeCategory) {
+      const categoryUrl = `${CAD_SEO_CANONICAL_BASE_URL}${categoryPath(activeCategory.id)}`;
+      document.title = `Online ${activeCategory.name} Converter | OmniConvert`;
+      upsertMeta('description', `Use OmniConvert's online ${activeCategory.name.toLowerCase()} converter hub to choose source and target formats, upload files, and test category-specific conversion routes.`);
+      upsertCanonical(categoryUrl);
+      return;
+    }
+
+    if (currentPage === 'security') {
+      document.title = 'Security & Compliance | OmniConvert';
+      upsertMeta('description', 'Learn how OmniConvert is designed for private file conversion, temporary processing, retention policy, Privacy and GDPR readiness, and business security review.');
+      upsertCanonical(`${CAD_SEO_CANONICAL_BASE_URL}/security/`);
+      return;
+    }
+
+    document.title = 'OmniConvert | File Conversion Sandbox';
+    upsertMeta('description', 'OmniConvert is a multi-format file conversion sandbox for documents, images, media, CAD, archives, ebooks, and data files.');
+    upsertCanonical(`${CAD_SEO_CANONICAL_BASE_URL}/`);
+  }, [activeCadSeoPage, activeCategory, currentPage]);
 
   return (
     <div className="min-h-screen bg-transparent text-zinc-800 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-white antialiased transition-colors duration-300" id="omnicovert-saas-root">
@@ -308,11 +557,14 @@ export default function App() {
         onOpenAuth={() => setAuthModalOpen(true)}
         onLogout={handleLogout}
         currentPage={currentPage}
-        onChangePage={setCurrentPage}
+        onChangePage={handleChangePage}
         remainingDailyLimit={remainingDailyLimit}
         onOpenOnboarding={() => setOnboardingOpen(true)}
         theme={theme}
         onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectToolCategory={handleSelectToolCategory}
       />
 
       {/* MAIN APP SECTION */}
@@ -327,7 +579,7 @@ export default function App() {
               <span className="text-[10px] uppercase tracking-wider font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
                 🚀 Multi-Format Cloud Transcoder
               </span>
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-tight">
                 Any Format. <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">Zero Friction.</span>
               </h1>
               <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
@@ -387,12 +639,14 @@ export default function App() {
               </div>
             )}
 
+            <SecurityTrustBand onOpenSecurity={() => handleChangePage('security')} />
+
             {/* SEPARATOR DIVIDER */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-zinc-200 dark:border-white/5"></div>
               </div>
-              <span className="relative px-4 bg-slate-50 dark:bg-slate-900 border border-zinc-200 dark:border-white/10 py-1 rounded-full text-xs text-zinc-600 dark:text-zinc-300 font-mono">158 Conversion Tools Available</span>
+              <span className="relative px-4 bg-slate-50 dark:bg-slate-900 border border-zinc-200 dark:border-white/10 py-1 rounded-full text-xs text-zinc-600 dark:text-zinc-300 font-mono">{TOOLS.length} Conversion Tools Available</span>
             </div>
 
             {/* RECENTLY USED TOOLS QUICK ACCESS */}
@@ -462,9 +716,34 @@ export default function App() {
               </div>
 
               {/* Category Pills Slider */}
+              {selectedCategory !== 'CAD' && (
+                <button
+                  type="button"
+                  onClick={() => handleSelectToolCategory('CAD')}
+                  className="w-full glass-card glass-card-hover border border-sky-200/70 dark:border-sky-500/15 rounded-2xl p-4 text-left flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between cursor-pointer"
+                  id="cad-tools-directory-shortcut"
+                >
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-300 font-mono">
+                      CAD tools
+                    </div>
+                    <h4 className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 mt-1">
+                      DWG, DXF, STEP, STL and engineering file converters
+                    </h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
+                      Jump straight to {CATEGORIES.find(cat => cat.id === 'CAD')?.count ?? 9} CAD utilities for drawings, 3D models, printing, and sharing.
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-2 text-xs font-bold text-sky-700 dark:text-sky-300">
+                    View CAD tools
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </button>
+              )}
+
               <div className="flex gap-2 overflow-x-auto pb-2 pr-4 scrollbar-thin scrollbar-thumb-zinc-800" id="category-pills">
                 <button
-                  onClick={() => setSelectedCategory('All')}
+                  onClick={() => handleSelectToolCategory('All')}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
                     selectedCategory === 'All'
                       ? 'btn-primary text-white font-bold'
@@ -476,7 +755,7 @@ export default function App() {
                 {CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
+                    onClick={() => handleSelectToolCategory(cat.id)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
                       selectedCategory === cat.id
                         ? 'btn-primary text-white font-bold'
@@ -532,7 +811,106 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 2: CUSTOM AUTOMATION WORKFLOW BUILDER */}
+        {/* VIEW 2: DEDICATED CATEGORY CONVERTER PAGE */}
+        {currentPage === 'category' && activeCategory && (
+          <CategoryPage
+            category={activeCategory}
+            tools={categoryTools}
+            selectedTool={selectedTool}
+            onSelectTool={handleSelectTool}
+            onBackToAllTools={() => handleSelectToolCategory('All')}
+            seoPages={activeCategory.id === 'CAD' ? CAD_SEO_PAGES : undefined}
+            onOpenSeoPage={activeCategory.id === 'CAD' ? handleOpenCadSeoPage : undefined}
+            converterSlot={
+              limitExceeded ? (
+                <div className="p-6 rounded-2xl bg-indigo-950/20 border-2 border-indigo-500/30 space-y-4 text-center" id="category-quota-warning-banner">
+                  <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto" />
+                  <div>
+                    <h3 className="text-base font-bold text-white">Daily Sandbox Quota Exceeded</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Upgrade or sign in to continue testing category conversions.</p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage('billing')}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl cursor-pointer shadow-lg shadow-indigo-600/20"
+                  >
+                    View Pricing Plans
+                  </button>
+                </div>
+              ) : (
+                <ConversionPanel
+                  currentUser={currentUser}
+                  selectedTool={selectedTool}
+                  onConversionCompleted={handleConversionCompleted}
+                  onOpenAuth={() => setAuthModalOpen(true)}
+                  integrations={integrations}
+                />
+              )
+            }
+          />
+        )}
+
+        {/* VIEW 2B: PROGRAMMATIC CAD SEO DETAIL PAGE */}
+        {currentPage === 'cad-detail' && activeCadSeoPage && (
+          <CadSeoPage
+            page={activeCadSeoPage}
+            relatedPages={relatedCadSeoPages}
+            popularCategorySections={popularCategorySections}
+            onBackToHub={() => handleSelectToolCategory('CAD')}
+            onOpenCadSeoPage={handleOpenCadSeoPage}
+            onOpenPopularTool={handleOpenPopularTool}
+            converterSlot={
+              limitExceeded ? (
+                <div className="p-6 rounded-2xl bg-indigo-950/20 border-2 border-indigo-500/30 space-y-4 text-center" id="cad-seo-quota-warning-banner">
+                  <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto" />
+                  <div>
+                    <h3 className="text-base font-bold text-white">Daily Sandbox Quota Exceeded</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Upgrade or sign in to continue testing CAD conversions.</p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage('billing')}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl cursor-pointer shadow-lg shadow-indigo-600/20"
+                  >
+                    View Pricing Plans
+                  </button>
+                </div>
+              ) : (
+                <ConversionPanel
+                  currentUser={currentUser}
+                  selectedTool={selectedTool}
+                  onConversionCompleted={handleConversionCompleted}
+                  onOpenAuth={() => setAuthModalOpen(true)}
+                  integrations={integrations}
+                />
+              )
+            }
+          />
+        )}
+
+        {/* VIEW 2C: UNKNOWN CAD SEO SLUG */}
+        {currentPage === 'cad-not-found' && (
+          <section className="max-w-2xl mx-auto glass-card rounded-2xl p-8 text-center space-y-4 animate-fade-in" id="cad-seo-not-found-page">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-300">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-white">CAD converter page not found</h1>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+                This CAD route is not part of the current indexable OmniConvert catalog.
+              </p>
+            </div>
+            <button type="button" onClick={() => handleSelectToolCategory('CAD')} className="inline-flex items-center justify-center gap-2 rounded-xl btn-primary px-4 py-2 text-xs font-bold text-white">
+              View CAD converter hub
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </section>
+        )}
+
+        {/* VIEW 2D: SECURITY & COMPLIANCE */}
+        {currentPage === 'security' && (
+          <SecurityPage onBackToTools={() => handleChangePage('tools')} />
+        )}
+
+        {/* VIEW 3: CUSTOM AUTOMATION WORKFLOW BUILDER */}
         {currentPage === 'workflows' && (
           <div className="animate-fade-in">
             <WorkflowBuilder 
@@ -617,6 +995,14 @@ export default function App() {
           <div className="flex justify-center gap-4 text-[11px] text-zinc-500">
             <span>Built by Google AI Studio</span>
             <span>•</span>
+            <button
+              type="button"
+              onClick={() => handleChangePage('security')}
+              className="font-bold text-sky-700 transition-colors hover:text-sky-600 dark:text-sky-300 dark:hover:text-sky-200"
+            >
+              Security
+            </button>
+            <span>â€¢</span>
             <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> Inspired by family.co</span>
           </div>
         </div>

@@ -1,4 +1,4 @@
-﻿# Skills DOX
+# Skills DOX
 
 ## Purpose
 - Owns project-local Codex skill folders for recurring OmniConvert workflows.

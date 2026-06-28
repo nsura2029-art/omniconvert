@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniConvert Card Systems - 5 UI Directions</title>
+    <style>
+      :root {
+        --ink: #172033;
+        --muted: #647084;
+        --line: rgba(114, 128, 150, 0.22);
+        --panel: rgba(255, 255, 255, 0.82);
+        --panel-solid: #ffffff;
+        --sky: #0ea5e9;
+        --indigo: #4f46e5;
+        --emerald: #059669;
+        --coral: #f97361;
+        --gold: #d99a19;
+        --violet: #7c3aed;
+        --shadow: 0 22px 60px rgba(32, 45, 72, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 10%, rgba(14, 165, 233, 0.16), transparent 30%),
+          radial-gradient(circle at 86% 16%, rgba(249, 115, 97, 0.12), transparent 28%),
+          linear-gradient(135deg, #f8fbff 0%, #eef6f4 45%, #fff8f0 100%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        width: min(1420px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 34px 0 70px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #111827, #1d4ed8 48%, #22c55e),
+          #111827;
+        box-shadow: 0 16px 34px rgba(29, 78, 216, 0.22);
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .topbar h1 {
+        margin-top: 2px;
+        font-size: clamp(28px, 5vw, 52px);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      .summary {
+        max-width: 420px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .section {
+        margin-top: 34px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.54);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 20px 56px rgba(51, 65, 85, 0.08);
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .section h2 {
+        font-size: clamp(20px, 3vw, 30px);
+        letter-spacing: 0;
+      }
+
+      .section-note {
+        max-width: 520px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        height: 25px;
+        padding: 0 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.65);
+        color: #526077;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .route {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .arrow {
+        width: 24px;
+        height: 24px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        background: #111827;
+        color: white;
+        transition: transform 180ms ease;
+      }
+
+      .card:hover .arrow {
+        transform: translateX(3px);
+      }
+
+      .set-1 {
+        perspective: 1100px;
+      }
+
+      .tilt-card {
+        position: relative;
+        min-height: 236px;
+        padding: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(239, 249, 255, 0.72)),
+          var(--panel-solid);
+        box-shadow: var(--shadow);
+        transform-style: preserve-3d;
+        transition:
+          transform 220ms ease,
+          box-shadow 220ms ease,
+          border-color 220ms ease;
+      }
+
+      .tilt-card::before {
+        content: "";
+        position: absolute;
+        inset: -55% -20% auto auto;
+        width: 190px;
+        height: 190px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.2), transparent 68%);
+        transform: translateZ(18px);
+      }
+
+      .tilt-card:hover {
+        border-color: rgba(14, 165, 233, 0.44);
+        box-shadow: 0 34px 72px rgba(14, 80, 125, 0.17);
+      }
+
+      .tilt-card .card-body {
+        position: relative;
+        transform: translateZ(34px);
+      }
+
+      .icon-tile {
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #e0f2fe, #dcfce7);
+        color: #0369a1;
+        font-weight: 950;
+        box-shadow: inset 0 1px 0 white;
+      }
+
+      .tilt-card h3,
+      .stack-card h3,
+      .rail-card h3,
+      .lab-card h3,
+      .compact-card h3 {
+        margin-top: 16px;
+        font-size: 19px;
+        letter-spacing: 0;
+      }
+
+      .card-copy {
+        margin-top: 9px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .card-footer {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(148, 163, 184, 0.22);
+      }
+
+      .set-2 {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(246, 251, 255, 0.88)),
+          rgba(255, 255, 255, 0.7);
+      }
+
+      .stack-card {
+        position: relative;
+        min-height: 244px;
+        padding: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 8px;
+        background: var(--panel-solid);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+        transition:
+          transform 200ms ease,
+          box-shadow 200ms ease;
+      }
+
+      .stack-card::before,
+      .stack-card::after {
+        content: "";
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        height: 100%;
+        border-radius: inherit;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        background: rgba(255, 255, 255, 0.48);
+        z-index: -1;
+        transition: transform 200ms ease;
+      }
+
+      .stack-card::before {
+        top: 8px;
+      }
+
+      .stack-card::after {
+        top: 16px;
+        left: 26px;
+        right: 26px;
+      }
+
+      .stack-card:hover {
+        transform: translateY(-7px);
+        box-shadow: 0 28px 54px rgba(51, 65, 85, 0.14);
+      }
+
+      .stack-card:hover::before {
+        transform: translateY(4px) scale(0.985);
+      }
+
+      .stack-card:hover::after {
+        transform: translateY(8px) scale(0.965);
+      }
+
+      .meter {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        margin-top: 18px;
+      }
+
+      .meter span {
+        height: 38px;
+        border-radius: 6px;
+        background: #dbeafe;
+      }
+
+      .meter span:nth-child(2n) {
+        background: #ccfbf1;
+      }
+
+      .meter span:nth-child(3n) {
+        background: #fed7aa;
+      }
+
+      .set-3 {
+        background:
+          linear-gradient(135deg, rgba(236, 253, 245, 0.74), rgba(255, 247, 237, 0.64)),
+          rgba(255, 255, 255, 0.64);
+      }
+
+      .rail-card {
+        position: relative;
+        min-height: 238px;
+        display: grid;
+        grid-template-columns: 8px 1fr;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 16px 42px rgba(30, 41, 59, 0.1);
+        transition:
+          transform 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .rail-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 30px 60px rgba(30, 41, 59, 0.14);
+      }
+
+      .rail {
+        background: linear-gradient(180deg, var(--sky), var(--emerald));
+      }
+
+      .rail-card:nth-child(2) .rail {
+        background: linear-gradient(180deg, var(--coral), var(--gold));
+      }
+
+      .rail-card:nth-child(3) .rail {
+        background: linear-gradient(180deg, var(--indigo), var(--violet));
+      }
+
+      .rail-content {
+        padding: 18px;
+      }
+
+      .format-pair {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 17px;
+      }
+
+      .format-box {
+        flex: 1;
+        min-width: 0;
+        padding: 13px 10px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 8px;
+        background: rgba(248, 250, 252, 0.8);
+        text-align: center;
+      }
+
+      .format-box strong {
+        display: block;
+        font-size: 18px;
+      }
+
+      .format-box span {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .set-4 {
+        background:
+          linear-gradient(135deg, rgba(239, 246, 255, 0.68), rgba(255, 255, 255, 0.8)),
+          rgba(255, 255, 255, 0.66);
+      }
+
+      .lab-grid {
+        grid-template-columns: 1.1fr 0.9fr 1fr;
+      }
+
+      .lab-card {
+        min-height: 256px;
+        padding: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.84)),
+          #ffffff;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease;
+      }
+
+      .lab-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(79, 70, 229, 0.32);
+      }
+
+      .preview-3d {
+        position: relative;
+        height: 104px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(224, 242, 254, 0.75)),
+          #f8fafc;
+        display: grid;
+        place-items: center;
+        perspective: 700px;
+      }
+
+      .tool-icon-row {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .tool-icon-row span {
+        display: inline-grid;
+        place-items: center;
+        min-width: 28px;
+        height: 24px;
+        padding: 0 6px;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        color: #334155;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        font-size: 9px;
+        font-weight: 950;
+        letter-spacing: 0.04em;
+      }
+
+      .lab-format-pair {
+        display: grid;
+        grid-template-columns: 1fr 28px 1fr;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .lab-format-box {
+        min-width: 0;
+        padding: 10px 8px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 8px;
+        background: rgba(248, 250, 252, 0.82);
+        text-align: center;
+      }
+
+      .lab-format-box strong {
+        display: block;
+        overflow: hidden;
+        color: #172033;
+        font-size: 15px;
+        font-weight: 950;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .lab-format-box span {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .cube {
+        position: relative;
+        width: 58px;
+        height: 58px;
+        transform-style: preserve-3d;
+        transform: rotateX(-24deg) rotateY(38deg);
+        animation: floatCube 5s ease-in-out infinite;
+      }
+
+      .cube span {
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(14, 165, 233, 0.22);
+      }
+
+      .cube span:nth-child(1) {
+        transform: translateZ(29px);
+      }
+
+      .cube span:nth-child(2) {
+        transform: rotateY(90deg) translateZ(29px);
+        background: rgba(34, 197, 94, 0.2);
+      }
+
+      .cube span:nth-child(3) {
+        transform: rotateX(90deg) translateZ(29px);
+        background: rgba(249, 115, 97, 0.2);
+      }
+
+      @keyframes floatCube {
+        0%,
+        100% {
+          transform: rotateX(-24deg) rotateY(38deg) translateY(0);
+        }
+        50% {
+          transform: rotateX(-18deg) rotateY(52deg) translateY(-7px);
+        }
+      }
+
+      .set-5 {
+        position: relative;
+        background:
+          linear-gradient(135deg, rgba(255, 251, 235, 0.64), rgba(240, 253, 250, 0.68)),
+          rgba(255, 255, 255, 0.68);
+      }
+
+      .utility-cursor {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 20;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 62px;
+        height: 34px;
+        padding: 0 12px;
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.92);
+        color: #ffffff;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.22);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        opacity: 0;
+        pointer-events: none;
+        text-transform: uppercase;
+        transform: translate(-50%, -50%) scale(0.86);
+        transition:
+          opacity 120ms ease,
+          transform 120ms ease;
+      }
+
+      .utility-cursor.is-visible {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .compact-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .compact-card {
+        position: relative;
+        min-height: 206px;
+        padding: 15px;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 14px 30px rgba(30, 41, 59, 0.08);
+        cursor: none;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          background 160ms ease;
+      }
+
+      .compact-card::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--sky), var(--emerald), var(--coral));
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 180ms ease;
+      }
+
+      .compact-card:hover {
+        transform: translateY(-4px);
+        background: #ffffff;
+        box-shadow: 0 24px 42px rgba(30, 41, 59, 0.13);
+      }
+
+      .compact-card:hover::after {
+        transform: scaleX(1);
+      }
+
+      .mini-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: #ecfeff;
+        color: #0891b2;
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .compact-card h3 {
+        font-size: 16px;
+      }
+
+      @media (max-width: 1080px) {
+        .grid,
+        .lab-grid,
+        .compact-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          width: min(100% - 28px, 1420px);
+          padding-top: 22px;
+        }
+
+        .topbar,
+        .section-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .grid,
+        .lab-grid,
+        .compact-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <div>
+            <p class="eyebrow">OmniConvert UI study</p>
+            <h1>Five card systems</h1>
+          </div>
+        </div>
+        <p class="summary">
+          Standalone card directions for home and category pages. Each set keeps the app light, modern, card-rich, and conversion-focused while testing different hover and depth patterns.
+        </p>
+      </header>
+
+      <section class="section set-1">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Set 01</p>
+            <h2>3D Tilt Conversion Cards</h2>
+          </div>
+          <p class="section-note">Premium route cards with subtle pointer-driven depth. Best for featured tools, popular CAD routes, and high-intent converter pages.</p>
+        </div>
+        <div class="grid">
+          <article class="card tilt-card">
+            <div class="card-body">
+              <div class="meta-row"><span class="icon-tile">DWG</span><span class="chip">Popular</span><span class="chip">CAD</span></div>
+              <h3>DWG to PDF</h3>
+              <p class="card-copy">Render CAD drawings into shareable PDFs for review, printing, and handoff without opening AutoCAD.</p>
+              <div class="card-footer route"><span>DWG, DXF to PDF</span><span class="arrow">→</span></div>
+            </div>
+          </article>
+          <article class="card tilt-card">
+            <div class="card-body">
+              <div class="meta-row"><span class="icon-tile">STP</span><span class="chip">3D print</span><span class="chip">CAD</span></div>
+              <h3>STEP to STL</h3>
+              <p class="card-copy">Prepare mechanical CAD parts for slicers with a focused solid-model to mesh route.</p>
+              <div class="card-footer route"><span>STEP, STP to STL</span><span class="arrow">→</span></div>
+            </div>
+          </article>
+          <article class="card tilt-card">
+            <div class="card-body">
+              <div class="meta-row"><span class="icon-tile">PDF</span><span class="chip">Recover</span><span class="chip">CAD</span></div>
+              <h3>PDF to DWG</h3>
+              <p class="card-copy">Turn drawing references into CAD-ready output with clear limitations for reconstructed files.</p>
+              <div class="card-footer route"><span>PDF to DWG, DXF</span><span class="arrow">→</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section set-2">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Set 02</p>
+            <h2>Stacked File Cards</h2>
+          </div>
+          <p class="section-note">Layered cards feel like actual queued files. Good for category grids where users scan lots of similar tools.</p>
+        </div>
+        <div class="grid">
+          <article class="card stack-card">
+            <div class="meta-row"><span class="chip">Batch ready</span><span class="chip">Vector</span></div>
+            <h3>DXF to SVG</h3>
+            <p class="card-copy">Convert exchange drawings to browser-friendly vector output for documentation and previews.</p>
+            <div class="meter"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="card-footer route"><span>DXF to SVG</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card stack-card">
+            <div class="meta-row"><span class="chip">Archive</span><span class="chip">Version</span></div>
+            <h3>DWG Version Converter</h3>
+            <p class="card-copy">Make newer DWG files easier to open in older project environments and CAD seats.</p>
+            <div class="meter"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="card-footer route"><span>DWG to DWG</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card stack-card">
+            <div class="meta-row"><span class="chip">Compress</span><span class="chip">Share</span></div>
+            <h3>CAD Drawing Compress</h3>
+            <p class="card-copy">Reduce bulky drawings before upload portals, email, and contractor review packets.</p>
+            <div class="meter"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="card-footer route"><span>DWG, DXF to smaller files</span><span class="arrow">→</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section set-3">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Set 03</p>
+            <h2>Format Rail Cards</h2>
+          </div>
+          <p class="section-note">A strong color rail and explicit format boxes make input and output obvious. Best for SEO landing cards and large category pages.</p>
+        </div>
+        <div class="grid">
+          <article class="card rail-card">
+            <div class="rail"></div>
+            <div class="rail-content">
+              <div class="meta-row"><span class="chip">Model</span><span class="chip">Mesh</span></div>
+              <h3>OBJ to STL</h3>
+              <p class="card-copy">Move visual model files into a 3D-printable mesh format.</p>
+              <div class="format-pair">
+                <div class="format-box"><strong>OBJ</strong><span>From</span></div>
+                <span class="arrow">→</span>
+                <div class="format-box"><strong>STL</strong><span>To</span></div>
+              </div>
+            </div>
+          </article>
+          <article class="card rail-card">
+            <div class="rail"></div>
+            <div class="rail-content">
+              <div class="meta-row"><span class="chip">Image</span><span class="chip">Preview</span></div>
+              <h3>DWG to Image</h3>
+              <p class="card-copy">Create quick PNG or JPG previews for chats, tickets, and documentation.</p>
+              <div class="format-pair">
+                <div class="format-box"><strong>DWG</strong><span>From</span></div>
+                <span class="arrow">→</span>
+                <div class="format-box"><strong>PNG</strong><span>To</span></div>
+              </div>
+            </div>
+          </article>
+          <article class="card rail-card">
+            <div class="rail"></div>
+            <div class="rail-content">
+              <div class="meta-row"><span class="chip">Legacy</span><span class="chip">CAD</span></div>
+              <h3>IGES to STEP</h3>
+              <p class="card-copy">Update legacy interchange files for modern mechanical CAD workflows.</p>
+              <div class="format-pair">
+                <div class="format-box"><strong>IGES</strong><span>From</span></div>
+                <span class="arrow">→</span>
+                <div class="format-box"><strong>STEP</strong><span>To</span></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section set-4">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Set 04</p>
+            <h2>3D Preview Lab Cards</h2>
+          </div>
+          <p class="section-note">Animated preview cards make CAD and 3D routes feel tangible. Use sparingly for high-value categories so motion does not overwhelm dense grids.</p>
+        </div>
+        <div class="grid lab-grid">
+          <article class="card lab-card">
+            <div class="preview-3d">
+              <div class="tool-icon-row"><span>OBJ</span><span>FBX</span><span>STL</span></div>
+              <div class="cube"><span></span><span></span><span></span></div>
+            </div>
+            <div class="meta-row" style="margin-top: 14px"><span class="chip">Universal</span><span class="chip">3D</span></div>
+            <h3>3D Model Converter</h3>
+            <p class="card-copy">Convert OBJ, FBX, STL, STEP, and DAE for visualization, printing, and design workflows.</p>
+            <div class="lab-format-pair">
+              <div class="lab-format-box"><strong>OBJ</strong><span>From</span></div>
+              <span class="arrow">→</span>
+              <div class="lab-format-box"><strong>STL</strong><span>To</span></div>
+            </div>
+            <div class="card-footer route"><span>Multi-format</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card lab-card">
+            <div class="preview-3d">
+              <div class="tool-icon-row"><span>FBX</span><span>OBJ</span><span>MTL</span></div>
+              <div class="cube"><span></span><span></span><span></span></div>
+            </div>
+            <div class="meta-row" style="margin-top: 14px"><span class="chip">FBX</span><span class="chip">OBJ</span></div>
+            <h3>FBX to OBJ</h3>
+            <p class="card-copy">Simplify Autodesk FBX assets into Wavefront OBJ files for static model exchange.</p>
+            <div class="lab-format-pair">
+              <div class="lab-format-box"><strong>FBX</strong><span>From</span></div>
+              <span class="arrow">→</span>
+              <div class="lab-format-box"><strong>OBJ</strong><span>To</span></div>
+            </div>
+            <div class="card-footer route"><span>FBX to OBJ</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card lab-card">
+            <div class="preview-3d">
+              <div class="tool-icon-row"><span>CAD</span><span>STL</span><span>OBJ</span></div>
+              <div class="cube"><span></span><span></span><span></span></div>
+            </div>
+            <div class="meta-row" style="margin-top: 14px"><span class="chip">Mesh</span><span class="chip">Optimize</span></div>
+            <h3>CAD Compress</h3>
+            <p class="card-copy">Create lighter model versions for sharing, review, and web-friendly collaboration.</p>
+            <div class="lab-format-pair">
+              <div class="lab-format-box"><strong>CAD</strong><span>From</span></div>
+              <span class="arrow">→</span>
+              <div class="lab-format-box"><strong>Lite</strong><span>To</span></div>
+            </div>
+            <div class="card-footer route"><span>CAD to optimized</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card lab-card">
+            <div class="preview-3d">
+              <div class="tool-icon-row"><span>STEP</span><span>STP</span><span>STL</span></div>
+              <div class="cube"><span></span><span></span><span></span></div>
+            </div>
+            <div class="meta-row" style="margin-top: 14px"><span class="chip">3D print</span><span class="chip">CAD</span></div>
+            <h3>STEP to STL</h3>
+            <p class="card-copy">Prepare solid mechanical CAD parts for slicers, prototyping, and print review.</p>
+            <div class="lab-format-pair">
+              <div class="lab-format-box"><strong>STEP</strong><span>From</span></div>
+              <span class="arrow">→</span>
+              <div class="lab-format-box"><strong>STL</strong><span>To</span></div>
+            </div>
+            <div class="card-footer route"><span>CAD solid to print mesh</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card lab-card">
+            <div class="preview-3d">
+              <div class="tool-icon-row"><span>DWG</span><span>DXF</span><span>PDF</span></div>
+              <div class="cube"><span></span><span></span><span></span></div>
+            </div>
+            <div class="meta-row" style="margin-top: 14px"><span class="chip">Drawing</span><span class="chip">Review</span></div>
+            <h3>DWG to PDF</h3>
+            <p class="card-copy">Render CAD drawings into portable review files while keeping the route obvious.</p>
+            <div class="lab-format-pair">
+              <div class="lab-format-box"><strong>DWG</strong><span>From</span></div>
+              <span class="arrow">→</span>
+              <div class="lab-format-box"><strong>PDF</strong><span>To</span></div>
+            </div>
+            <div class="card-footer route"><span>Drawing to document</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card lab-card">
+            <div class="preview-3d">
+              <div class="tool-icon-row"><span>IGES</span><span>IGS</span><span>STEP</span></div>
+              <div class="cube"><span></span><span></span><span></span></div>
+            </div>
+            <div class="meta-row" style="margin-top: 14px"><span class="chip">Legacy</span><span class="chip">Solid</span></div>
+            <h3>IGES to STEP</h3>
+            <p class="card-copy">Move legacy CAD interchange files into modern STEP-based mechanical workflows.</p>
+            <div class="lab-format-pair">
+              <div class="lab-format-box"><strong>IGES</strong><span>From</span></div>
+              <span class="arrow">→</span>
+              <div class="lab-format-box"><strong>STEP</strong><span>To</span></div>
+            </div>
+            <div class="card-footer route"><span>Legacy to modern CAD</span><span class="arrow">→</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section set-5">
+        <div class="utility-cursor" aria-hidden="true">Open</div>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Set 05</p>
+            <h2>Dense Utility Cards</h2>
+          </div>
+          <p class="section-note">Compact cards for pages with lots of tools. The hover underline gives a clear action state while preserving scan density.</p>
+        </div>
+        <div class="grid compact-grid">
+          <article class="card compact-card">
+            <div class="meta-row"><span class="mini-icon">DXF</span><span class="chip">CAD</span></div>
+            <h3>DWG to DXF</h3>
+            <p class="card-copy">Exchange AutoCAD drawings with CNC, CAM, and vendor workflows.</p>
+            <div class="card-footer route"><span>5 credits</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card compact-card">
+            <div class="meta-row"><span class="mini-icon">DWG</span><span class="chip">CAD</span></div>
+            <h3>DXF to DWG</h3>
+            <p class="card-copy">Bring exchange drawings back into DWG archives and reviews.</p>
+            <div class="card-footer route"><span>5 credits</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card compact-card">
+            <div class="meta-row"><span class="mini-icon">LAY</span><span class="chip">Layers</span></div>
+            <h3>CAD Layer Extractor</h3>
+            <p class="card-copy">Export selected drawing layers to CAD or PDF outputs.</p>
+            <div class="card-footer route"><span>5 credits</span><span class="arrow">→</span></div>
+          </article>
+          <article class="card compact-card">
+            <div class="meta-row"><span class="mini-icon">STL</span><span class="chip">Mesh</span></div>
+            <h3>STL to STEP</h3>
+            <p class="card-copy">Move print meshes into CAD-adjacent interchange workflows.</p>
+            <div class="card-footer route"><span>6 credits</span><span class="arrow">→</span></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const tiltCards = document.querySelectorAll(".tilt-card");
+      const utilityCursor = document.querySelector(".utility-cursor");
+      const utilityCards = document.querySelectorAll(".compact-card");
+
+      tiltCards.forEach((card) => {
+        card.addEventListener("mousemove", (event) => {
+          const rect = card.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          const rotateY = ((x / rect.width) - 0.5) * 12;
+          const rotateX = ((y / rect.height) - 0.5) * -12;
+          card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+        });
+
+        card.addEventListener("mouseleave", () => {
+          card.style.transform = "rotateX(0deg) rotateY(0deg) translateY(0)";
+        });
+      });
+
+      utilityCards.forEach((card) => {
+        card.addEventListener("mousemove", (event) => {
+          utilityCursor.classList.add("is-visible");
+          utilityCursor.style.left = `${event.clientX + 18}px`;
+          utilityCursor.style.top = `${event.clientY + 18}px`;
+        });
+
+        card.addEventListener("mouseleave", () => {
+          utilityCursor.classList.remove("is-visible");
+        });
+      });
+    </script>
+  </body>
+</html>
