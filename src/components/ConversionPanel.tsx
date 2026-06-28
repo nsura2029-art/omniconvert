@@ -868,6 +868,20 @@ export default function ConversionPanel({
   const [cadUploadButtonLabel, setCadUploadButtonLabel] = useState('Choose Files');
   const [cadSaveDestination, setCadSaveDestination] = useState<'gdrive' | 'dropbox' | 'onedrive' | null>(null);
   const [cadNotice, setCadNotice] = useState('');
+  const cadNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashCadNotice = (message: string, ms = 7000) => {
+    if (cadNoticeTimeoutRef.current) {
+      clearTimeout(cadNoticeTimeoutRef.current);
+    }
+    setCadNotice(message);
+    cadNoticeTimeoutRef.current = setTimeout(() => {
+      setCadNotice('');
+      cadNoticeTimeoutRef.current = null;
+    }, ms);
+  };
+  useEffect(() => () => {
+    if (cadNoticeTimeoutRef.current) clearTimeout(cadNoticeTimeoutRef.current);
+  }, []);
   const [showCadShareOptions, setShowCadShareOptions] = useState(false);
   const [showCadAddSources, setShowCadAddSources] = useState(false);
   const [cadAddSourcesPinned, setCadAddSourcesPinned] = useState(false);
@@ -1412,7 +1426,7 @@ export default function ConversionPanel({
 
   const handleDownloadAllAsZip = async () => {
     if (conversions.length === 0) return;
-    setCadNotice('Bundling converted files into a zip archive...');
+    flashCadNotice('Bundling converted files into a zip archive...');
     try {
       const blobs = await Promise.all(
         conversions.map(conversion => downloadUrlToBlob(conversion.downloadUrl))
@@ -1427,9 +1441,9 @@ export default function ConversionPanel({
       const stamp = new Date().toISOString().slice(0, 10);
       const zipName = `omniconvert-conversions-${stamp}.zip`;
       handleDownloadSingle(URL.createObjectURL(zipBlob), zipName);
-      setCadNotice(`Downloaded ${files.length} file${files.length === 1 ? '' : 's'} as ${zipName}.`);
+      flashCadNotice(`Downloaded ${files.length} file${files.length === 1 ? '' : 's'} as ${zipName}.`, 7000);
     } catch (err) {
-      setCadNotice(`Could not bundle files into a zip: ${err instanceof Error ? err.message : 'unknown error'}`);
+      flashCadNotice(`Could not bundle files into a zip: ${err instanceof Error ? err.message : 'unknown error'}`, 10000);
     }
   };
 
