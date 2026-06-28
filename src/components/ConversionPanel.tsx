@@ -608,10 +608,22 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
         </div>
 
         <div className="min-w-[150px]">
-          <UploadProgressBar
-            value={progressValue}
-            label={converted ? 'Complete 100%' : progress ? `${progress.statusText} ${progress.progress}%` : isAnalyzing ? 'Analyzing...' : 'Ready'}
-          />
+          {converted ? (
+            // Already converted — render a static Done indicator so the eye doesn't
+            // group it with the live bar of a currently-processing file.
+            <div className="flex items-center gap-2" aria-label="Complete 100%">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </span>
+              <span className="text-xs font-black text-emerald-700">100%</span>
+              <span className="hidden text-xs font-bold text-slate-500 lg:inline">Complete</span>
+            </div>
+          ) : (
+            <UploadProgressBar
+              value={progressValue}
+              label={progress ? `${progress.statusText} ${progress.progress}%` : isAnalyzing ? 'Analyzing...' : 'Ready'}
+            />
+          )}
         </div>
 
         <div className="text-center text-xs font-semibold text-slate-500 lg:text-right">
