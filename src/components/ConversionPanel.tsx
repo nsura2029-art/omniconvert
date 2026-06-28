@@ -47,8 +47,30 @@ const CAD_TARGET_MATRIX: Record<string, string[]> = {
   iges: ['STEP', 'STL', 'OBJ', 'PDF'],
   igs: ['STEP', 'STL', 'OBJ', 'PDF'],
   svg: ['PDF', 'PNG', 'DXF', 'JPG'],
-  png: ['PDF', 'SVG', 'JPG', 'DXF'],
-  default: ['PDF', 'DXF', 'SVG', 'PNG', 'JPG', 'STL', 'OBJ'],
+  png: ['PDF', 'SVG', 'JPG', 'DXF', 'DWG', 'STL'],
+  jpg: ['PDF', 'SVG', 'PNG', 'DXF', 'DWG'],
+  jpeg: ['PDF', 'SVG', 'PNG', 'DXF', 'DWG'],
+  webp: ['PNG', 'JPG', 'PDF', 'SVG'],
+  gif: ['PNG', 'JPG', 'PDF', 'SVG'],
+  bmp: ['PNG', 'JPG', 'PDF', 'SVG'],
+  tiff: ['PNG', 'JPG', 'PDF', 'SVG'],
+  tif: ['PNG', 'JPG', 'PDF', 'SVG'],
+  csv: ['PDF', 'XLSX', 'DOCX', 'HTML', 'MD', 'JSON', 'TXT'],
+  xlsx: ['PDF', 'CSV', 'HTML', 'DOCX', 'JSON'],
+  xls: ['PDF', 'CSV', 'HTML', 'DOCX', 'JSON'],
+  json: ['PDF', 'CSV', 'HTML', 'MD', 'XML', 'TXT'],
+  xml: ['JSON', 'PDF', 'HTML', 'CSV'],
+  txt: ['PDF', 'DOCX', 'HTML', 'MD', 'RTF'],
+  md: ['PDF', 'HTML', 'DOCX', 'TXT', 'RTF'],
+  html: ['PDF', 'DOCX', 'MD', 'TXT', 'PNG'],
+  htm: ['PDF', 'DOCX', 'MD', 'TXT', 'PNG'],
+  doc: ['PDF', 'DOCX', 'TXT', 'HTML', 'RTF'],
+  docx: ['PDF', 'DOC', 'TXT', 'HTML', 'RTF'],
+  rtf: ['PDF', 'DOCX', 'TXT', 'HTML'],
+  epub: ['PDF', 'MOBI', 'TXT', 'HTML'],
+  mobi: ['EPUB', 'PDF', 'TXT', 'HTML'],
+  zip: ['PDF', 'TAR', '7Z'],
+  default: ['PDF', 'DXF', 'SVG', 'PNG', 'JPG', 'STL', 'OBJ', 'DOCX', 'HTML'],
 };
 
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || 'cad';
@@ -422,34 +444,34 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
         aria-label={ariaLabel}
         className={cls(
           'inline-flex min-h-11 items-center gap-1.5 rounded-xl border font-mono font-black outline-none',
-          'bg-black/60 border-white/10 text-zinc-100 hover:bg-black/80',
-          'focus-visible:ring-4 focus-visible:ring-blue-500/30',
+          'bg-white border-slate-200 text-slate-800 hover:bg-slate-50',
+          'focus-visible:ring-4 focus-visible:ring-blue-200',
           'disabled:cursor-not-allowed disabled:opacity-50',
           triggerPad
         )}
       >
         <span className="uppercase">{currentTarget || '---'}</span>
-        <ChevronDown className={cls('h-3 w-3 transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={cls('h-3 w-3 text-slate-500 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 top-full z-50 mt-2 w-[420px] rounded-xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60 overflow-hidden"
+          className="absolute left-0 top-full z-50 mt-2 w-[420px] rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 overflow-hidden"
         >
-          <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
-            <Search className="h-3.5 w-3.5 text-zinc-500" />
+          <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
+            <Search className="h-3.5 w-3.5 text-slate-400" />
             <input
               ref={searchRef}
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search"
-              className="flex-1 bg-transparent text-xs text-zinc-200 placeholder:text-zinc-500 outline-none"
+              className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 outline-none"
             />
           </div>
           <div className="grid grid-cols-[140px_1fr] max-h-[280px]">
-            <div className="border-r border-white/10 overflow-y-auto py-1">
+            <div className="border-r border-slate-100 bg-slate-50/60 overflow-y-auto py-1">
               {filteredCategories.length === 0 && (
-                <p className="px-3 py-4 text-[11px] text-zinc-500">No formats match.</p>
+                <p className="px-3 py-4 text-[11px] text-slate-500">No formats match.</p>
               )}
               {filteredCategories.map(cat => {
                 const active = cat.name === activeCategory;
@@ -461,22 +483,22 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
                     className={cls(
                       'flex w-full items-center justify-between px-3 py-2 text-xs',
                       active
-                        ? 'bg-white/10 text-white font-bold'
-                        : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+                        ? 'bg-white text-blue-700 font-bold shadow-[inset_3px_0_0_0_theme(colors.blue.600)]'
+                        : 'text-slate-600 hover:bg-white hover:text-slate-900'
                     )}
                   >
                     <span className="flex items-center gap-2">
                       <CategoryIcon name={cat.name} />
                       {cat.name}
                     </span>
-                    {active && <ChevronRight className="h-3.5 w-3.5 text-zinc-300" />}
+                    {active && <ChevronRight className="h-3.5 w-3.5 text-blue-600" />}
                   </button>
                 );
               })}
             </div>
             <div className="overflow-y-auto p-3">
               {visibleFormats.length === 0 ? (
-                <p className="px-1 py-6 text-center text-[11px] text-zinc-500">No formats in this category.</p>
+                <p className="px-1 py-6 text-center text-[11px] text-slate-500">No formats in this category.</p>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {visibleFormats.map(fmt => {
@@ -489,8 +511,8 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
                         className={cls(
                           'rounded-lg px-2 py-2 text-[11px] font-mono font-black uppercase text-center transition-colors',
                           selected
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700'
+                            ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         )}
                       >
                         {fmt}
@@ -548,7 +570,7 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
       transition={{ duration: 0.2 }}
       className="border-b border-slate-100 bg-white px-4 py-3 last:border-b-0"
     >
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_auto] lg:items-center">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px] lg:items-center">
         <div className="flex min-w-0 gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">
             <File className="h-5 w-5" />
@@ -608,7 +630,7 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 ml-12 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3"
+          className="mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px]"
         >
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-500 text-white">
@@ -627,14 +649,23 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onDownload}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
-          >
-            <Download className="h-4 w-4" />
-            Download
-          </button>
+          <div className="hidden lg:block" />
+          <div className="hidden lg:block" />
+          <div className="hidden text-xs font-semibold text-slate-500 lg:block lg:text-right">
+            <span className="rounded-full bg-emerald-100 px-2 py-1 font-mono text-[10px] font-black uppercase text-emerald-700">
+              Done
+            </span>
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onDownload}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </button>
+          </div>
         </motion.div>
       )}
     </motion.article>
@@ -1011,14 +1042,13 @@ export default function ConversionPanel({
   };
 
   // TRIGGER MASTER PROCESSING WORKER (REAL & SIMULATED PIPELINE)
-  const handleConvert = async () => {
+  const handleConvert = async (forceAll = false) => {
     if (files.length === 0 && selectedTool.name !== 'Text to Speech' && selectedTool.name !== 'Markdown to HTML') {
       return;
     }
 
     setIsProcessing(true);
     setShowLogs(true);
-    setConversions([]);
 
     // Prepare list of items to convert
     // - Skip files that have already completed in a prior run
@@ -1026,6 +1056,7 @@ export default function ConversionPanel({
     //   mock a single virtual file.
     const itemsToConvert = files.length > 0
       ? files.filter(file => {
+          if (forceAll) return true;
           const progress = fileProgresses[file.name];
           return !progress || progress.status !== 'completed';
         })
@@ -1386,6 +1417,13 @@ export default function ConversionPanel({
       nextTargets[file.name] = format;
     });
     setTargetFormats(nextTargets);
+    if (files.length > 0) {
+      // Clear prior outputs so each row shows the new format result (not the old one).
+      setConversions([]);
+      setFileProgresses({});
+      // Re-run the pipeline with forceAll so every file is processed again.
+      handleConvert(true);
+    }
   };
 
   if (isCadTool) {
@@ -1491,8 +1529,8 @@ export default function ConversionPanel({
                 </AnimatePresence>
               </div>
 
-              <div className="flex min-h-16 flex-wrap items-center justify-center gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-3">
-                <label className="mr-2 text-xs font-semibold text-slate-400">Convert all to</label>
+              <div className="flex min-h-16 flex-wrap items-center justify-end gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                <label className="text-xs font-semibold text-slate-500">Convert all to</label>
                 <select
                   value={cadConvertAllTarget}
                   onChange={(event) => applyCadConvertAll(event.target.value)}
@@ -1510,20 +1548,23 @@ export default function ConversionPanel({
                     setFileProgresses({});
                     setCadFileReadiness({});
                   }}
-                  className="min-h-10 rounded-lg px-3 text-xs font-black text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-4 focus-visible:ring-rose-100"
+                  className="min-h-10 rounded-lg border border-rose-200 px-3 text-xs font-black text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-4 focus-visible:ring-rose-100"
                 >
                   Clear all
                 </button>
-                {allConverted && (
+              </div>
+              {allConverted && (
+                <div className="flex justify-end px-5 pb-3">
                   <button
                     type="button"
                     onClick={handleDownloadAllAsZip}
-                    className="min-h-10 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black text-blue-700 outline-none hover:bg-blue-100 focus-visible:ring-4 focus-visible:ring-blue-100"
+                    className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black text-blue-700 outline-none hover:bg-blue-100 focus-visible:ring-4 focus-visible:ring-blue-100"
                   >
+                    <Download className="h-3.5 w-3.5" />
                     Download all
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               <div
                 onMouseLeave={() => {
