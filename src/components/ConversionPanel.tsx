@@ -113,6 +113,180 @@ const getFileTypeMeta = (fileName: string): FileTypeMeta => {
   return FILE_TYPE_TABLE.find(g => g.exts.includes(ext))?.meta || FALLBACK_FILE_META;
 };
 
+// ===== Real browser-side CAD converters =====
+// Per the omniconvert-conversion-matrix skill: pure CAD↔CAD conversion is
+// server-territory, but a small subset of text-based mesh formats round-trip
+// losslessly in the browser. We ship STL↔OBJ and OBJ↔PLY here. Anything
+// else (DWG/DXF/STEP/IGES/...) falls back to the simulated placeholder.
+const parseAsciiStl = (text: string): { triangles: { normal: [number, number, number]; v: [number, number, number][] }[] } => {
+  const triangles: { normal: [number, number, number]; v: [number, number, number][] }[] = [];
+  const lines = text.split(/\r?\n/);
+  let i = 0;
+  let cur: { normal: [number, number, number]; v: [number, number, number][] } | null = null;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (line.startsWith('solid') || line.startsWith('endsolid')) { i++; continue; }
+    if (line.startsWith('facet normal')) {
+      const p = line.split(/\s+/);
+      cur = { normal: [parseFloat(p[2]), parseFloat(p[3]), parseFloat(p[4])], v: [] };
+    } else if (line.startsWith('vertex')) {
+      const p = line.split(/\s+/);
+      cur.v.push([parseFloat(p[1]), parseFloat(p[2]), parseFloat(p[3])]);
+    } else if (line.startsWith('endfacet')) {
+      if (cur) triangles.push(cur);
+      cur = null;
+    }
+    i++;
+  }
+  return { triangles };
+};
+
+const writeAsciiStl = (triangles: { normal: [number, number, number]; v: [number, number, number][] }[]): string => {
+  let out = 'solid omniconvert_converted\n';
+  for (const t of triangles) {
+    out += `  facet normal ${t.normal[0]} ${t.normal[1]} ${t.normal[2]}\n`;
+    out += '    outer loop\n';
+    for (const v of t.v) out += `      vertex ${v[0]} ${v[1]} ${v[2]}\n`;
+    out += '    endloop\n  endfacet\n';
+  }
+  return out + 'endsolid omniconvert_converted\n';
+};
+
+const parseObj = (text: string): { vertices: [number, number, number][]; triangles: [number, number, number][] } => {
+  const vertices: [number, number, number][] = [];
+  const triangles: [number, number, number][] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const p = line.split(/\s+/);
+    if (p[0] === 'v' && p.length >= 4) {
+      vertices.push([parseFloat(p[1]), parseFloat(p[2]), parseFloat(p[3])]);
+    } else if (p[0] === 'f' && p.length >= 4) {
+      const faceIdx = p.slice(1).map(tok => {
+        const vSpec = tok.split('/')[0];
+        const idx = parseInt(vSpec, 10);
+        return idx < 0 ? vertices.length + idx + 1 : idx;
+      });
+      // Fan-triangulate n-gons.
+      for (let k = 1; k < faceIdx.length - 1; k++) {
+        triangles.push([faceIdx[0] - 1, faceIdx[k] - 1, faceIdx[k + 1] - 1]);
+      }
+    }
+  }
+  return { vertices, triangles };
+};
+
+const writeObj = (vertices: [number, number, number][], triangles: [number, number, number][]): string => {
+  let out = '# Converted by OmniConvert\n';
+  out += 'o OmniConvert_Output\n';
+  for (const v of vertices) out += `v ${v[0]} ${v[1]} ${v[2]}\n`;
+  for (const t of triangles) out += `f ${t[0] + 1} ${t[1] + 1} ${t[2] + 1}\n`;
+  return out;
+};
+
+const stlToObj = (stlText: string): string => {
+  const { triangles } = parseAsciiStl(stlText);
+  const vertMap = new Map<string, number>();
+  const vertices: [number, number, number][] = [];
+  const outTris: [number, number, number][] = [];
+  for (const t of triangles) {
+    const idx: [number, number, number] = t.v.map(v => {
+      const key = v.map(n => n.toFixed(6)).join(',');
+      let i = vertMap.get(key);
+      if (i === undefined) { i = vertices.length; vertices.push(v); vertMap.set(key, i); }
+      return i;
+    }) as [number, number, number];
+    outTris.push(idx);
+  }
+  return writeObj(vertices, outTris);
+};
+
+const objToStl = (objText: string): string => {
+  const { vertices, triangles } = parseObj(objText);
+  const out = triangles.map(t => {
+    const [a, b, c] = t.map(i => vertices[i]);
+    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
+    const vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const L = Math.hypot(nx, ny, nz) || 1;
+    return { normal: [nx / L, ny / L, nz / L] as [number, number, number], v: [a, b, c] as [number, number, number][] };
+  });
+  return writeAsciiStl(out);
+};
+
+const PLY_ASCII_HEADER = `ply\nformat ascii 1.0\ncomment Converted by OmniConvert\n`;
+
+const parsePly = (text: string): { vertices: [number, number, number][]; triangles: [number, number, number][] } => {
+  const lines = text.split(/\r?\n/);
+  let i = 0;
+  let vertexCount = 0;
+  let faceCount = 0;
+  const properties: string[] = [];
+  let inVertex = false;
+  let inFace = false;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (line.startsWith('element vertex')) { vertexCount = parseInt(line.split(/\s+/)[2], 10); inVertex = false; }
+    else if (line.startsWith('element face')) { faceCount = parseInt(line.split(/\s+/)[2], 10); inVertex = false; inFace = false; }
+    else if (line.startsWith('property') && (inVertex === false) && (inFace === false)) {
+      properties.push(line.split(/\s+/).slice(-1)[0]);
+    } else if (line === 'end_header') {
+      inVertex = true; i++; break;
+    }
+    i++;
+  }
+  const vertices: [number, number, number][] = [];
+  for (let v = 0; v < vertexCount; v++) {
+    const parts = lines[i++].trim().split(/\s+/).map(parseFloat);
+    vertices.push([parts[0], parts[1], parts[2]]);
+  }
+  const triangles: [number, number, number][] = [];
+  for (let f = 0; f < faceCount; f++) {
+    const parts = lines[i++].trim().split(/\s+/);
+    const n = parseInt(parts[0], 10);
+    for (let k = 1; k < n - 1; k++) {
+      triangles.push([parseInt(parts[1], 10), parseInt(parts[k + 1], 10), parseInt(parts[k + 2], 10)]);
+    }
+  }
+  return { vertices, triangles };
+};
+
+const writePlyAscii = (vertices: [number, number, number][], triangles: [number, number, number][]): string => {
+  let out = PLY_ASCII_HEADER;
+  out += `element vertex ${vertices.length}\nproperty float x\nproperty float y\nproperty float z\n`;
+  out += `element face ${triangles.length}\nproperty list uchar int vertex_indices\n`;
+  out += 'end_header\n';
+  for (const v of vertices) out += `${v[0]} ${v[1]} ${v[2]}\n`;
+  for (const t of triangles) out += `3 ${t[0]} ${t[1]} ${t[2]}\n`;
+  return out;
+};
+
+const objToPly = (objText: string): string => {
+  const { vertices, triangles } = parseObj(objText);
+  return writePlyAscii(vertices, triangles);
+};
+
+const plyToObj = (plyText: string): string => {
+  const { vertices, triangles } = parsePly(plyText);
+  return writeObj(vertices, triangles);
+};
+
+// Try a real browser-side CAD conversion. Returns null when unsupported
+// (caller should fall back to the simulated placeholder).
+const tryRealCadConversion = async (file: File, targetExt: string): Promise<{ blob: Blob; mime: string } | null> => {
+  const srcExt = getFileExtension(file.name).toLowerCase();
+  const tgt = targetExt.toLowerCase();
+  const text = await file.text();
+  let out: string | null = null;
+  let mime = 'text/plain';
+  if (srcExt === 'stl' && tgt === 'obj') { out = stlToObj(text); mime = 'text/plain'; }
+  else if (srcExt === 'obj' && tgt === 'stl') { out = objToStl(text); mime = 'model/stl'; }
+  else if (srcExt === 'obj' && tgt === 'ply') { out = objToPly(text); mime = 'application/ply'; }
+  else if (srcExt === 'ply' && tgt === 'obj') { out = plyToObj(text); mime = 'text/plain'; }
+  if (out === null) return null;
+  return { blob: new Blob([out], { type: mime }), mime };
+};
+
 const getCadTargetOptions = (fileName: string, fallbackOutput: string[]) => {
   const ext = getFileExtension(fileName);
   return CAD_TARGET_MATRIX[ext] || fallbackOutput || CAD_TARGET_MATRIX.default;
@@ -1425,6 +1599,22 @@ export default function ConversionPanel({
         updateProgress(currentFile.name, 'failed', 0, `Error occurred: ${err}`);
       }
 
+      // Real browser-side CAD conversion for the small subset that round-trips losslessly.
+      // Other CAD paths fall through to the simulated placeholder below.
+      if (!realConversionPerformed && isCadTool) {
+        try {
+          const real = await tryRealCadConversion(currentFile, selectedTargetFormat);
+          if (real) {
+            downloadUrl = URL.createObjectURL(real.blob);
+            realConversionPerformed = true;
+            addLog(`[CONVERT] Real client-side parse/serialize completed (${(real.blob.size / 1024).toFixed(1)} KB).`);
+            updateProgress(currentFile.name, 'processing', 85, 'Real CAD geometry converted in browser.');
+          }
+        } catch (err) {
+          addLog(`[WARN] Real CAD path failed: ${err}. Falling back to placeholder.`);
+        }
+      }
+
       // If client-side convert is not possible/simulated, fallback to our gorgeous simulated queue download!
       if (!realConversionPerformed) {
         addLog(`[CONVERT] Running proprietary parser on cloud instance...`);
@@ -1466,7 +1656,9 @@ export default function ConversionPanel({
       const newConversion: FileConversion = {
         id: conversionId,
         fileName: resultFileName,
-        fileSize: Math.floor(currentFile.size * (Math.random() * 0.4 + 0.8)), // simulated compressed size
+        fileSize: realConversionPerformed
+          ? Math.max(1, downloadUrl && downloadUrl !== '#' ? (await fetch(downloadUrl).then(r => r.blob()).then(b => b.size).catch(() => Math.floor(currentFile.size * 0.9))) : Math.floor(currentFile.size * 0.9))
+          : Math.floor(currentFile.size * (Math.random() * 0.4 + 0.8)), // simulated compressed size
         toolId: selectedTool.id,
         toolName: selectedTool.name,
         category: selectedTool.category,
