@@ -23,6 +23,7 @@
 ## Child DOX Index
 - `omniconvert-auth-data/` - sandbox auth, localStorage data, and future production auth/database migration guidance.
 - `omniconvert-cloudflare-deploy/` - Cloudflare Workers Static Assets and Wrangler deployment guidance.
+- `omniconvert-conversion-matrix/` - format catalog, feasibility rules, validation, and TODO generation for any new from→to path.
 - `omniconvert-conversion-workflow/` - upload sources, queue, conversion simulation, and picker behavior.
 - `omniconvert-github-actions/` - GitHub Actions CI/CD and Wrangler action guidance.
 - `omniconvert-react-vite-ui/` - React/Vite app structure and UI implementation guidance.
