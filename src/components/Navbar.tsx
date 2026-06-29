@@ -172,13 +172,16 @@ export default function Navbar({
             </button>
 
             <button
-              onClick={() => onChangePage('analytics')}
+              onClick={() => isAdmin ? onChangePage('analytics') : null}
+              disabled={!isAdmin}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 currentPage === 'analytics' || currentPage.startsWith('analytics:')
                   ? 'bg-zinc-800/10 dark:bg-white/10 text-zinc-900 dark:text-white border border-zinc-300/30 dark:border-white/10 shadow-sm'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  : isAdmin
+                    ? 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                    : 'text-zinc-400/40 dark:text-zinc-600/40 cursor-not-allowed'
               }`}
-              title="Per-category conversion analytics"
+              title={isAdmin ? 'Per-category conversion analytics' : 'Admin only'}
             >
               <Activity className="w-3.5 h-3.5" />
               Analytics
@@ -295,11 +298,16 @@ export default function Navbar({
                     </button>
 
                     <button
-                      onClick={() => onChangePage('analytics')}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-500/10 dark:hover:bg-white/5 transition-colors"
+                      onClick={() => isAdmin ? onChangePage('analytics') : null}
+                      disabled={!isAdmin}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                        isAdmin
+                          ? 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-500/10 dark:hover:bg-white/5 cursor-pointer'
+                          : 'text-zinc-400/40 dark:text-zinc-600/40 cursor-not-allowed'
+                      }`}
                     >
                       <Activity className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
-                      Per-Category Analytics
+                      Per-Category Analytics{!isAdmin && ' (admin only)'}
                     </button>
 
                     <button
@@ -376,10 +384,16 @@ export default function Navbar({
           Dashboard
         </button>
         <button
-          onClick={() => onChangePage('analytics')}
+          onClick={() => isAdmin ? onChangePage('analytics') : null}
+          disabled={!isAdmin}
           className={`flex flex-col items-center gap-0.5 text-[10px] font-medium transition-colors ${
-            currentPage === 'analytics' || currentPage.startsWith('analytics:') ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            currentPage === 'analytics' || currentPage.startsWith('analytics:')
+              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+              : isAdmin
+                ? 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                : 'text-zinc-400/40 dark:text-zinc-600/40 cursor-not-allowed'
           }`}
+          title={isAdmin ? 'Analytics' : 'Admin only'}
         >
           <Activity className="w-4 h-4" />
           Analytics

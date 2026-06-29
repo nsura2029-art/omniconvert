@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box, Music, FileCode, Sheet, FileType, BookOpen, Code, FileSpreadsheet, Presentation, Layers, Type } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
@@ -665,7 +666,9 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
   const [open, setOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [search, setSearch] = useState('');
+  const [popover, setPopover] = useState<{ top: number; left: number; width: number; placement: 'down' | 'up' } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const categories = useMemo(() => categorizeFormats(formats), [formats]);
@@ -687,24 +690,44 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
     }
   }, [filteredCategories, activeCategory, currentTarget]);
 
-  // Click-outside + Escape close.
+  // Calculate popover position from the trigger button (fixed positioning so
+  // it overflows above the file-list overflow context without being clipped).
+  // Stable: re-computed only on open + scroll + resize, not on every render.
+  const computePopover = useCallback(() => {
+    if (!rootRef.current) return;
+    const r = rootRef.current.getBoundingClientRect();
+    const width = Math.max(420, r.width + 80);
+    const margin = 8;
+    const spaceBelow = window.innerHeight - r.bottom;
+    const placement = spaceBelow < 360 && r.top > 360 ? 'up' : 'down';
+    const top = placement === 'down' ? r.bottom + margin : Math.max(margin, r.top - margin - 360);
+    const left = Math.min(window.innerWidth - width - margin, Math.max(margin, r.left));
+    setPopover({ top, left, width, placement });
+  }, []);
+
   useEffect(() => {
     if (!open) return;
+    computePopover();
     const onDocMouseDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
     document.addEventListener('mousedown', onDocMouseDown);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', computePopover, true);
+    window.addEventListener('resize', computePopover);
     return () => {
       document.removeEventListener('mousedown', onDocMouseDown);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', computePopover, true);
+      window.removeEventListener('resize', computePopover);
     };
-  }, [open]);
+  }, [open, computePopover]);
 
   // Focus search on open; reset on close.
   useEffect(() => {
@@ -712,6 +735,7 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
       requestAnimationFrame(() => searchRef.current?.focus());
     } else {
       setSearch('');
+      setPopover(null);
     }
   }, [open]);
 
@@ -738,10 +762,18 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
         <span className="uppercase">{currentTarget || '---'}</span>
         <ChevronDown className={cls('h-3 w-3 text-slate-500 transition-transform', open && 'rotate-180')} />
       </button>
-      {open && (
+      {open && popover && createPortal(
         <div
+          ref={popoverRef}
           role="listbox"
-          className="absolute left-0 top-full z-50 mt-2 w-[420px] rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 overflow-hidden"
+          style={{
+            position: 'fixed',
+            top: popover.top,
+            left: popover.left,
+            width: popover.width,
+            zIndex: 60,
+          }}
+          className="rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 overflow-hidden"
         >
           <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
             <Search className="h-3.5 w-3.5 text-slate-400" />
@@ -808,7 +840,8 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -844,7 +877,6 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
   const extension = getFileExtension(file.name);
   const isAnalyzing = readiness === 'analyzing' && !progress;
   const progressValue = progress?.progress ?? (converted ? 100 : isAnalyzing ? 44 : 0);
-  const statusText = converted ? 'Ready to download' : progress?.statusText || (isAnalyzing ? 'Analyzing file...' : 'Ready to convert');
 
   return (
     <motion.article
@@ -876,28 +908,27 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
                   </span>
                 );
               })()}
-            </div>
-            <p className="mt-1 text-xs font-semibold text-slate-500">{statusText}</p>
-
-            {/* Progress / status row: SINGLE horizontal line.
-                - Idle: animated left-to-right SingleProgressBar
-                - Converted: static ✓ 100% Complete pill on the SAME row as the
-                  status text (no extra row). When converted, statusText reads
-                  "Ready to download" so the two pieces of information read as a
-                  single phrase: "Ready to download · ✓ 100% Complete". */}
-            <div className="mt-2 flex items-center gap-3">
+              {/* All status / progress text lives INLINE beside the filename
+                  chip — no separate status line, no duplicate phrases. */}
               {converted ? (
-                <>
-                  <div className="flex items-center gap-1.5" aria-label="Complete 100%">
-                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-                      <CheckCircle2 className="h-3 w-3" />
-                    </span>
-                    <span className="text-[11px] font-black text-emerald-700">100%</span>
-                    <span className="text-[11px] font-bold text-slate-500">Complete</span>
-                  </div>
-                  <span className="h-3 w-px bg-slate-200" aria-hidden="true" />
-                  <span className="text-[11px] font-black text-emerald-700">Ready to download</span>
-                </>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700" aria-label="Complete 100%">
+                  <CheckCircle2 className="h-3 w-3" />
+                  100% Complete
+                </span>
+              ) : isAnalyzing ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Analyzing
+                </span>
+              ) : progress?.statusText ? (
+                <span className="text-[11px] font-black text-slate-600">{progress.statusText}</span>
+              ) : null}
+            </div>
+            <div className="mt-2">
+              {converted ? (
+                /* hidden in converted state — the inline pill above is the single
+                   source of truth and replaces any second status line. */
+                <span className="sr-only">Ready to download</span>
               ) : (
                 <SingleProgressBar value={progressValue} />
               )}
@@ -2005,7 +2036,7 @@ export default function ConversionPanel({
                    sticky action row below stays pinned to the viewport bottom. */
                 className={cls(
                   'border-b border-slate-100',
-                  files.length > 2 ? 'max-h-[min(60vh,560px)] overflow-y-auto' : 'overflow-hidden'
+                  files.length > 2 ? 'max-h-[min(60vh,560px)] overflow-y-auto' : 'overflow-visible'
                 )}
               >
                 <AnimatePresence initial={false}>
@@ -2048,11 +2079,12 @@ export default function ConversionPanel({
                 </AnimatePresence>
               </div>
 
-              {/* Sticky action area: bottom 3 rows stay pinned to the viewport while the
-                  file list scrolls. When files overflow the max-h above, the list grows its
-                  own scrollbar and the action area continues to render at the bottom of the
-                  browser visible area. */}
-              <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
+              {/* Pinned action area: position:fixed pins to the browser viewport
+                  bottom regardless of page/file-list scroll. The file list's
+                  overflow-y-auto would otherwise make sticky pin to the file
+                  list scroll, not the viewport — fixed solves that. */}
+              <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               {/* ============== ROW: Unified action bar (Phase 1 cleanup) ==============
                   Phase 1 keeps the layout to a single horizontal action row:
                     - LEFT cluster:  Convert all to (select) -> status counter -> Clear all
@@ -2151,8 +2183,12 @@ export default function ConversionPanel({
               </div>
 
               </div>
+                </div>
               </div>
           )}
+
+          {/* Spacer for fixed action bar — keeps file list last row clear. */}
+          <div className="h-24" aria-hidden="true" />
 
           <input
             ref={fileInputRef}

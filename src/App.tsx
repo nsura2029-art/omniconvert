@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Library, Search, Sliders, Play, CheckCircle2, AlertTriangle, ShieldCheck, Mail, ArrowRight, UserPlus, Heart, FileCode2, HelpCircle } from 'lucide-react';
+import { Sparkles, Library, Search, Sliders, Play, CheckCircle2, AlertTriangle, ShieldCheck, Mail, ArrowRight, UserPlus, Heart, FileCode2, HelpCircle, ShieldAlert } from 'lucide-react';
 import { User, FileConversion, CloudIntegration, PlanType } from './types';
 import { Tool, TOOLS, CATEGORIES } from './data/tools';
 import { CAD_SEO_CANONICAL_BASE_URL, CAD_SEO_PAGES, getCadSeoPageBySlug, getCadSeoPageByToolId } from './data/cadSeoPages';
@@ -9,10 +9,9 @@ import CadSeoPage from './components/CadSeoPage';
 import AuthModal from './components/AuthModal';
 import ConversionPanel from './components/ConversionPanel';
 import Dashboard from './components/Dashboard';
-import AnalyticsDashboard from './pages/Dashboard';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import Billing from './components/Billing';
-import AdminDashboard from './components/AdminDashboard';
+import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
 import OnboardingTour from './components/OnboardingTour';
 import InteractiveHeroSelector from './components/InteractiveHeroSelector';
 import SecurityPage from './components/SecurityPage';
@@ -957,21 +956,36 @@ export default function App() {
         {/* VIEW 3b: PER-CATEGORY ANALYTICS DASHBOARD */}
         {(currentPage === 'analytics' || currentPage.startsWith('analytics:')) && (
           <div className="animate-fade-in -mx-4 sm:-mx-6 lg:-mx-8 -my-8">
-            <AnalyticsDashboard
-              embedded
-              categoryParam={currentPage.startsWith('analytics:') ? currentPage.split(':')[1] : undefined}
-              onNavigate={(page, cat) => {
-                if (page === 'overview') handleChangePage('analytics');
-                else if (page === 'category' && cat) handleChangePage(`analytics:${cat}`);
-              }}
-            />
+            {currentUser?.email === 'admin@omniconvert.com' ? (
+              <AdminPanel
+                embedded
+                initialSection="analytics"
+              />
+            ) : (
+              <div className="mx-auto max-w-xl py-20 text-center">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-50">
+                  <ShieldAlert className="h-7 w-7 text-rose-600" />
+                </div>
+                <h2 className="mt-4 text-xl font-black tracking-tight text-slate-900">Admin only</h2>
+                <p className="mt-2 text-sm font-semibold text-slate-600">
+                  Analytics are restricted to the admin account. Sign in as <span className="font-black text-slate-900">admin@omniconvert.com</span> to view this dashboard.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setAuthModalOpen(true)}
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white hover:bg-blue-700"
+                >
+                  Sign in
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {/* VIEW 4: BILLING / subscription manager */}
         {currentPage === 'billing' && (
           <div className="animate-fade-in">
-            <Billing 
+            <Billing
               currentUser={currentUser}
               onUpgradePlan={handleUpgradePlan}
               onOpenAuth={() => setAuthModalOpen(true)}
@@ -979,20 +993,30 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 5: ADMIN DASHBOARD */}
-        {currentPage === 'admin' && currentUser?.email === 'admin@omniconvert.com' && (
-          <div className="animate-fade-in">
-            <AdminDashboard 
-              currentUser={currentUser}
-              conversions={conversions}
-              onUpdateUsersList={(updatedList) => {
-                // update local state if matching
-              }}
-              systemStats={systemStats}
-              activeHeroPreset={activeHeroPreset}
-              onChangeHeroPreset={handleUpdateHeroPreset}
-            />
-          </div>
+        {/* VIEW 5: ADMIN PANEL (Dashboard + Analytics + Users + Conversions + Settings) */}
+        {currentPage === 'admin' && (
+          currentUser?.email === 'admin@omniconvert.com' ? (
+            <div className="animate-fade-in -mx-4 sm:-mx-6 lg:-mx-8 -my-8">
+              <AdminPanel />
+            </div>
+          ) : (
+            <div className="mx-auto max-w-xl py-20 text-center">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-50">
+                <ShieldAlert className="h-7 w-7 text-rose-600" />
+              </div>
+              <h2 className="mt-4 text-xl font-black tracking-tight text-slate-900">Admin only</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-600">
+                The admin panel is restricted to the admin account. Sign in as <span className="font-black text-slate-900">admin@omniconvert.com</span> to view it.
+              </p>
+              <button
+                type="button"
+                onClick={() => setAuthModalOpen(true)}
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white hover:bg-blue-700"
+              >
+                Sign in
+              </button>
+            </div>
+          )
         )}
 
       </main>

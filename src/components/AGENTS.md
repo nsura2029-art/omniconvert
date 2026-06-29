@@ -55,17 +55,22 @@
 - Use browser checks for changed interactions such as upload source selection, auth modals, dashboard tabs, or billing checkout.
 
 ## Per-Category Analytics Dashboard
-- A new full-page dashboard ships at `/dashboard` (overview) and `/dashboard/{categoryId}` per-category. The host app renders it via `currentPage === 'analytics' | 'analytics:cad' | ...` and the `<AnalyticsDashboard />` component mounted in `App.tsx`.
-- The dashboard is required for every conversion category shipped to the platform. The contract is locked in the conversion-matrix skill §5 ("ANALYTICS DASHBOARD TODO") and §6 of `skills/omniconvert-conversion-matrix/SKILL.md`. Adding a new category without a working analytics view violates the DOX.
-- Panels required on the per-category page: 8 KPI cards (KpiGrid), From->To matrix heatmap (FromToMatrix), Popular pairs table, Processing path breakdown (browser/hybrid/server %), Latency breakdown, Trending line chart, Usage timeline with day/week/month toggle, Advanced analytics (peak hour, avg file size, error rate, cold start, retention, format popularity, top regions).
-- Data layer (`src/data/dashboardAnalytics.ts`) is deterministic per category (seeded PRNG by category id) so the same category always renders the same numbers. Real conversion counts from localStorage (`src/data/localConversions.ts`) blend into the KPI cards when present; otherwise the seeded values are the source of truth.
+- Analytics is now an admin-only section inside the Admin Panel (alongside Dashboard, Users, Conversions, Settings). The host app routes `currentPage === 'analytics'` to `<AdminPanel initialSection="analytics" />`. Non-admin users see a "Admin only" sign-in prompt instead.
+- The Admin Panel (`src/pages/admin/AdminPanel.tsx`) ships a left-rail nav: **Dashboard · Analytics · Users · Conversions · Settings**. All five sections are gated by `currentUser?.email === 'admin@omniconvert.com'` in `App.tsx`.
+- The Analytics section shows 12 per-category cards (clickable) + a per-category deep-dive when one is selected. Panels required on the per-category page: 8 KPI cards (KpiGrid), From->To matrix heatmap (FromToMatrix), Popular pairs table, Processing path breakdown (browser/hybrid/server %), Latency breakdown, Trending line chart, Usage timeline with day/week/month toggle, Advanced analytics (peak hour, avg file size, error rate, cold start, retention, format popularity, top regions).
+- **Realtime signal**: every admin section polls `localStorage` every 5 seconds (Analytics reads `omni_conversions`, Dashboard / Conversions sections read `omni_users` + `omni_conversions`). Real counts blend into KPI tiles; seeded analytics fill the gaps for categories with no real conversions yet.
 - New category checklist:
   1. Add entry to `CATEGORY_META` in `src/data/dashboardAnalytics.ts` (id, name, description, format counts, browserFeasible / serverRequired).
   2. Add icon name to `CATEGORY_LIST` (use an existing lucide-react icon name).
   3. Add a format pool entry in `pickFormatsForCategory(cat, n, rand)` so Popular pairs / Matrix / Timeline render realistic format names.
-  4. Verify the sidebar shows the new category and the per-category page renders without errors.
+  4. Verify the admin Analytics section shows the new category and the per-category deep-dive renders without errors.
 - Implementation files:
-  - `src/pages/Dashboard.tsx` (overview + category view + breadcrumb)
+  - `src/pages/admin/AdminPanel.tsx` (admin shell with left nav)
+  - `src/pages/admin/AdminDashboardSection.tsx` (admin overview KPIs, realtime from localStorage)
+  - `src/pages/admin/AdminAnalyticsSection.tsx` (12 categories + per-category deep-dive + realtime polling)
+  - `src/pages/admin/AdminUsersSection.tsx` (user table + plan + credits + remove)
+  - `src/pages/admin/AdminConversionsSection.tsx` (realtime conversion log table + filter + sort)
+  - `src/pages/admin/AdminSettingsSection.tsx` (hero preset + Phase 2 backend wiring status)
   - `src/components/dashboard/DashboardSidebar.tsx`
   - `src/components/dashboard/KpiCard.tsx` (KPI cards + KpiGrid + formatBytes/formatMs helpers)
   - `src/components/dashboard/FromToMatrix.tsx`
