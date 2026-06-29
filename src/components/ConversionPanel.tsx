@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box, Music, FileCode, Sheet, FileType, BookOpen, Code } from 'lucide-react';
+import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box, Music, FileCode, Sheet, FileType, BookOpen, Code, FileSpreadsheet, Presentation, Layers, Type } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
 import confetti from 'canvas-confetti';
@@ -38,39 +38,32 @@ const ONEDRIVE_MOCK_FILES = [
   { name: 'Tutorial_Guide_V1.txt', size: 35000, ext: 'txt' },
 ];
 
+// Cross-category target universe per CAD source extension.
+// Each entry spans multiple categories so the per-row TO picker surfaces
+// every reachable category (CAD / 3D Models / Vectors / Images / Documents /
+// Spreadsheets / Presentations / Archives / eBooks). Many of these pairs are
+// NOT yet browser-feasible (DWG→PDF, STEP→DOCX, etc.) — they fall through to
+// the simulated placeholder when the user clicks Convert. The goal of this
+// expansion is to let the user SEE all reachable categories from the picker
+// so the platform's capability surface is discoverable.
 const CAD_TARGET_MATRIX: Record<string, string[]> = {
-  dwg: ['PDF', 'DXF', 'SVG', 'PNG', 'JPG', 'STL', 'OBJ', 'STEP'],
-  dxf: ['PDF', 'DWG', 'SVG', 'PNG', 'JPG', 'STL'],
-  step: ['STL', 'OBJ', 'GLB', 'FBX', '3MF', 'PDF'],
-  stp: ['STL', 'OBJ', 'GLB', 'FBX', '3MF', 'PDF'],
-  stl: ['STEP', 'OBJ', 'GLB', 'FBX', '3MF', 'PNG'],
-  iges: ['STEP', 'STL', 'OBJ', 'PDF'],
-  igs: ['STEP', 'STL', 'OBJ', 'PDF'],
-  svg: ['PDF', 'PNG', 'DXF', 'JPG'],
-  png: ['PDF', 'SVG', 'JPG', 'DXF', 'DWG', 'STL'],
-  jpg: ['PDF', 'SVG', 'PNG', 'DXF', 'DWG'],
-  jpeg: ['PDF', 'SVG', 'PNG', 'DXF', 'DWG'],
-  webp: ['PNG', 'JPG', 'PDF', 'SVG'],
-  gif: ['PNG', 'JPG', 'PDF', 'SVG'],
-  bmp: ['PNG', 'JPG', 'PDF', 'SVG'],
-  tiff: ['PNG', 'JPG', 'PDF', 'SVG'],
-  tif: ['PNG', 'JPG', 'PDF', 'SVG'],
-  csv: ['PDF', 'XLSX', 'DOCX', 'HTML', 'MD', 'JSON', 'TXT'],
-  xlsx: ['PDF', 'CSV', 'HTML', 'DOCX', 'JSON'],
-  xls: ['PDF', 'CSV', 'HTML', 'DOCX', 'JSON'],
-  json: ['PDF', 'CSV', 'HTML', 'MD', 'XML', 'TXT'],
-  xml: ['JSON', 'PDF', 'HTML', 'CSV'],
-  txt: ['PDF', 'DOCX', 'HTML', 'MD', 'RTF'],
-  md: ['PDF', 'HTML', 'DOCX', 'TXT', 'RTF'],
-  html: ['PDF', 'DOCX', 'MD', 'TXT', 'PNG'],
-  htm: ['PDF', 'DOCX', 'MD', 'TXT', 'PNG'],
-  doc: ['PDF', 'DOCX', 'TXT', 'HTML', 'RTF'],
-  docx: ['PDF', 'DOC', 'TXT', 'HTML', 'RTF'],
-  rtf: ['PDF', 'DOCX', 'TXT', 'HTML'],
-  epub: ['PDF', 'MOBI', 'TXT', 'HTML'],
-  mobi: ['EPUB', 'PDF', 'TXT', 'HTML'],
-  zip: ['PDF', 'TAR', '7Z'],
-  default: ['PDF', 'DXF', 'SVG', 'PNG', 'JPG', 'STL', 'OBJ', 'DOCX', 'HTML'],
+  dwg:  ['DXF','STEP','STL','OBJ','SVG','PDF','PNG','JPG','GLB','GLTF','PLY','FBX','3DS','DAE','DOCX','XLSX','PPTX','ZIP'],
+  dxf:  ['DWG','SVG','PDF','PNG','JPG','STEP','STL','OBJ','GLB','GLTF','PLY','FBX','3DS','DAE','DOCX','XLSX','PPTX','ZIP'],
+  step: ['STP','IGES','STL','OBJ','3DS','DAE','GLB','GLTF','PLY','FBX','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  stp:  ['STEP','IGES','STL','OBJ','3DS','DAE','GLB','GLTF','PLY','FBX','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  stl:  ['STEP','IGES','OBJ','PLY','3DS','DAE','GLB','GLTF','FBX','DWG','DXF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  obj:  ['STEP','IGES','STL','PLY','3DS','DAE','GLB','GLTF','FBX','DWG','DXF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  '3ds':['STEP','IGES','STL','OBJ','PLY','DAE','GLB','GLTF','FBX','DWG','DXF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  dae:  ['STEP','IGES','STL','OBJ','PLY','3DS','GLB','GLTF','FBX','DWG','DXF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  fbx:  ['STEP','IGES','STL','OBJ','PLY','3DS','DAE','GLB','GLTF','DWG','DXF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  ply:  ['STEP','IGES','STL','OBJ','3DS','DAE','GLB','GLTF','FBX','DWG','DXF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP','EPUB'],
+  ifc:  ['STEP','STL','OBJ','GLB','GLTF','PLY','PDF','DOCX','ZIP'],
+  skp:  ['STEP','STL','OBJ','GLB','GLTF','PLY','PDF','ZIP'],
+  vsd:  ['VSDX','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP'],
+  vsdx: ['VSD','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP'],
+  svgz: ['SVG','PDF','PNG','JPG','DOCX','ZIP'],
+  cgm:  ['SVG','PDF','PNG','JPG','DOCX','ZIP'],
+  default: ['STEP','IGES','STL','OBJ','GLB','GLTF','SVG','PDF','PNG','JPG','DOCX','XLSX','PPTX','ZIP'],
 };
 
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || 'cad';
@@ -292,34 +285,60 @@ const getCadTargetOptions = (fileName: string, fallbackOutput: string[]) => {
   return CAD_TARGET_MATRIX[ext] || fallbackOutput || CAD_TARGET_MATRIX.default;
 };
 
-// Format -> category map for the categorized "to" picker.
+// Format -> category map for the categorized "to" picker. Covers every
+// writable format from the CloudConvert catalog so the per-row picker
+// surfaces ALL reachable categories from a single source extension. Keys
+// are uppercase extension / name; missing entries fall through to 'Other'.
 const FORMAT_CATEGORY_MAP: Record<string, string> = {
-  // Image
-  PNG: 'Image', JPG: 'Image', JPEG: 'Image', WEBP: 'Image', GIF: 'Image',
-  BMP: 'Image', TIFF: 'Image', TIF: 'Image', SVG: 'Image', HEIC: 'Image',
-  ICO: 'Image', AVIF: 'Image', PSD: 'Image', RAW: 'Image',
+  // Documents
+  PDF: 'Documents', DOC: 'Documents', DOCX: 'Documents', ODT: 'Documents',
+  TXT: 'Documents', RTF: 'Documents', HTML: 'Documents', HTM: 'Documents',
+  MD: 'Documents', TEX: 'Documents', JSON: 'Documents', XML: 'Documents',
+  // Spreadsheets
+  CSV: 'Spreadsheets', XLS: 'Spreadsheets', XLSX: 'Spreadsheets',
+  ODS: 'Spreadsheets', TSV: 'Spreadsheets', DBF: 'Spreadsheets', FODS: 'Spreadsheets',
+  // Presentations
+  PPT: 'Presentations', PPTX: 'Presentations', ODP: 'Presentations',
+  // Images
+  PNG: 'Images', JPG: 'Images', JPEG: 'Images', WEBP: 'Images', GIF: 'Images',
+  BMP: 'Images', TIFF: 'Images', TIF: 'Images', HEIC: 'Images', HEIF: 'Images',
+  ICO: 'Images', AVIF: 'Images', PBM: 'Images', PCX: 'Images', PGM: 'Images',
+  PPM: 'Images', XBM: 'Images', XPM: 'Images', DNG: 'Images',
   // Audio
   MP3: 'Audio', WAV: 'Audio', OGG: 'Audio', M4A: 'Audio', OPUS: 'Audio',
   FLAC: 'Audio', AAC: 'Audio', WMA: 'Audio', M4R: 'Audio', DTS: 'Audio',
   AMR: 'Audio', MP2: 'Audio', VOC: 'Audio', AIFF: 'Audio', AIF: 'Audio',
-  '8SVX': 'Audio', CVS: 'Audio',
+  AC3: 'Audio', AU: 'Audio', EAC3: 'Audio', MKA: 'Audio', SPX: 'Audio',
+  TTA: 'Audio', WV: 'Audio',
   // Video
   MP4: 'Video', MOV: 'Video', AVI: 'Video', MKV: 'Video', WEBM: 'Video',
   FLV: 'Video', WMV: 'Video', MPEG: 'Video', MPG: 'Video',
-  '3GP': 'Video', M4V: 'Video', TS: 'Video',
-  // Document
-  PDF: 'Document', DOC: 'Document', DOCX: 'Document', TXT: 'Document',
-  MD: 'Document', RTF: 'Document', ODT: 'Document', HTML: 'Document',
-  HTM: 'Document', EPUB: 'Document', MOBI: 'Document', CSV: 'Document',
-  // Archive
-  ZIP: 'Archive', RAR: 'Archive', '7Z': 'Archive', TAR: 'Archive', GZ: 'Archive',
-  BZ2: 'Archive', XZ: 'Archive',
-  // 3D / CAD
-  STL: '3D', OBJ: '3D', STEP: '3D', STP: '3D', IGES: '3D', IGS: '3D',
-  DWG: '3D', DXF: '3D', FBX: '3D', '3DS': '3D'
+  '3GP': 'Video', M4V: 'Video', TS: 'Video', ASF: 'Video', DIVX: 'Video',
+  DV: 'Video', F4V: 'Video', M2TS: 'Video', M2V: 'Video', MTS: 'Video',
+  MXF: 'Video', OGV: 'Video', SWF: 'Video', VOB: 'Video',
+  // Archives
+  ZIP: 'Archives', '7Z': 'Archives', TAR: 'Archives', GZ: 'Archives',
+  BZ2: 'Archives', XZ: 'Archives', LZ: 'Archives', LZMA: 'Archives', CPIO: 'Archives',
+  // CAD
+  DWG: 'CAD', DXF: 'CAD', STEP: 'CAD', STP: 'CAD', IGES: 'CAD', IGS: 'CAD',
+  IFC: 'CAD', VSDX: 'CAD', CGM: 'CAD', SVGZ: 'CAD',
+  // eBooks
+  EPUB: 'eBooks', MOBI: 'eBooks', FB2: 'eBooks',
+  // Vectors
+  SVG: 'Vectors', EPS: 'Vectors', EMF: 'Vectors', WMF: 'Vectors', ODG: 'Vectors',
+  // Fonts
+  TTF: 'Fonts', OTF: 'Fonts', WOFF: 'Fonts', WOFF2: 'Fonts', EOT: 'Fonts',
+  // 3D Models
+  STL: '3D Models', OBJ: '3D Models', GLTF: '3D Models', GLB: '3D Models',
+  PLY: '3D Models', '3DS': '3D Models', DAE: '3D Models', FBX: '3D Models',
+  WRL: '3D Models', X3D: '3D Models',
 };
 
-const CATEGORY_ORDER = ['Image', 'Audio', 'Video', 'Document', 'Archive', '3D', 'Other'];
+const CATEGORY_ORDER = [
+  'CAD', '3D Models', 'Vectors', 'Images',
+  'Documents', 'Spreadsheets', 'Presentations',
+  'Audio', 'Video', 'Archives', 'eBooks', 'Fonts',
+];
 
 const categorizeFormats = (formats: string[]) => {
   const groups = new Map<string, string[]>();
@@ -610,13 +629,19 @@ function UploadPlaceholder({
 
 const CategoryIcon: React.FC<{ name: string }> = ({ name }) => {
   switch (name) {
-    case 'Image': return <Image className="h-3.5 w-3.5" />;
-    case 'Audio': return <Volume2 className="h-3.5 w-3.5" />;
-    case 'Video': return <Video className="h-3.5 w-3.5" />;
-    case 'Document': return <FileText className="h-3.5 w-3.5" />;
-    case 'Archive': return <FolderArchive className="h-3.5 w-3.5" />;
-    case '3D': return <Box className="h-3.5 w-3.5" />;
-    default: return <File className="h-3.5 w-3.5" />;
+    case 'Documents':     return <FileText className="h-3.5 w-3.5" />;
+    case 'Spreadsheets':  return <FileSpreadsheet className="h-3.5 w-3.5" />;
+    case 'Presentations': return <Presentation className="h-3.5 w-3.5" />;
+    case 'Images':        return <Image className="h-3.5 w-3.5" />;
+    case 'Audio':         return <Volume2 className="h-3.5 w-3.5" />;
+    case 'Video':         return <Video className="h-3.5 w-3.5" />;
+    case 'Archives':      return <FolderArchive className="h-3.5 w-3.5" />;
+    case 'CAD':           return <Box className="h-3.5 w-3.5" />;
+    case 'eBooks':        return <BookOpen className="h-3.5 w-3.5" />;
+    case 'Vectors':       return <Layers className="h-3.5 w-3.5" />;
+    case 'Fonts':         return <Type className="h-3.5 w-3.5" />;
+    case '3D Models':     return <Box className="h-3.5 w-3.5" />;
+    default:              return <File className="h-3.5 w-3.5" />;
   }
 };
 
@@ -728,7 +753,7 @@ const TargetFormatPicker: React.FC<TargetFormatPickerProps> = ({
               className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 outline-none"
             />
           </div>
-          <div className="grid grid-cols-[140px_1fr] max-h-[280px]">
+          <div className="grid grid-cols-[150px_1fr] max-h-[360px]">
             <div className="border-r border-slate-100 bg-slate-50/60 overflow-y-auto py-1">
               {filteredCategories.length === 0 && (
                 <p className="px-3 py-4 text-[11px] text-slate-500">No formats match.</p>
@@ -1963,7 +1988,18 @@ export default function ConversionPanel({
                 <p className="mt-2 text-sm font-semibold text-slate-600">{converterSubtitle}</p>
               </div>
 
-              <div className="max-h-[min(60vh,560px)] overflow-y-auto border-b border-slate-100">
+              <div
+                /* File list: only switches to internal scroll when the content
+                   actually exceeds the cap. With 1 file (content ~150-220px),
+                   the visible height is the natural content height and NO
+                   scrollbar track is reserved. Once the list grows past the
+                   cap (~4 files at 1080p), overflow-y-auto kicks in and the
+                   sticky action row below stays pinned to the viewport bottom. */
+                className={cls(
+                  'border-b border-slate-100',
+                  files.length > 2 ? 'max-h-[min(60vh,560px)] overflow-y-auto' : 'overflow-hidden'
+                )}
+              >
                 <AnimatePresence initial={false}>
                   {files.map((file, index) => {
                     const readiness = cadFileReadiness[file.name] || 'analyzing';
