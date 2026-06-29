@@ -12,6 +12,8 @@ import Dashboard from './components/Dashboard';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import Billing from './components/Billing';
 import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
+import { getOrCreateUser, captureReferralFromUrl } from './data/gamification';
+import FloatingCreditPill from './components/gamification/FloatingCreditPill';
 import OnboardingTour from './components/OnboardingTour';
 import InteractiveHeroSelector from './components/InteractiveHeroSelector';
 import SecurityPage from './components/SecurityPage';
@@ -122,6 +124,9 @@ export default function App() {
 
   // Load conversions & limits from localStorage on boot
   useEffect(() => {
+    // Bootstrap gamification: capture ?ref= and create session/user.
+    captureReferralFromUrl();
+    getOrCreateUser(currentUser);
     const savedConvs = localStorage.getItem('omni_conversions') || '[]';
     setConversions(JSON.parse(savedConvs));
 
@@ -1020,6 +1025,11 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Floating gamification pill — visible to every user, admin or not.
+          Opens the gamification modal with credits / upvote / refer / share /
+          activity tabs. */}
+      <FloatingCreditPill currentUser={currentUser} />
 
       {/* CLERK LOGIN / REGISTRATION POPUP MODAL */}
       <AuthModal 
