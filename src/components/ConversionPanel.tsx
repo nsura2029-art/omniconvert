@@ -1504,7 +1504,18 @@ export default function ConversionPanel({
   };
 
   if (isCadTool) {
-    const allConverted = files.length > 0 && conversions.length >= files.length && !isProcessing;
+    // Helpers that derive counts from current `files` so labels stay in sync after
+    // deletions / new uploads / TO changes — never trust raw `conversions.length`.
+    const baseNameOf = (name: string) => name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name;
+    const hasConversionFor = (name: string) => conversions.some(c => c.fileName.startsWith(baseNameOf(name)));
+    const completedCount = files.filter(f => hasConversionFor(f.name)).length;
+    const pendingCount = files.filter(f => {
+      if (!hasConversionFor(f.name)) return true;
+      const currentTarget = targetFormats[f.name] || outputs[0];
+      const lastTarget = lastConvertedTargets[f.name];
+      return lastTarget !== currentTarget;
+    }).length;
+    const allConverted = files.length > 0 && pendingCount === 0 && !isProcessing;
     const primaryFile = files[0];
     const primarySourceFormat = primaryFile ? getFileExtension(primaryFile.name).toUpperCase() : selectedTool.input.split(',')[0].trim();
     const primaryTargetFormat = primaryFile
@@ -1864,7 +1875,7 @@ export default function ConversionPanel({
                       : 'text-slate-500'
                 )}>
                   {files.length > 0
-                    ? `${conversions.length} of ${files.length} converted${isProcessing ? ' · ' + (files.length - conversions.length) + ' in progress' : ''}`
+                    ? `${completedCount} of ${files.length} converted${isProcessing ? ` · ${pendingCount} in progress` : pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`
                     : '0 files'}
                 </span>
                 <button
@@ -1919,7 +1930,7 @@ export default function ConversionPanel({
                       className="btn-primary inline-flex items-center justify-center gap-3 rounded-xl px-6 py-4 text-base font-black text-white shadow-md shadow-blue-500/20 outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
                     >
                       <Download className="h-5 w-5" />
-                      Download all ({files.length} {files.length === 1 ? 'file' : 'files'})
+                      Download all ({completedCount} {completedCount === 1 ? 'file' : 'files'})
                       <ArrowRight className="h-5 w-5" />
                     </button>
                   </div>
@@ -1939,7 +1950,7 @@ export default function ConversionPanel({
                     ) : (
                       <>
                         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        Convert {files.length} {files.length === 1 ? 'file' : 'files'}
+                        Convert {pendingCount} {pendingCount === 1 ? 'file' : 'files'}
                         <ArrowRight className="h-5 w-5" />
                       </>
                     )}
