@@ -1810,7 +1810,15 @@ export default function ConversionPanel({
   };
 
   const handleDownloadAllAsZip = async () => {
-    if (conversions.length === 0) return;
+    // Source the zip contents from `conversions` only. The button's `disabled`
+    // state already gates on both allConverted and a non-empty conversions
+    // array, so reaching here with empty conversions should be rare — but if
+    // it ever happens (race during Convert-all-to flow), flash a notice
+    // instead of silently returning so the user knows why nothing happened.
+    if (conversions.length === 0) {
+      flashCadNotice('No converted files to bundle yet. Click Convert first.', 7000);
+      return;
+    }
     flashCadNotice('Bundling converted files into a zip archive...');
     try {
       const blobs = await Promise.all(
@@ -1866,6 +1874,13 @@ export default function ConversionPanel({
       return lastTarget !== currentTarget;
     }).length;
     const allConverted = files.length > 0 && pendingCount === 0 && !isProcessing;
+    // canDownload is the source of truth for the Download all button. allConverted
+    // alone is not enough — it's derived from lastConvertedTargets/targetFormats
+    // and can briefly report true while the actual conversions array is still
+    // being repopulated by handleConvert (race during Convert-all-to flow). The
+    // button must require a non-empty conversions array too, otherwise the click
+    // handler exits silently with no feedback.
+    const canDownload = allConverted && conversions.length > 0;
     const primaryFile = files[0];
     const primarySourceFormat = primaryFile ? getFileExtension(primaryFile.name).toUpperCase() : selectedTool.input.split(',')[0].trim();
     const primaryTargetFormat = primaryFile
@@ -2057,10 +2072,10 @@ export default function ConversionPanel({
                 <button
                   type="button"
                   onClick={handleDownloadAllAsZip}
-                  disabled={!allConverted}
+                  disabled={!canDownload}
                   className={cls(
                     'inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-black outline-none transition active:scale-[0.97]',
-                    allConverted
+                    canDownload
                       ? 'btn-primary text-white'
                       : 'cursor-not-allowed bg-slate-100 text-slate-400'
                   )}
