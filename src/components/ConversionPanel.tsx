@@ -909,24 +909,22 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
       {/* Output file row: ALWAYS rendered so the article's bounding box is
           locked whether the file is pending or done. Content swaps between the
           "converted output" view and a dashed "awaiting conversion" placeholder,
-          but the surrounding box (grid + padding + border + bg) is identical,
-          so conversions complete without shifting the file list or the sticky
-          action row below.
+          but the surrounding box (border + padding + bg + radius) is identical
+          between the two states so conversions complete without shifting the
+          file list or the sticky action row below.
 
-          Layout (flex column, not the old 4-col grid):
-            - Line 1: file info (icon + label + filename + target chip + size + status pill)
-            - Line 2: Download button, right-aligned (only when converted)
-          The Download button sits on its own line so the eye scans the
-          output row as file info → action, not file info → table → action. */}
+          Layout: file info on the left (flex-1), Download button right-aligned
+          in the SAME row (only when converted). Pending branch intentionally
+          has no Download affordance — a disabled ghost button only adds noise. */}
       <div
         className={cls(
-          'mt-3 flex flex-col gap-3 rounded-xl border px-4 py-3',
+          'mt-3 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3',
           converted && conversion
             ? 'border-emerald-100 bg-emerald-50/60'
             : 'border-dashed border-slate-200 bg-slate-50/40'
         )}
       >
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {converted && conversion ? (
             (() => {
               const { Icon: OutIcon, bg, fg } = getFileTypeMeta(conversion.fileName);
@@ -992,20 +990,16 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
           </div>
         </div>
 
-        {/* Download button: only when converted. Sits on its own line, right-aligned.
-            Pending branch intentionally has no Download affordance — there is nothing
-            to download yet, and a disabled ghost button only adds noise. */}
+        {/* Download button: right-aligned in the SAME row. Only when converted. */}
         {converted && conversion && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={onDownload}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
-            >
-              <Download className="h-4 w-4" />
-              Download
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onDownload}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
+          >
+            <Download className="h-4 w-4" />
+            Download
+          </button>
         )}
       </div>
 
@@ -1230,6 +1224,19 @@ export default function ConversionPanel({
   useEffect(() => () => {
     if (cadNoticeTimeoutRef.current) clearTimeout(cadNoticeTimeoutRef.current);
   }, []);
+
+  // When the first file lands the workspace appears below the fold on most
+  // viewports (the upload placeholder sits below the page intro). Scroll the
+  // page so the convert row is in the browser visible area on first upload;
+  // subsequent adds don't scroll because the workspace is already in view.
+  const previousFileCountRef = useRef(0);
+  useEffect(() => {
+    if (files.length > 0 && previousFileCountRef.current === 0) {
+      const el = document.getElementById('cad-conversion-workspace');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+    previousFileCountRef.current = files.length;
+  }, [files.length]);
   const [showCadShareOptions, setShowCadShareOptions] = useState(false);
   const [showCadAddSources, setShowCadAddSources] = useState(false);
   const [cadAddSourcesPinned, setCadAddSourcesPinned] = useState(false);
