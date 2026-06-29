@@ -879,18 +879,25 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
             </div>
             <p className="mt-1 text-xs font-semibold text-slate-500">{statusText}</p>
 
-            {/* Progress bar: SINGLE left-to-right fill, positioned directly below
-                the input filename. When converted, this whole strip swaps to a
-                static "Complete" inline indicator (no animated bar). */}
-            <div className="mt-2">
+            {/* Progress / status row: SINGLE horizontal line.
+                - Idle: animated left-to-right SingleProgressBar
+                - Converted: static ✓ 100% Complete pill on the SAME row as the
+                  status text (no extra row). When converted, statusText reads
+                  "Ready to download" so the two pieces of information read as a
+                  single phrase: "Ready to download · ✓ 100% Complete". */}
+            <div className="mt-2 flex items-center gap-3">
               {converted ? (
-                <div className="flex items-center gap-2" aria-label="Complete 100%">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-                    <CheckCircle2 className="h-3 w-3" />
-                  </span>
-                  <span className="text-[11px] font-black text-emerald-700">100%</span>
-                  <span className="text-[11px] font-bold text-slate-500">Complete</span>
-                </div>
+                <>
+                  <div className="flex items-center gap-1.5" aria-label="Complete 100%">
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                      <CheckCircle2 className="h-3 w-3" />
+                    </span>
+                    <span className="text-[11px] font-black text-emerald-700">100%</span>
+                    <span className="text-[11px] font-bold text-slate-500">Complete</span>
+                  </div>
+                  <span className="h-3 w-px bg-slate-200" aria-hidden="true" />
+                  <span className="text-[11px] font-black text-emerald-700">Ready to download</span>
+                </>
               ) : (
                 <SingleProgressBar value={progressValue} />
               )}
@@ -975,13 +982,14 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
             })()
           )}
           <div className="min-w-0 flex-1">
-            <p className={cls(
-              'text-[10px] font-black uppercase tracking-wider',
-              converted && conversion ? 'text-emerald-700' : 'text-slate-400'
-            )}>
-              {converted && conversion ? 'Converted output' : 'Awaiting conversion'}
-            </p>
-            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+            {/* No label row here. The input row above already shows
+                "Ready to download" + "100% Complete" inline, and the
+                "Awaiting conversion" placeholder is implied by the dashed
+                border + projected filename + ghost target chip — adding
+                a "Converted output" / "Awaiting conversion" eyebrow just
+                adds a redundant row of text. The output row is purely
+                file info + Download action. */}
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className={cls(
                 'truncate text-sm',
                 converted && conversion ? 'font-black text-slate-900' : 'font-bold text-slate-400'
