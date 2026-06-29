@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box } from 'lucide-react';
+import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box, Music, FileCode, Sheet, FileType, BookOpen, Code } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
 import confetti from 'canvas-confetti';
@@ -74,6 +74,44 @@ const CAD_TARGET_MATRIX: Record<string, string[]> = {
 };
 
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || 'cad';
+
+// Map a filename's extension to a colored icon chip so the row tells you
+// what kind of file it is before you even read the name.
+type FileTypeMeta = {
+  Icon: React.ComponentType<{ className?: string }>;
+  bg: string;
+  fg: string;
+  label: string;
+};
+const FILE_TYPE_TABLE: Array<{ exts: string[]; meta: FileTypeMeta }> = [
+  { exts: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'tif', 'heic', 'ico', 'avif'],
+    meta: { Icon: Image,        bg: 'bg-pink-50',    fg: 'text-pink-600',    label: 'image' } },
+  { exts: ['svg'],             meta: { Icon: Code,         bg: 'bg-pink-50',    fg: 'text-pink-600',    label: 'vector' } },
+  { exts: ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'm4r', 'dts', 'amr', 'mp2', 'voc', 'aiff', 'aif', '8svx', 'cvs', 'opus'],
+    meta: { Icon: Music,        bg: 'bg-violet-50',  fg: 'text-violet-600',  label: 'audio' } },
+  { exts: ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 'mpeg', 'mpg', '3gp', 'm4v', 'ts'],
+    meta: { Icon: Video,        bg: 'bg-rose-50',    fg: 'text-rose-600',    label: 'video' } },
+  { exts: ['pdf'],             meta: { Icon: FileText,     bg: 'bg-red-50',     fg: 'text-red-600',     label: 'pdf' } },
+  { exts: ['doc', 'docx', 'odt', 'rtf'],
+    meta: { Icon: FileType,     bg: 'bg-blue-50',    fg: 'text-blue-600',    label: 'document' } },
+  { exts: ['xlsx', 'xls', 'csv'],
+    meta: { Icon: Sheet,        bg: 'bg-emerald-50', fg: 'text-emerald-700', label: 'spreadsheet' } },
+  { exts: ['txt', 'md', 'log'],
+    meta: { Icon: FileText,     bg: 'bg-slate-50',   fg: 'text-slate-600',   label: 'text' } },
+  { exts: ['html', 'htm'],     meta: { Icon: Code,         bg: 'bg-orange-50',  fg: 'text-orange-600',  label: 'markup' } },
+  { exts: ['json', 'xml', 'css', 'js', 'jsx', 'ts', 'tsx', 'yaml', 'yml'],
+    meta: { Icon: FileCode,     bg: 'bg-amber-50',   fg: 'text-amber-700',   label: 'code' } },
+  { exts: ['epub', 'mobi'],    meta: { Icon: BookOpen,     bg: 'bg-indigo-50',   fg: 'text-indigo-600',  label: 'ebook' } },
+  { exts: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'],
+    meta: { Icon: FolderArchive, bg: 'bg-yellow-50', fg: 'text-yellow-700', label: 'archive' } },
+  { exts: ['stl', 'obj', 'step', 'stp', 'iges', 'igs', 'dwg', 'dxf', 'fbx', '3ds', 'glb', 'gltf', '3mf'],
+    meta: { Icon: Box,          bg: 'bg-orange-50',  fg: 'text-orange-600',  label: '3d' } },
+];
+const FALLBACK_FILE_META: FileTypeMeta = { Icon: File, bg: 'bg-slate-100', fg: 'text-slate-500', label: 'file' };
+const getFileTypeMeta = (fileName: string): FileTypeMeta => {
+  const ext = getFileExtension(fileName);
+  return FILE_TYPE_TABLE.find(g => g.exts.includes(ext))?.meta || FALLBACK_FILE_META;
+};
 
 const getCadTargetOptions = (fileName: string, fallbackOutput: string[]) => {
   const ext = getFileExtension(fileName);
@@ -581,15 +619,25 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
     >
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px] lg:items-center">
         <div className="flex min-w-0 gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">
-            <File className="h-5 w-5" />
-          </span>
+          {(() => {
+            const { Icon: TypeIcon, bg, fg } = getFileTypeMeta(file.name);
+            return (
+              <span className={cls('grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1 ring-inset ring-black/[0.04]', bg, fg)}>
+                <TypeIcon className="h-5 w-5" />
+              </span>
+            );
+          })()}
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <p className="truncate text-sm font-black text-slate-900">{file.name}</p>
-              <span className="rounded-full bg-blue-50 px-2 py-1 font-mono text-[10px] font-black uppercase text-blue-700">
-                {extension}
-              </span>
+              {(() => {
+                const { bg, fg } = getFileTypeMeta(file.name);
+                return (
+                  <span className={cls('rounded-full px-2 py-1 font-mono text-[10px] font-black uppercase', bg, fg)}>
+                    {extension}
+                  </span>
+                );
+              })()}
             </div>
             <p className="mt-1 text-xs font-semibold text-slate-500">{statusText}</p>
           </div>
@@ -654,9 +702,19 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
           className="mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px]"
         >
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-500 text-white">
-              <CheckCircle2 className="h-4 w-4" />
-            </span>
+            {(() => {
+              const { Icon: OutIcon, bg, fg } = getFileTypeMeta(conversion.fileName);
+              return (
+                <span className="relative">
+                  <span className={cls('grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-black/[0.04]', bg, fg)}>
+                    <OutIcon className="h-4 w-4" />
+                  </span>
+                  <span className="absolute -right-1 -bottom-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
+                    <CheckCircle2 className="h-2.5 w-2.5" />
+                  </span>
+                </span>
+              );
+            })()}
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
                 Converted output
