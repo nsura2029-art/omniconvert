@@ -1421,7 +1421,7 @@ export default function ConversionPanel({
   };
 
   // TRIGGER MASTER PROCESSING WORKER (REAL & SIMULATED PIPELINE)
-  const handleConvert = async (forceAll = false) => {
+  const handleConvert = async (forceAll = false, overrideTargets?: Record<string, string>) => {
     if (files.length === 0 && selectedTool.name !== 'Text to Speech' && selectedTool.name !== 'Markdown to HTML') {
       return;
     }
@@ -1491,7 +1491,14 @@ export default function ConversionPanel({
     // Each file runs its own conversion pipeline concurrently; per-file state
     // (progress, logs, conversion record) is kept independent via closures.
     const processSingleFile = async (currentFile: File): Promise<FileConversion> => {
-      const selectedTargetFormat = targetFormats[currentFile.name] || outputs[0];
+      // Resolve the target format with overrideTargets (from applyCadConvertAll)
+      // taking precedence over the closure's targetFormats. The closure value is
+      // stale when applyCadConvertAll calls handleConvert(true) in the SAME render
+      // it just set the new targets — without this override the conversion would
+      // be written against the OLD target format, and after re-render the row
+      // would show a mismatched chip (new target) + filename (old target).
+      const selectedTargetFormat =
+        overrideTargets?.[currentFile.name] ?? targetFormats[currentFile.name] ?? outputs[0];
       const conversionId = 'conv_' + Math.random().toString(36).substr(2, 9);
 
       const logMessages: string[] = [];
@@ -1776,7 +1783,12 @@ export default function ConversionPanel({
     setLastConvertedTargets(prev => {
       const next = { ...prev };
       itemsToConvert.forEach(file => {
-        next[file.name] = targetFormats[file.name] || outputs[0];
+        // Mirror the override resolution used in processSingleFile so the
+        // `lastTarget` written here matches the target the conversion just ran
+        // against. Otherwise Convert-all-to would leave pendingCount > 0 in
+        // the next render (the old lastTarget would not equal the new target).
+        next[file.name] =
+          overrideTargets?.[file.name] ?? targetFormats[file.name] ?? outputs[0];
       });
       return next;
     });
@@ -1848,8 +1860,11 @@ export default function ConversionPanel({
       // Clear prior outputs so each row shows the new format result (not the old one).
       setConversions([]);
       setFileProgresses({});
-      // Re-run the pipeline with forceAll so every file is processed again.
-      handleConvert(true);
+      // Pass nextTargets through explicitly. handleConvert runs in this same render,
+      // so its closure's `targetFormats` still holds the OLD values — without the
+      // override the conversion record would be written against the old format and
+      // the row would show a mismatched chip (new) + filename (old).
+      handleConvert(true, nextTargets);
     }
   };
 
