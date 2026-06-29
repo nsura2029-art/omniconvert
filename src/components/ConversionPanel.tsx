@@ -396,19 +396,19 @@ function UploadProgressBar({ value, label }: { value: number; label?: string }) 
   return (
     <div className="w-full space-y-1.5" aria-label={label || `Upload progress ${safeValue}%`}>
       <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100">
-        {/* Left-anchored fill: grows right from the left edge */}
-        <motion.div
-          className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-cyan-300"
-          initial={{ width: 0 }}
-          animate={{ width: `${halfWidth}%` }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
+        {/* Left-anchored fill: grows right from the left edge.
+            Plain div + CSS transition (not motion.div) so rapid progress
+            updates smoothly interpolate instead of triggering overlapping
+            motion animations that visually jitter. */}
+        <div
+          className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-300"
+          style={{ width: `${halfWidth}%`, transition: 'width 180ms ease-out' }}
         />
-        {/* Right-anchored fill: grows left from the right edge */}
-        <motion.div
-          className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-l from-emerald-400 via-cyan-400 to-cyan-300"
-          initial={{ width: 0 }}
-          animate={{ width: `${halfWidth}%` }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
+        {/* Right-anchored fill: grows left from the right edge. Same
+            treatment so the dual-anchored cadence stays in lockstep. */}
+        <div
+          className="absolute top-0 right-0 h-full rounded-full bg-gradient-to-l from-emerald-400 to-emerald-300"
+          style={{ width: `${halfWidth}%`, transition: 'width 180ms ease-out' }}
         />
       </div>
       {label && <p className="text-xs font-bold text-slate-500">{label}</p>}
