@@ -1833,7 +1833,7 @@ export default function ConversionPanel({
                 <p className="mt-2 text-sm font-semibold text-slate-600">{converterSubtitle}</p>
               </div>
 
-              <div className="border-y border-slate-100">
+              <div className="max-h-[min(60vh,560px)] overflow-y-auto border-b border-slate-100">
                 <AnimatePresence initial={false}>
                   {files.map((file, index) => {
                     const readiness = cadFileReadiness[file.name] || 'analyzing';
@@ -1867,6 +1867,11 @@ export default function ConversionPanel({
                 </AnimatePresence>
               </div>
 
+              {/* Sticky action area: bottom 3 rows stay pinned to the viewport while the
+                  file list scrolls. When files overflow the max-h above, the list grows its
+                  own scrollbar and the action area continues to render at the bottom of the
+                  browser visible area. */}
+              <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
               {/* ============== ROW 1: Inputs (Attach + Save destination) ============== */}
               <div className={cls(
                 'flex items-stretch divide-x border-b',
@@ -2208,6 +2213,7 @@ export default function ConversionPanel({
                 )}
               </div>
 
+              </div>
               </div>
           )}
 

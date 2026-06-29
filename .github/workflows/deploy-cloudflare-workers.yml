@@ -1,10 +1,20 @@
-﻿name: Deploy to Cloudflare Workers
+name: Deploy Cloudflare Workers
 
 on:
   push:
     branches:
       - develop
       - main
+    paths:
+      - 'src/**'
+      - 'workers/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - 'wrangler.toml'
+      - 'workers/**/wrangler.toml'
+      - '.github/workflows/deploy-cloudflare-workers.yml'
   workflow_dispatch:
 
 permissions:
@@ -15,37 +25,85 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Build and deploy
+  lint-and-build:
+    name: Lint + build SPA
     runs-on: ubuntu-latest
     env:
       APP_URL: ${{ vars.APP_URL }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      VITE_APP_URL: ${{ vars.APP_URL }}
+      VITE_APP_URL: ${{ vars.VITE_APP_URL }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       VITE_APP_ENV: production
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spa-dist
+          path: dist
+          retention-days: 1
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npm run lint
-
-      - name: Build app
-        run: npm run build
-
-      - name: Deploy Worker
+  deploy-spa:
+    name: Deploy omni-spa (static assets)
+    needs: lint-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: spa-dist
+      - name: Publish to Workers Assets
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          workingDirectory: .
+          command: deploy --name ${{ vars.CF_WORKER_NAME_SPA }}
+
+  # Phase 1 spine: gateway Worker. Stubbed for now — real code lands
+  # in workers/api/. Activate by creating the Worker and enabling this job.
+  deploy-api:
+    name: Deploy omni-api (gateway)
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Publish omni-api
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/api
+          command: deploy --name ${{ vars.CF_WORKER_NAME_API }}
+
+  # Phase 2: CAD consumer Worker. Activated once we ship OCCT WASM module.
+  # Uncomment + flip the `if` guard to enable.
+  # deploy-cad:
+  #   name: Deploy omni-cad-worker (consumer)
+  #   needs: lint-and-build
+  #   if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22
+  #         cache: npm
+  #     - run: npm ci
+  #     - name: Publish omni-cad-worker
+  #       uses: cloudflare/wrangler-action@v3
+  #       with:
+  #         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  #         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  #         workingDirectory: workers/cad-consumer
+  #         command: deploy --name ${{ vars.CF_WORKER_NAME_CAD }}
