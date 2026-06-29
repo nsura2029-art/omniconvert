@@ -869,65 +869,124 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
         </div>
       </div>
 
-      {converted && conversion && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px]"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            {(() => {
-              const { Icon: OutIcon, bg, fg } = getFileTypeMeta(conversion.fileName);
-              return (
-                <span className="relative">
-                  <span className={cls('grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-black/[0.04]', bg, fg)}>
-                    <OutIcon className="h-4 w-4" />
+      {/* Output file row: ALWAYS rendered so the article's bounding box is
+          locked whether the file is pending or done. Content swaps between the
+          "converted output" view and a dashed "awaiting conversion" placeholder,
+          but the surrounding box (grid + padding + border + bg) is identical,
+          so conversions complete without shifting the file list or the sticky
+          action row below. */}
+      <div
+        className={cls(
+          'mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px]',
+          converted && conversion
+            ? 'border-emerald-100 bg-emerald-50/60'
+            : 'border-dashed border-slate-200 bg-slate-50/40'
+        )}
+      >
+        {converted && conversion ? (
+          <>
+            <div className="flex min-w-0 items-center gap-3">
+              {(() => {
+                const { Icon: OutIcon, bg, fg } = getFileTypeMeta(conversion.fileName);
+                return (
+                  <span className="relative">
+                    <span className={cls('grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-black/[0.04]', bg, fg)}>
+                      <OutIcon className="h-4 w-4" />
+                    </span>
+                    <span className="absolute -right-1 -bottom-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
+                      <CheckCircle2 className="h-2.5 w-2.5" />
+                    </span>
                   </span>
-                  <span className="absolute -right-1 -bottom-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
-                    <CheckCircle2 className="h-2.5 w-2.5" />
+                );
+              })()}
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                  Converted output
+                </p>
+                <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="truncate text-sm font-black text-slate-900">{conversion.fileName}</span>
+                  <span className="rounded-full bg-white px-2 py-0.5 font-mono text-[10px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200">
+                    {currentTarget}
                   </span>
-                </span>
-              );
-            })()}
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
-                Converted output
-              </p>
-              <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
-                <span className="truncate text-sm font-black text-slate-900">{conversion.fileName}</span>
-                <span className="rounded-full bg-white px-2 py-0.5 font-mono text-[10px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200">
-                  {currentTarget}
-                </span>
-                <span className="text-xs font-semibold text-slate-500">{formatReadableFileSize(conversion.fileSize)}</span>
+                  <span className="text-xs font-semibold text-slate-500">{formatReadableFileSize(conversion.fileSize)}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="hidden lg:block" />
-          <div className="hidden lg:block" />
-          <div className="hidden text-xs font-semibold text-slate-500 lg:block lg:text-right">
-            <span className="rounded-full bg-emerald-100 px-2 py-1 font-mono text-[10px] font-black uppercase text-emerald-700">
-              Done
-            </span>
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={onDownload}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
-            >
-              <Download className="h-4 w-4" />
-              Download
-            </button>
-          </div>
-        </motion.div>
-      )}
+            <div className="hidden lg:block" />
+            <div className="hidden lg:block" />
+            <div className="hidden text-xs font-semibold text-slate-500 lg:block lg:text-right">
+              <span className="rounded-full bg-emerald-100 px-2 py-1 font-mono text-[10px] font-black uppercase text-emerald-700">
+                Done
+              </span>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={onDownload}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </button>
+            </div>
+          </>
+        ) : (
+          /* Pending placeholder: same 5 grid cells as the converted branch so
+             the row's footprint (and therefore the article's height) is byte-
+             identical whether the file is done or still pending. */
+          <>
+            <div className="flex min-w-0 items-center gap-3">
+              {(() => {
+                const { Icon: OutIcon } = getFileTypeMeta(`placeholder.${currentTarget.toLowerCase()}`);
+                return (
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-dashed border-slate-200 bg-white">
+                    <OutIcon className="h-4 w-4 text-slate-300" />
+                  </span>
+                );
+              })()}
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Awaiting conversion
+                </p>
+                <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="truncate text-sm font-bold text-slate-400">
+                    {file.name.includes('.')
+                      ? `${file.name.slice(0, file.name.lastIndexOf('.'))}.${currentTarget.toLowerCase()}`
+                      : `${file.name}.${currentTarget.toLowerCase()}`}
+                  </span>
+                  <span className="rounded-full bg-white px-2 py-0.5 font-mono text-[10px] font-black uppercase text-slate-500 ring-1 ring-slate-200">
+                    {currentTarget}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden lg:block" />
+            <div className="hidden lg:block" />
+            <div className="hidden text-xs font-semibold text-slate-400 lg:block lg:text-right">
+              <span className="rounded-full bg-slate-100 px-2 py-1 font-mono text-[10px] font-black uppercase text-slate-500">
+                Pending
+              </span>
+            </div>
+            <div className="flex justify-end">
+              <span
+                aria-disabled="true"
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-white px-4 text-xs font-black text-slate-300"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </span>
+            </div>
+          </>
+        )}
+      </div>
 
-      {converted && conversion && (
-        <div
-          aria-hidden="true"
-          className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-slate-500/70 to-transparent dark:via-slate-300/60"
-        />
-      )}
+      {/* Gradient divider: always rendered so the visual cadence between
+          rows is identical for every file. Previously this was conditional
+          and contributed to the same flicker. */}
+      <div
+        aria-hidden="true"
+        className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-slate-300/60 to-transparent dark:via-slate-300/30"
+      />
     </motion.article>
   );
 };
@@ -1847,7 +1906,14 @@ export default function ConversionPanel({
 
                     return (
                       <UploadedFileRow
-                        key={`${file.name}-${index}`}
+                        /* Stable, content-derived key. file.name alone is not
+                           unique (two picks of the same filename would collide);
+                           appending size + lastModified makes the key unique per
+                           File instance AND stable across re-orderings, so
+                           removing a middle row does not re-mount the rows
+                           below it (which would re-trigger the entrance
+                           animation and look like a flicker). */
+                        key={`${file.name}-${file.size}-${file.lastModified}`}
                         file={file}
                         readiness={readiness}
                         progress={progress}
