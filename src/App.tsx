@@ -9,6 +9,7 @@ import CadSeoPage from './components/CadSeoPage';
 import AuthModal from './components/AuthModal';
 import ConversionPanel from './components/ConversionPanel';
 import Dashboard from './components/Dashboard';
+import AnalyticsDashboard from './pages/Dashboard';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import Billing from './components/Billing';
 import AdminDashboard from './components/AdminDashboard';
@@ -369,6 +370,11 @@ export default function App() {
       window.history.pushState({}, '', '/');
     } else if (page === 'security') {
       window.history.pushState({}, '', '/security/');
+    } else if (page === 'analytics') {
+      window.history.pushState({}, '', '/dashboard');
+    } else if (page.startsWith('analytics:')) {
+      const cat = page.split(':')[1];
+      window.history.pushState({}, '', `/dashboard/${cat}`);
     }
   };
 
@@ -937,13 +943,27 @@ export default function App() {
         {/* VIEW 3: COMPREHENSIVE DASHBOARD */}
         {currentPage === 'dashboard' && (
           <div className="animate-fade-in">
-            <Dashboard 
+            <Dashboard
               currentUser={currentUser}
               conversions={conversions}
               integrations={integrations}
               onToggleIntegration={handleToggleIntegration}
               onUpdateIntegration={handleUpdateIntegration}
               onOpenAuth={() => setAuthModalOpen(true)}
+            />
+          </div>
+        )}
+
+        {/* VIEW 3b: PER-CATEGORY ANALYTICS DASHBOARD */}
+        {(currentPage === 'analytics' || currentPage.startsWith('analytics:')) && (
+          <div className="animate-fade-in -mx-4 sm:-mx-6 lg:-mx-8 -my-8">
+            <AnalyticsDashboard
+              embedded
+              categoryParam={currentPage.startsWith('analytics:') ? currentPage.split(':')[1] : undefined}
+              onNavigate={(page, cat) => {
+                if (page === 'overview') handleChangePage('analytics');
+                else if (page === 'category' && cat) handleChangePage(`analytics:${cat}`);
+              }}
             />
           </div>
         )}

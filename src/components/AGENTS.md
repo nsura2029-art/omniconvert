@@ -54,5 +54,25 @@
 - Run `npm run build` for component changes.
 - Use browser checks for changed interactions such as upload source selection, auth modals, dashboard tabs, or billing checkout.
 
+## Per-Category Analytics Dashboard
+- A new full-page dashboard ships at `/dashboard` (overview) and `/dashboard/{categoryId}` per-category. The host app renders it via `currentPage === 'analytics' | 'analytics:cad' | ...` and the `<AnalyticsDashboard />` component mounted in `App.tsx`.
+- The dashboard is required for every conversion category shipped to the platform. The contract is locked in the conversion-matrix skill §5 ("ANALYTICS DASHBOARD TODO") and §6 of `skills/omniconvert-conversion-matrix/SKILL.md`. Adding a new category without a working analytics view violates the DOX.
+- Panels required on the per-category page: 8 KPI cards (KpiGrid), From->To matrix heatmap (FromToMatrix), Popular pairs table, Processing path breakdown (browser/hybrid/server %), Latency breakdown, Trending line chart, Usage timeline with day/week/month toggle, Advanced analytics (peak hour, avg file size, error rate, cold start, retention, format popularity, top regions).
+- Data layer (`src/data/dashboardAnalytics.ts`) is deterministic per category (seeded PRNG by category id) so the same category always renders the same numbers. Real conversion counts from localStorage (`src/data/localConversions.ts`) blend into the KPI cards when present; otherwise the seeded values are the source of truth.
+- New category checklist:
+  1. Add entry to `CATEGORY_META` in `src/data/dashboardAnalytics.ts` (id, name, description, format counts, browserFeasible / serverRequired).
+  2. Add icon name to `CATEGORY_LIST` (use an existing lucide-react icon name).
+  3. Add a format pool entry in `pickFormatsForCategory(cat, n, rand)` so Popular pairs / Matrix / Timeline render realistic format names.
+  4. Verify the sidebar shows the new category and the per-category page renders without errors.
+- Implementation files:
+  - `src/pages/Dashboard.tsx` (overview + category view + breadcrumb)
+  - `src/components/dashboard/DashboardSidebar.tsx`
+  - `src/components/dashboard/KpiCard.tsx` (KPI cards + KpiGrid + formatBytes/formatMs helpers)
+  - `src/components/dashboard/FromToMatrix.tsx`
+  - `src/components/dashboard/DashboardPanels.tsx` (Popular pairs, Trending chart, Processing breakdown, Latency breakdown, Usage timeline, Advanced analytics)
+  - `src/data/dashboardAnalytics.ts` (seeded data + builders)
+  - `src/data/localConversions.ts` (real-signal layer)
+  - `src/pages/stubRouter.tsx` (Link stub for environments without react-router-dom; replace with real `Link`/`useParams` when that dep is added)
+
 ## Child DOX Index
 - No child DOX files yet.

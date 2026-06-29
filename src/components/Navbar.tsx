@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, User as UserIcon, LogOut, ShieldAlert, Library, Route, BarChart3, CreditCard, ChevronDown, HelpCircle, Sun, Moon, Gift } from 'lucide-react';
+import { Sparkles, User as UserIcon, LogOut, ShieldAlert, Library, Route, BarChart3, CreditCard, ChevronDown, HelpCircle, Sun, Moon, Gift, Activity } from 'lucide-react';
 import { User } from '../types';
 import type { Category } from '../data/tools';
 
@@ -172,6 +172,19 @@ export default function Navbar({
             </button>
 
             <button
+              onClick={() => onChangePage('analytics')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                currentPage === 'analytics' || currentPage.startsWith('analytics:')
+                  ? 'bg-zinc-800/10 dark:bg-white/10 text-zinc-900 dark:text-white border border-zinc-300/30 dark:border-white/10 shadow-sm'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              }`}
+              title="Per-category conversion analytics"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              Analytics
+            </button>
+
+            <button
               onClick={() => onChangePage('billing')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 currentPage === 'billing'
@@ -282,6 +295,14 @@ export default function Navbar({
                     </button>
 
                     <button
+                      onClick={() => onChangePage('analytics')}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-500/10 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <Activity className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                      Per-Category Analytics
+                    </button>
+
+                    <button
                       onClick={() => onChangePage('billing')}
                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-500/10 dark:hover:bg-white/5 transition-colors"
                     >
@@ -353,6 +374,15 @@ export default function Navbar({
         >
           <BarChart3 className="w-4 h-4" />
           Dashboard
+        </button>
+        <button
+          onClick={() => onChangePage('analytics')}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-medium transition-colors ${
+            currentPage === 'analytics' || currentPage.startsWith('analytics:') ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          Analytics
         </button>
         <button
           onClick={() => onChangePage('billing')}
