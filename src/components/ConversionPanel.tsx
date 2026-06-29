@@ -1234,7 +1234,7 @@ export default function ConversionPanel({
       const selectedFiles = Array.from(e.target.files) as File[];
       setFiles(prev => [...prev, ...selectedFiles]);
       setShowUploadDropdown(false);
-      
+
       const initialFormats = { ...targetFormats };
       selectedFiles.forEach(f => {
         if (!initialFormats[f.name]) {
@@ -1242,6 +1242,10 @@ export default function ConversionPanel({
         }
       });
       setTargetFormats(initialFormats);
+      // Phase 1 cleanup: no auto-trigger. The inline Convert button (leftmost
+      // in the unified action row) is now the explicit start. handleConvert
+      // reads `files` from closure, so auto-triggering from this handler would
+      // race with the setFiles/setTargetFormats updates above.
     }
   };
 
@@ -1804,10 +1808,6 @@ export default function ConversionPanel({
 
     const cadSourceActions = ([
       ['computer', 'From Computer'],
-      ['url', 'From URL'],
-      ['gdrive', 'From Google Drive'],
-      ['dropbox', 'From Dropbox'],
-      ['onedrive', 'From OneDrive'],
     ] as Array<[UploadSourceId, string]>).map(([source, label]) => ({
       id: source,
       label,
@@ -1817,9 +1817,7 @@ export default function ConversionPanel({
         setCadUploadButtonLabel(label);
         setShowCadAddSources(false);
         setCadAddSourcesPinned(false);
-        if (source === 'computer') fileInputRef.current?.click();
-        else if (source === 'url') setActiveUploadSource(activeUploadSource === 'url' ? 'menu' : 'url');
-        else addCadSampleFiles(label);
+        fileInputRef.current?.click();
       },
     }));
 
@@ -1872,244 +1870,41 @@ export default function ConversionPanel({
                   own scrollbar and the action area continues to render at the bottom of the
                   browser visible area. */}
               <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
-              {/* ============== ROW 1: Inputs (Attach + Save destination) ============== */}
+              {/* ============== ROW: Unified action bar (Phase 1 cleanup) ==============
+                  Phase 1 keeps the layout to a single horizontal action row:
+                    - Primary Convert button (left)
+                    - "Convert all to" bulk override select
+                    - Status counter (ml-auto pushes right)
+                    - Clear all + Download all
+                    - + Add more files (rightmost, opens native file picker directly)
+                  The previous three-row layout (Inputs / Bulk ops / Primary) and the
+                  Save-destination popover are intentionally collapsed. */}
               <div className={cls(
-                'flex items-stretch divide-x border-b',
+                'flex flex-wrap items-center gap-3 px-5 py-3',
                 allConverted
-                  ? 'divide-emerald-100 border-emerald-100'
+                  ? 'border-b border-emerald-100 bg-emerald-50/30'
                   : isProcessing
-                    ? 'divide-blue-100 border-blue-100'
-                    : 'divide-slate-100 border-slate-100'
+                    ? 'border-b border-blue-100 bg-blue-50/40'
+                    : 'border-b border-slate-100'
               )}>
-                {/* Attach more files (left) */}
-                <div className="relative flex-1">
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() => {
-                      setCadAddSourcesPinned(prev => !prev);
-                      setShowCadAddSources(prev => !prev);
-                      setShowSavePopover(false);
-                    }}
-                    className={cls(
-                      'group flex w-full items-center gap-3 px-5 py-4 text-left transition',
-                      isProcessing
-                        ? 'cursor-not-allowed opacity-60'
-                        : 'hover:bg-blue-50/40',
-                      showCadAddSources && 'bg-blue-50/60'
-                    )}
-                  >
-                    <span className={cls(
-                      'grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1',
-                      isProcessing
-                        ? 'bg-blue-100 text-blue-600'
-                        : showCadAddSources
-                          ? 'bg-blue-100 text-blue-700 ring-blue-200'
-                          : 'bg-blue-50 text-blue-600 ring-blue-100'
-                    )}>
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14m-7-7h14"/></svg>
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className={cls(
-                        'block text-[10px] font-black uppercase tracking-wider',
-                        isProcessing ? 'text-slate-500' : allConverted ? 'text-emerald-700' : 'text-slate-500'
-                      )}>Source</span>
-                      <span className={cls(
-                        'block truncate text-sm font-black',
-                        isProcessing ? 'text-slate-500' : 'text-slate-800'
-                      )}>Attach more files</span>
-                    </span>
-                    <span className="hidden text-[10px] font-bold text-slate-400 lg:inline">Computer · URL · Drive · Dropbox · OneDrive</span>
-                    <svg className={cls(
-                      'h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform',
-                      !isProcessing && 'group-hover:text-blue-600',
-                      showCadAddSources && 'rotate-180 text-blue-700'
-                    )} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                  </button>
-
-                  {/* Attach popover (expands upward, anchored left) */}
-                  <AnimatePresence>
-                    {showCadAddSources && !isProcessing && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                        transition={{ duration: 0.16 }}
-                        className="absolute bottom-full left-0 z-30 mb-2 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15"
-                      >
-                        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Add files from</p>
-                        </div>
-                        <div className="p-1.5">
-                          {cadSourceActions.map(source => (
-                            <button
-                              key={source.id}
-                              type="button"
-                              onClick={() => {
-                                setShowCadAddSources(false);
-                                setCadAddSourcesPinned(false);
-                                source.onClick();
-                              }}
-                              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-blue-50"
-                            >
-                              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50">
-                                <ProviderIcon provider={source.id} />
-                              </span>
-                              <span>
-                                <span className="block text-xs font-black text-slate-800">{source.id === 'computer' ? 'From my computer' : source.label}</span>
-                                <span className="block text-[10px] text-slate-500">{source.id === 'computer' ? 'Browse local files' : source.id === 'url' ? 'Paste a direct file link' : `Pick from your ${source.label.replace('From ', '').toLowerCase()}`}</span>
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Save destination (right, fixed width) */}
-                <div className="relative w-72 shrink-0">
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() => {
-                      setShowSavePopover(prev => !prev);
-                      setShowCadAddSources(false);
-                      setCadAddSourcesPinned(false);
-                    }}
-                    className={cls(
-                      'group flex w-full items-center gap-3 px-5 py-4 text-left transition',
-                      isProcessing
-                        ? 'cursor-not-allowed opacity-60'
-                        : 'hover:bg-blue-50/40',
-                      showSavePopover && 'bg-blue-50/60'
-                    )}
-                  >
-                    <span className={cls(
-                      'grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1',
-                      cadSaveDestination
-                        ? 'bg-white shadow ring-blue-100'
-                        : isProcessing
-                          ? 'bg-blue-100 text-slate-400'
-                          : 'border border-dashed border-slate-300 bg-slate-50 text-slate-400'
-                    )}>
-                      {cadSaveDestination ? (
-                        <ProviderIcon provider={cadSaveDestination} />
-                      ) : (
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className={cls(
-                        'block text-[10px] font-black uppercase tracking-wider',
-                        isProcessing ? 'text-slate-500' : allConverted ? 'text-emerald-700' : 'text-slate-500'
-                      )}>Save to</span>
-                      {cadSaveDestination ? (
-                        <span className="flex items-center gap-1.5 truncate text-sm font-black text-slate-800">
-                          {cadSaveDestination === 'gdrive' ? 'Google Drive' : cadSaveDestination === 'dropbox' ? 'Dropbox' : 'OneDrive'}
-                          {allConverted && (
-                            <span className="rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black text-white">✓</span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="block truncate text-sm font-bold text-slate-500">Pick destination</span>
-                      )}
-                    </span>
-                    {!isProcessing && (
-                      <svg className={cls(
-                        'h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-hover:text-blue-600',
-                        showSavePopover && 'rotate-180 text-blue-700'
-                      )} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                    )}
-                  </button>
-
-                  {/* Save-to popover (expands upward, anchored right) */}
-                  <AnimatePresence>
-                    {showSavePopover && !isProcessing && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                        transition={{ duration: 0.16 }}
-                        className="absolute bottom-full right-0 z-30 mb-2 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15"
-                      >
-                        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Save converted output to</p>
-                        </div>
-                        <div className="p-1.5">
-                          {([
-                            { id: 'gdrive', label: 'Google Drive', sub: 'chief@omni.app', ringClass: 'ring-blue-100', activeBg: 'bg-blue-50', activeText: 'text-blue-700', activeSub: 'text-blue-600/80', activeCheck: 'text-blue-600' },
-                            { id: 'dropbox', label: 'Dropbox', sub: 'Sign in to enable', ringClass: 'ring-slate-200', activeBg: 'bg-blue-50', activeText: 'text-blue-700', activeSub: 'text-blue-600/80', activeCheck: 'text-blue-600' },
-                            { id: 'onedrive', label: 'OneDrive', sub: 'Sign in to enable', ringClass: 'ring-slate-200', activeBg: 'bg-blue-50', activeText: 'text-blue-700', activeSub: 'text-blue-600/80', activeCheck: 'text-blue-600' },
-                          ] as const).map(opt => {
-                            const active = cadSaveDestination === opt.id;
-                            return (
-                              <button
-                                key={opt.id}
-                                type="button"
-                                onClick={() => {
-                                  setCadSaveDestination(opt.id);
-                                  setShowSavePopover(false);
-                                  setCadNotice(`${opt.label} save requires sign in.`);
-                                }}
-                                className={cls(
-                                  'mt-1 flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition',
-                                  active ? opt.activeBg : 'hover:bg-slate-50'
-                                )}
-                              >
-                                <span className="flex items-center gap-3">
-                                  <span className={cls(
-                                    'grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white shadow ring-1',
-                                    opt.ringClass
-                                  )}>
-                                    <ProviderIcon provider={opt.id} />
-                                  </span>
-                                  <span>
-                                    <span className={cls(
-                                      'block text-xs font-black',
-                                      active ? opt.activeText : 'text-slate-800'
-                                    )}>{opt.label}</span>
-                                    <span className={cls(
-                                      'block text-[10px]',
-                                      active ? opt.activeSub : 'text-slate-500'
-                                    )}>{opt.sub}</span>
-                                  </span>
-                                </span>
-                                {active && (
-                                  <svg className={cls('h-3.5 w-3.5', opt.activeCheck)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <div className="border-t border-slate-100 bg-slate-50 p-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowSavePopover(false);
-                              setCadNotice('Switch cloud account flow coming soon.');
-                            }}
-                            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700"
-                          >
-                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                            Switch cloud account
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              {/* ============== ROW 2: Bulk ops ============== */}
-              <div className={cls(
-                'flex flex-wrap items-center gap-3 border-b px-5 py-3',
-                allConverted
-                  ? 'border-emerald-100'
-                  : isProcessing
-                    ? 'border-blue-100'
-                    : 'border-slate-100'
-              )}>
+                <button
+                  type="button"
+                  onClick={() => handleConvert(false)}
+                  disabled={isProcessing || files.length === 0 || pendingCount === 0}
+                  className={cls(
+                    'inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-xs font-black outline-none transition active:scale-[0.97]',
+                    pendingCount > 0 && !isProcessing
+                      ? 'btn-primary text-white shadow-sm shadow-blue-500/20'
+                      : 'cursor-not-allowed bg-slate-100 text-slate-400'
+                  )}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  )}
+                  {isProcessing ? 'Converting...' : `Convert ${pendingCount} ${pendingCount === 1 ? 'file' : 'files'}`}
+                </button>
                 <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Convert all to</label>
                 <select
                   value={cadConvertAllTarget}
@@ -2162,55 +1957,15 @@ export default function ConversionPanel({
                   <Download className="h-3 w-3" />
                   Download all
                 </button>
-              </div>
-
-              {/* ============== ROW 3: Primary action ============== */}
-              <div className={cls(
-                isProcessing ? 'bg-blue-50/40' : allConverted ? 'bg-emerald-50/30' : ''
-              )}>
-                {allConverted && !isProcessing ? (
-                  // All converted: Regenerate (secondary) + Download all (primary)
-                  <div className="grid grid-cols-[1fr_2fr] gap-2 p-2">
-                    <button
-                      type="button"
-                      onClick={() => handleConvert(true)}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm font-black text-slate-700 transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/40 hover:text-blue-700 hover:shadow-sm"
-                    >
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M3 21v-5h5"/></svg>
-                      Regenerate all
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDownloadAllAsZip}
-                      className="btn-primary inline-flex items-center justify-center gap-3 rounded-xl px-6 py-4 text-base font-black text-white shadow-md shadow-blue-500/20 outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
-                    >
-                      <Download className="h-5 w-5" />
-                      Download all ({completedCount} {completedCount === 1 ? 'file' : 'files'})
-                      <ArrowRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                ) : (
-                  // Idle or processing: full-width Convert button
-                  <button
-                    type="button"
-                    onClick={() => handleConvert(false)}
-                    disabled={isProcessing}
-                    className="btn-primary flex w-full items-center justify-center gap-3 px-10 py-5 text-base font-black text-white shadow-sm outline-none focus-visible:ring-4 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-300"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Converting...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        Convert {pendingCount} {pendingCount === 1 ? 'file' : 'files'}
-                        <ArrowRight className="h-5 w-5" />
-                      </>
-                    )}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 text-xs font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+                  Add more files
+                </button>
               </div>
 
               </div>
