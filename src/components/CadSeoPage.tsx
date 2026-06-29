@@ -56,45 +56,6 @@ export default function CadSeoPage({
     <div className="space-y-10 animate-fade-in" id="cad-seo-detail-page">
       <CadSeoConverterShell page={page} converterSlot={converterSlot} onBackToHub={onBackToHub} />
 
-      <section className="space-y-4" id="cad-seo-related-links">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-zinc-200 dark:border-white/5 pb-4">
-          <div>
-            <h2 className="text-lg font-extrabold text-zinc-900 dark:text-white">Related CAD converters</h2>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">Top related CAD routes for this workflow, placed next to the upload path for fast route switching.</p>
-          </div>
-          <button type="button" onClick={onBackToHub} className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100 dark:bg-sky-400/10 dark:text-sky-200 dark:ring-sky-400/20">
-            Browse all CAD tools
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {relatedPages.map(related => (
-            <a
-              key={related.slug}
-              href={`/cad/${related.slug}`}
-              onClick={event => {
-                event.preventDefault();
-                onOpenCadSeoPage(related.slug);
-              }}
-              className="group block min-h-[154px] rounded-lg border border-zinc-200/80 bg-white/90 p-4 text-left shadow-[0_14px_30px_rgba(30,41,59,0.08)] transition-all hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_42px_rgba(30,41,59,0.13)] dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.07]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider font-black text-sky-600 dark:text-sky-300 font-mono">{related.primaryKeyword}</p>
-                  <h3 className="text-sm font-extrabold text-zinc-900 dark:text-white mt-2">{related.tool.name}</h3>
-                </div>
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600 ring-1 ring-slate-200 transition-transform group-hover:translate-x-0.5 dark:bg-white/10 dark:text-slate-200 dark:ring-white/10">
-                  <ArrowRight className="w-4 h-4" />
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-3 line-clamp-2">{related.searchIntent}</p>
-              <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mt-4">{related.tool.input} to {related.tool.output}</p>
-            </a>
-          ))}
-        </div>
-      </section>
-
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-card rounded-2xl p-5">
           <FileCode2 className="w-5 h-5 text-sky-600 dark:text-sky-300" />
@@ -222,6 +183,55 @@ export default function CadSeoPage({
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Related CAD converters — moved to the bottom of the page so it
+          sits below the visible area. The card grid still renders for SEO
+          + cross-link purposes, but it requires scrolling to reach. */}
+      <section className="space-y-4 scroll-mt-32 pt-8" id="cad-seo-related-links">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-zinc-200 dark:border-white/5 pb-4">
+          <div>
+            <h2 className="text-lg font-extrabold text-zinc-900 dark:text-white">Related CAD converters</h2>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">Top related CAD routes for this workflow.</p>
+          </div>
+          <button type="button" onClick={onBackToHub} className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100 dark:bg-sky-400/10 dark:text-sky-200 dark:ring-sky-400/20">
+            Browse all CAD tools
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {relatedPages.map(related => {
+            // Generic dynamic 1-liner: derived purely from input/output so it
+            // stays consistent across the catalog without hand-curated copy.
+            const inFmt = related.tool.input.split(/[,\s]+/)[0];
+            const outFmt = related.tool.output.split(/[,\s]+/)[0];
+            const oneLiner = `Convert ${inFmt} to ${outFmt} online in your browser.`;
+            return (
+              <a
+                key={related.slug}
+                href={`/cad/${related.slug}`}
+                onClick={event => {
+                  event.preventDefault();
+                  onOpenCadSeoPage(related.slug);
+                }}
+                className="group block min-h-[124px] rounded-lg border border-zinc-200/80 bg-white/90 p-4 text-left shadow-[0_14px_30px_rgba(30,41,59,0.08)] transition-all hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_42px_rgba(30,41,59,0.13)] dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.07]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-black text-sky-600 dark:text-sky-300 font-mono">{related.primaryKeyword}</p>
+                    <h3 className="text-sm font-extrabold text-zinc-900 dark:text-white mt-1.5">{related.tool.name}</h3>
+                  </div>
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600 ring-1 ring-slate-200 transition-transform group-hover:translate-x-0.5 dark:bg-white/10 dark:text-slate-200 dark:ring-white/10">
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-2 line-clamp-1">{oneLiner}</p>
+                <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mt-2">{related.tool.input} to {related.tool.output}</p>
+              </a>
+            );
+          })}
         </div>
       </section>
     </div>

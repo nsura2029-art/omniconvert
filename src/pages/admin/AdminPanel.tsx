@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard, BarChart3, Users, Activity, Settings, ShieldAlert, ChevronRight,
+  LayoutDashboard, BarChart3, Users, Activity, Settings, ShieldAlert,
 } from 'lucide-react';
 import AdminDashboardSection from './AdminDashboardSection';
 import AdminAnalyticsSection from './AdminAnalyticsSection';
@@ -32,7 +32,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialSection = 'dashboard', e
     if (onSectionChange) onSectionChange(s);
   };
 
-  const current = NAV.find(n => n.id === section)!;
+  const currentHint = NAV.find(n => n.id === section)?.hint ?? '';
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-slate-50">
@@ -62,7 +62,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialSection = 'dashboard', e
               >
                 <Icon className="h-4 w-4" />
                 <span className="flex-1 text-left">{item.label}</span>
-                {isActive && <ChevronRight className="h-3.5 w-3.5 text-blue-600" />}
               </button>
             );
           })}
@@ -72,14 +71,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialSection = 'dashboard', e
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-6 py-6">
-          <header className="mb-5">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-              <span>Admin</span>
-              <ChevronRight className="h-3 w-3 text-slate-300" />
-              <span className="text-slate-900">{current.label}</span>
-            </div>
-            <p className="mt-1 text-[11px] font-semibold text-slate-500">{current.hint}</p>
+        <div className="mx-auto max-w-7xl px-6 py-4">
+          <header className="mb-3">
+            <p className="text-[11px] font-semibold text-slate-500">{currentHint}</p>
           </header>
           {section === 'dashboard'   && <AdminDashboardSection />}
           {section === 'analytics'   && <AdminAnalyticsSection />}

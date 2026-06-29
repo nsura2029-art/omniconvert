@@ -255,7 +255,7 @@ export default function CategoryPage({
                   </div>
                   {tool.popular && <span className="shrink-0 text-[8px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Popular</span>}
                 </div>
-                <p className={`${isCadCategory ? 'text-[11px]' : 'text-[10px]'} text-zinc-600 dark:text-zinc-400 mt-3 line-clamp-3 leading-relaxed`}>{tool.description}</p>
+                <p className={`${isCadCategory ? 'text-[11px]' : 'text-[10px]'} text-zinc-600 dark:text-zinc-400 mt-2 line-clamp-1 leading-relaxed`}>{`Convert ${tool.input} to ${tool.output} online in your browser.`}</p>
                 <div className="flex items-center justify-between border-t border-zinc-200 dark:border-white/5 pt-3 mt-4 text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
                   <span>{tool.input} to {tool.output}</span>
                   {isCadCategory ? (

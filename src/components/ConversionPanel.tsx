@@ -1972,6 +1972,11 @@ export default function ConversionPanel({
       ? (targetFormats[primaryFile.name] || outputs[0] || selectedTool.output).toUpperCase()
       : (outputs[0] || selectedTool.output).toUpperCase();
     const cadConvertAllTarget = primaryFile ? (targetFormats[primaryFile.name] || outputs[0] || 'PDF') : (outputs[0] || 'PDF');
+    const cadConvertAllFormats = Array.from(new Set([
+      cadConvertAllTarget,
+      ...outputs,
+      ...CAD_TARGET_MATRIX.default,
+    ]));
     const converterTitle = `${primarySourceFormat} to ${primaryTargetFormat} Converter`;
     const converterSubtitle = primaryFile
       ? `Transform ${primarySourceFormat} files into ${primaryTargetFormat} online`
@@ -2100,16 +2105,14 @@ export default function ConversionPanel({
                     : 'border-b border-slate-100'
               )}>
                 <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Convert all to</label>
-                <select
-                  value={cadConvertAllTarget}
+                <TargetFormatPicker
+                  currentTarget={cadConvertAllTarget}
+                  formats={cadConvertAllFormats}
                   disabled={isProcessing}
-                  onChange={(event) => applyCadConvertAll(event.target.value)}
-                  className="h-9 min-w-[120px] rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {[...new Set([cadConvertAllTarget, ...CAD_TARGET_MATRIX.default])].map(format => (
-                    <option key={format} value={format}>{format}</option>
-                  ))}
-                </select>
+                  onChange={(format) => applyCadConvertAll(format)}
+                  size="sm"
+                  ariaLabel="Bulk convert target format"
+                />
                 <span className={cls(
                   'text-[11px] font-bold',
                   allConverted
