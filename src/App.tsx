@@ -866,6 +866,7 @@ export default function App() {
             page={activeCadSeoPage}
             relatedPages={relatedCadSeoPages}
             popularCategorySections={popularCategorySections}
+            currentUser={currentUser}
             onBackToHub={() => handleSelectToolCategory('CAD')}
             onOpenCadSeoPage={handleOpenCadSeoPage}
             onOpenPopularTool={handleOpenPopularTool}

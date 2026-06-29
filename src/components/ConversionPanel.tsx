@@ -582,16 +582,19 @@ function UploadPlaceholder({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative mx-auto flex min-h-[250px] w-full flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-10">
-      <div className="mb-8 space-y-2">
-        <p className="text-2xl font-extrabold tracking-tight text-blue-600 sm:text-3xl">{title}</p>
-        <p className="text-sm font-semibold text-slate-600">{subtitle}</p>
-      </div>
+    <div className="relative mx-auto flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-10 text-center sm:px-8 sm:py-12">
+      {/* Soft drop-zone tint when dragging */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 rounded-2xl transition-colors ${
+          dragActive ? 'bg-blue-50/70' : 'bg-transparent'
+        }`}
+      />
 
       <motion.div
         animate={{ scale: dragActive ? 1.02 : 1 }}
         transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-        className="inline-flex max-w-full overflow-hidden rounded-xl bg-blue-600 shadow-[0_18px_42px_rgba(37,99,235,0.22)]"
+        className="inline-flex max-w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_18px_42px_rgba(37,99,235,0.25)] ring-1 ring-blue-700/20"
       >
         <UploadButton label={isProcessing ? 'Uploading...' : buttonLabel} loading={isProcessing} disabled={isProcessing} onClick={onBrowse} />
         {sourceActions.map(source => (
@@ -607,22 +610,28 @@ function UploadPlaceholder({
             onClick={source.onClick}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
-            className="grid h-14 w-16 place-items-center border-l border-white/20 bg-blue-600 text-white/90 outline-none transition-colors hover:bg-blue-700 hover:text-white focus-visible:ring-4 focus-visible:ring-blue-200"
+            className="grid h-14 w-16 place-items-center border-l border-white/20 bg-transparent text-white/90 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-4 focus-visible:ring-blue-200"
           >
             <ProviderIcon provider={source.id} />
           </motion.button>
         ))}
       </motion.div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
-        <Lock className="h-3.5 w-3.5 text-slate-400" />
-        <span>{dragActive ? 'Drop files here' : 'Drop files here.'}</span>
-        <span>1 GB maximum file size.</span>
-        <span>Supports {inputFormat} CAD files.</span>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500">
+        <span className="inline-flex items-center gap-1">
+          <Lock className="h-3.5 w-3.5 text-slate-400" />
+          {dragActive ? 'Release to upload' : 'Drop files here, or use the button above'}
+        </span>
+        <span className="hidden sm:inline">·</span>
+        <span>1 GB max per file</span>
+        <span className="hidden sm:inline">·</span>
+        <span>Supports {inputFormat} CAD files</span>
       </div>
 
-      <div className="mt-3 inline-flex min-h-8 items-center justify-center gap-2 rounded-full bg-white/70 px-4 text-[11px] font-black text-slate-600">
-        Converting <span className="font-mono uppercase text-blue-700">{inputFormat}</span> to <span className="font-mono uppercase text-blue-700">{outputFormat}</span>
+      <div className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-slate-50 px-4 py-1.5 text-[11px] font-black text-slate-600 ring-1 ring-slate-200">
+        Converting <span className="font-mono uppercase text-blue-700">{inputFormat}</span>
+        <ArrowRight className="h-3 w-3 text-slate-400" />
+        <span className="font-mono uppercase text-blue-700">{outputFormat}</span>
       </div>
 
       {children}

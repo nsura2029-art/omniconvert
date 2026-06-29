@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { User, FileConversion, CloudIntegration } from '../types';
-import { HardDrive, Cloud, Key, CheckCircle, RefreshCw, BarChart3, Database, History, HelpCircle, AlertCircle, Copy, Users, Award, Gift, Share2 } from 'lucide-react';
+import { HardDrive, Cloud, Key, CheckCircle, RefreshCw, BarChart3, Database, History, HelpCircle, AlertCircle, Copy, Users, Award, Gift, Share2, ThumbsUp, Activity, Link as LinkIcon, Sparkles, Gem } from 'lucide-react';
+import UpvoteButton from './gamification/UpvoteButton';
+import ShareGrid from './gamification/ShareGrid';
+import ActivityFeed from './gamification/ActivityFeed';
+import { getUser, TIER_TABLE } from '../data/gamification';
 
 interface DashboardProps {
   currentUser: User | null;
@@ -20,7 +24,7 @@ export default function Dashboard({
   onUpdateIntegration,
   onOpenAuth
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'cloud' | 'referral'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'cloud' | 'referral' | 'gamification'>('stats');
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
@@ -224,6 +228,19 @@ export default function Dashboard({
           <div className="flex items-center gap-1.5">
             <Gift className="w-4 h-4" />
             Referrals & Rewards
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('gamification')}
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'gamification'
+              ? 'border-indigo-500 text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+          }`}
+        >
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4" />
+            Earn · Upvote · Share
           </div>
         </button>
       </div>
@@ -656,8 +673,122 @@ export default function Dashboard({
           </div>
         )}
 
+        {/* GAMIFICATION — credits, upvote, share, activity */}
+        {activeTab === 'gamification' && (
+          <DashboardGamificationPanel currentUser={currentUser} />
+        )}
+
       </div>
 
     </div>
   );
 }
+
+// ───────────────────────────────────────────── Gamification panel
+
+const SUGGESTED_PAIRS = [
+  { category: 'CAD',         source: 'STL', target: 'OBJ' },
+  { category: 'Documents',   source: 'PDF', target: 'DOCX' },
+  { category: 'Images',      source: 'PNG', target: 'JPG' },
+  { category: 'Audio',       source: 'MP3', target: 'WAV' },
+  { category: 'Video',       source: 'MP4', target: 'GIF' },
+  { category: 'Archives',    source: 'ZIP', target: 'TAR' },
+];
+
+const DashboardGamificationPanel: React.FC<{ currentUser?: User | null }> = ({ currentUser }) => {
+  const gamUser = getUser(currentUser);
+  const cfg = TIER_TABLE[gamUser.tier];
+
+  return (
+    <div className="space-y-5 animate-fade-in" id="dashboard-gamification-panel">
+      {/* Top: credit balance + daily claim */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
+          <div className="flex items-start justify-between gap-3 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 px-5 py-5 text-white">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-white/70">Your credit balance</p>
+              <p className="mt-1 text-4xl font-black tabular-nums">{gamUser.credits.toLocaleString()}</p>
+              <p className="mt-1 text-[11px] font-bold text-white/80">Earned {gamUser.totalEarned.toLocaleString()} · Spent {gamUser.totalSpent.toLocaleString()} · Streak {gamUser.dailyLoginStreak}d</p>
+            </div>
+            <Gem className="h-8 w-8 text-white/40" />
+          </div>
+          <div className="flex flex-wrap items-center gap-3 px-5 py-4">
+            <UpvoteButton
+              category={SUGGESTED_PAIRS[0].category}
+              source={SUGGESTED_PAIRS[0].source}
+              target={SUGGESTED_PAIRS[0].target}
+              currentUser={gamUser}
+              showLabel
+            />
+            <span className="text-[11px] font-semibold text-slate-500">Help us prioritize the next CAD engine.</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <LinkIcon className="h-4 w-4 text-blue-600" /> Referral
+          </h3>
+          <p className="mt-1 text-[11px] font-semibold text-slate-500">Earn {cfg.rewards.referralSignup} cr per signup · {cfg.rewards.referralConvert} per conversion.</p>
+          <p className="mt-4 text-[10px] font-black uppercase tracking-wider text-slate-500">Your code</p>
+          <p className="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm font-black text-slate-900">{gamUser.referralCode}</p>
+          <button
+            type="button"
+            onClick={() => navigator.clipboard?.writeText(`${typeof window !== 'undefined' ? window.location.origin : ''}/?ref=${gamUser.referralCode}`)}
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-black text-white hover:bg-slate-700"
+          >
+            <Copy className="h-3 w-3" /> Copy invite link
+          </button>
+        </div>
+      </div>
+
+      {/* Upvote: grid of pairs */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+              <ThumbsUp className="h-4 w-4 text-blue-600" /> Upvote conversions
+            </h3>
+            <p className="mt-1 text-[11px] font-semibold text-slate-500">Earn +{cfg.rewards.upvote} cr per upvote · 10 / day limit.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {SUGGESTED_PAIRS.map(p => (
+            <UpvotePairCard key={`${p.category}-${p.source}-${p.target}`} category={p.category} source={p.source} target={p.target} user={gamUser} />
+          ))}
+        </div>
+      </div>
+
+      {/* Share + Activity */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <Share2 className="h-4 w-4 text-blue-600" /> Share & earn
+          </h3>
+          <p className="mt-1 text-[11px] font-semibold text-slate-500">One share per platform per day. Each platform has its own reward tier.</p>
+          <div className="mt-3">
+            <ShareGrid user={gamUser} cfg={cfg} />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <Activity className="h-4 w-4 text-blue-600" /> Activity
+          </h3>
+          <p className="mt-1 text-[11px] font-semibold text-slate-500">Live credits, upvotes, shares.</p>
+          <div className="mt-3 max-h-80 overflow-y-auto pr-1">
+            <ActivityFeed userId={gamUser.id} currentUser={currentUser} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const UpvotePairCard: React.FC<{ category: string; source: string; target: string; user: ReturnType<typeof getUser> }> = ({ category, source, target, user }) => (
+  <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+    <p className="text-[9px] font-black uppercase tracking-wider text-slate-500">{category}</p>
+    <p className="mt-1 text-sm font-black text-slate-900">{source} → {target}</p>
+    <div className="mt-2">
+      <UpvoteButton category={category} source={source} target={target} currentUser={user} size="sm" />
+    </div>
+  </div>
+);

@@ -1,5 +1,11 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, FileCode2, HelpCircle, Layers3, ShieldCheck } from 'lucide-react';
+import React from 'react';
 import type { ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, CheckCircle2, FileCode2, HelpCircle, Layers3, ShieldCheck, ThumbsUp, Share2, Activity, Link as LinkIcon } from 'lucide-react';
+import UpvoteButton from './gamification/UpvoteButton';
+import ShareGrid from './gamification/ShareGrid';
+import ActivityFeed from './gamification/ActivityFeed';
+import { getUser, TIER_TABLE } from '../data/gamification';
+import { User } from '../types';
 import type { CadSeoPage as CadSeoPageData } from '../data/cadSeoPages';
 import type { Category, Tool } from '../data/tools';
 
@@ -11,6 +17,7 @@ interface CadSeoPageProps {
     tools: Tool[];
   }>;
   converterSlot: ReactNode;
+  currentUser?: User | null;
   onBackToHub: () => void;
   onOpenCadSeoPage: (slug: string) => void;
   onOpenPopularTool: (tool: Tool) => void;
@@ -19,22 +26,54 @@ interface CadSeoPageProps {
 interface CadSeoConverterShellProps {
   page: CadSeoPageData;
   converterSlot: ReactNode;
+  currentUser?: User | null;
   onBackToHub: () => void;
 }
 
-function CadSeoConverterShell({ page, converterSlot, onBackToHub }: CadSeoConverterShellProps) {
+function CadSeoConverterShell({ page, converterSlot, currentUser, onBackToHub }: CadSeoConverterShellProps) {
+  const gamUser = getUser(currentUser);
   return (
-    <section className="space-y-4 pt-4" id="cad-seo-converter-shell">
-      <nav className="sticky top-20 z-20 flex flex-wrap items-center gap-2 bg-slate-50/85 py-2 text-[10px] font-mono uppercase tracking-wider text-zinc-500 backdrop-blur dark:bg-slate-900/85 dark:text-zinc-400">
-        <button type="button" onClick={onBackToHub} className="inline-flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-300">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          CAD converter
-        </button>
-        <span>/</span>
-        <span className="text-zinc-800 dark:text-zinc-200">{page.primaryKeyword}</span>
-      </nav>
-
-      <h1 className="sr-only">{page.h1}</h1>
+    <section className="space-y-6 pt-2" id="cad-seo-converter-shell">
+      {/* Tool header — visible title, description, category chip, upvote
+          and trust strip. Fills the gap the breadcrumb left and gives the
+          page a professional SaaS hero block. */}
+      <header className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-white to-blue-50/60 px-6 py-8 shadow-sm">
+        <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-blue-100/50 blur-3xl" aria-hidden="true" />
+        <div className="relative space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700">
+              <FileCode2 className="h-3 w-3" /> CAD converter
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-600">
+              {page.tool.category}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-700">
+              <ShieldCheck className="h-3 w-3" /> Browser-safe · No signup
+            </span>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{page.h1}</h1>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-600">{page.metaDescription}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <UpvoteButton
+                category={page.tool.category ?? 'CAD'}
+                source={page.tool.input}
+                target={page.tool.output}
+                currentUser={gamUser}
+                showLabel
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 border-t border-slate-200 pt-4 sm:grid-cols-4">
+            <Trust label="Source"   value={page.tool.input} />
+            <Trust label="Target"   value={page.tool.output} />
+            <Trust label="Privacy"  value="100% client-side" />
+            <Trust label="Speed"    value="Seconds" />
+          </div>
+        </div>
+      </header>
 
       <div className="scroll-mt-24" id="cad-seo-converter-stage">
         {converterSlot}
@@ -43,18 +82,57 @@ function CadSeoConverterShell({ page, converterSlot, onBackToHub }: CadSeoConver
   );
 }
 
+const Trust: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div>
+    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</p>
+    <p className="mt-0.5 text-sm font-black text-slate-900">{value}</p>
+  </div>
+);
+
 export default function CadSeoPage({
   page,
   relatedPages,
   popularCategorySections,
   converterSlot,
+  currentUser,
   onBackToHub,
   onOpenCadSeoPage,
   onOpenPopularTool
 }: CadSeoPageProps) {
+  const gamUser = getUser(currentUser);
+  const gamCfg = TIER_TABLE[gamUser.tier];
   return (
     <div className="space-y-10 animate-fade-in" id="cad-seo-detail-page">
-      <CadSeoConverterShell page={page} converterSlot={converterSlot} onBackToHub={onBackToHub} />
+      <CadSeoConverterShell page={page} converterSlot={converterSlot} currentUser={currentUser} onBackToHub={onBackToHub} />
+
+      {/* Gamification row: upvote count + share + activity feed in a clean
+          SaaS dashboard layout. Sits directly below the converter so the
+          user sees earning actions in context. */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-blue-600" /> Share & earn credits
+              </h3>
+              <p className="mt-1 text-[11px] font-semibold text-slate-500">One share per platform per day · 24h cooldown.</p>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">All platforms</span>
+          </div>
+          <div className="mt-3">
+            <ShareGrid user={gamUser} cfg={gamCfg} conversionPair={page.slug} />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <Activity className="h-4 w-4 text-blue-600" /> Your activity
+          </h3>
+          <p className="mt-1 text-[11px] font-semibold text-slate-500">Latest credits, upvotes, shares.</p>
+          <div className="mt-3 max-h-72 overflow-y-auto pr-1">
+            <ActivityFeed userId={gamUser.id} currentUser={currentUser} filter="all" />
+          </div>
+        </div>
+      </section>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-card rounded-2xl p-5">
