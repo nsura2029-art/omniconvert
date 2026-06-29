@@ -73,8 +73,10 @@ GENERATE four TODO lists:
   1. UI TODO: Components, pages, interactions needed
   2. API TODO: Endpoints, workers, storage needed (only for server-required conversions)
   3. DOCS TODO: API documentation, examples, guides needed
-  4. ANALYTICS DASHBOARD TODO: Per-category analytics view. Every category
-     MUST ship a /dashboard/{categoryId} route with the following panels:
+  4. ANALYTICS DASHBOARD TODO: Per-category analytics view. The dashboard
+     is **admin-only** (Approach: Admin Panel → Analytics section).
+     Every category MUST be reachable from the Analytics section's 12
+     category cards and render the following panels in its deep-dive:
        - KPI cards (8): total conversions, unique users, success rate,
          avg time, formats supported, browser-feasible pairs, server-required
          pairs, bytes processed
@@ -87,11 +89,18 @@ GENERATE four TODO lists:
        - Usage timeline with day/week/month toggle (peak + bytes)
        - Advanced analytics panel (peak hour, avg file size, error rate,
          cold start, 7d/30d retention, format popularity trend, top regions)
-     When a new category is added: append its id to CATEGORY_LIST in
-     src/data/dashboardAnalytics.ts, register its icon mapping, and
-     update the format pools used by buildPopularPairs / buildMatrix /
-     buildUsageTimeline so the new category's analytics surface is
-     populated with realistic-feeling seeded data.
+     Realtime signal: the Analytics section polls `omni_conversions` and
+     the gamification store every 5 seconds, so real conversion counts
+     blend into KPI tiles. Seeded analytics fill the gaps for categories
+     with no real conversions yet.
+     When a new category is added:
+       - Append its id to CATEGORY_LIST in `src/data/dashboardAnalytics.ts`
+       - Register its icon name (existing lucide-react icon)
+       - Add a format pool entry in `pickFormatsForCategory(cat, n, rand)`
+         so `buildPopularPairs` / `buildMatrix` / `buildUsageTimeline`
+         produce realistic-feeling format names for the new category
+       - Verify the admin Analytics section shows the new category card
+         and the per-category deep-dive renders without runtime errors
 OUTPUT: Four prioritized todo lists
 ```
 
@@ -291,14 +300,17 @@ committed to the conversation history.
 
 ## PER-CATEGORY ANALYTICS DASHBOARD CONTRACT
 
+The dashboard is **admin-only** and ships inside the Admin Panel.
 Reference implementation lives at:
-- `src/pages/Dashboard.tsx`
-- `src/components/dashboard/DashboardSidebar.tsx`
-- `src/components/dashboard/KpiCard.tsx`
-- `src/components/dashboard/FromToMatrix.tsx`
-- `src/components/dashboard/DashboardPanels.tsx`
-- `src/data/dashboardAnalytics.ts`
-- `src/data/localConversions.ts`
+- `src/pages/admin/AdminPanel.tsx` - shell with left-rail nav
+- `src/pages/admin/AdminAnalyticsSection.tsx` - 12 category cards + per-category deep-dive + realtime polling
+- `src/components/dashboard/DashboardSidebar.tsx` - left sidebar inside the dashboard page
+- `src/components/dashboard/KpiCard.tsx` - KPI cards + KpiGrid + formatBytes/formatMs helpers
+- `src/components/dashboard/FromToMatrix.tsx` - heatmap
+- `src/components/dashboard/DashboardPanels.tsx` - Popular pairs, Trending chart, Processing breakdown, Latency breakdown, Usage timeline, Advanced analytics
+- `src/data/dashboardAnalytics.ts` - seeded data + builders (KPI summaries, popular pairs, matrix, processing breakdown, timeline, advanced stats)
+- `src/data/localConversions.ts` - real-signal layer over `omni_conversions`
+- `src/pages/stubRouter.tsx` - Link stub; replace with real `react-router-dom` Link/useParams when added
 
 When shipping a new category, the agent MUST:
 1. Append the category id + name + description to CATEGORY_META in
@@ -308,10 +320,13 @@ When shipping a new category, the agent MUST:
 3. Add a format pool in `pickFormatsForCategory(cat, n, rand)` so
    `buildPopularPairs` / `buildMatrix` / `buildUsageTimeline` produce
    realistic-feeling format names for the new category.
-4. Verify the new category surfaces in the left sidebar and per-category
-   page renders without runtime errors.
+4. Verify the new category surfaces in the admin Analytics section's
+   12 category cards and the per-category deep-dive renders without
+   runtime errors.
 
 Adding the analytics view is part of the category's DOX contract; a
 category is NOT considered shipped until its dashboard panel renders
 without errors and the data layer produces seeded values consistent
-with the rest of the platform.
+with the rest of the platform. Non-admin visitors see a "Admin only"
+sign-in prompt instead of the dashboard, so adding a public route
+that exposes analytics is a DOX violation.

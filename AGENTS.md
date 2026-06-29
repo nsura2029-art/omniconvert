@@ -51,3 +51,10 @@
 - `docs/AGENTS.md` - durable project documentation contracts.
 - `skills/AGENTS.md` - project-local Codex skill contracts.
 - `src/AGENTS.md` - application source contracts.
+
+## Major Subsystems (Phase 1+)
+- **Conversion workflow**: client-side upload → parallel conversion → ZIP download. Real browser CAD (STL/OBJ/PLY) wired; other CAD pairs simulated. Lives in `src/components/ConversionPanel.tsx`. See `skills/omniconvert-conversion-workflow/`.
+- **Admin Panel**: left-rail nav (Dashboard · Analytics · Users · Conversions · Gamification · Settings). Gated on `currentUser?.email === 'admin@omniconvert.com'`. All sections are realtime (poll localStorage every 3–5s + cross-tab BroadcastChannel sync). See `src/pages/admin/AGENTS.md` (planned) and `src/components/AGENTS.md` §Admin.
+- **Gamification**: Approach C (floating pill + modal). Anonymous-first credit system, upvote (10/day), referral (`?ref=` cookie attribution), share (7 platforms, 24h cooldown). Data layer (`src/data/gamification.ts`) mirrors D1 brief 1:1 for Phase-2 Worker swap. See `src/components/AGENTS.md` §Gamification.
+- **Pricing**: 3-tier cards (anonymous / registered / paid) with cost calculator, earn-credits table, FAQ. At `currentPage === 'pricing'` in `src/pages/Pricing.tsx`.
+- **Per-Category Analytics**: 12 categories × 8-panel dashboard. Lives inside Admin Panel → Analytics section. See `skills/omniconvert-conversion-matrix/SKILL.md` §5.

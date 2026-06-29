@@ -32,18 +32,23 @@ Likely auth keys if Clerk is chosen:
 
 ## Database status
 
-Current implementation: browser `localStorage` for users, conversions, integrations, referrals, and admin data.
+Current implementation: browser `localStorage` for users, conversions, integrations, referrals, admin data, AND the full gamification store (credits / upvotes / referrals / shares / daily_login_streak).
+
+Gamification keys (mirrors the D1 brief schema 1:1 so Phase-2 swap is a one-file change):
+- `omni_gam_user`, `omni_gam_tx`, `omni_gam_upvotes`, `omni_gam_referrals`, `omni_gam_shares`, `omni_gam_limits`, `omni_gam_pending_ref`, `omni_gam_banned_users`, `omni_gam_flags`, `omni_session`.
 
 No real database dependency or migration tool is installed yet. There is no Prisma, Drizzle, Supabase client, Neon client, or Cloudflare D1 client code currently wired.
 
 Recommended Cloudflare-native path:
-- Cloudflare D1 for relational app data.
+- Cloudflare D1 for relational app data (users, credit_transactions, upvotes, referrals, shares, daily_limits). The gamification data layer in `src/data/gamification.ts` is the migration boundary — function names + types stay the same, only the storage primitives change.
 - Optional Cloudflare R2 for uploaded/source/output files.
 - Optional Cloudflare KV for lightweight cache/settings.
+- Optional Cloudflare Durable Objects for real-time WebSocket push of credit / upvote / share events to the admin Gamification dashboard.
 
 Likely database keys/bindings:
 - `CLOUDFLARE_D1_DATABASE_ID`
 - `DB` binding in `wrangler.toml`
+- `OMNI_GAMIFICATION` Durable Object binding (Phase 2)
 - `DATABASE_URL` only if a non-D1 database is introduced.
 
 ## Cloudflare Workers deployment
