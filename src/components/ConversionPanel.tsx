@@ -911,109 +911,101 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
           "converted output" view and a dashed "awaiting conversion" placeholder,
           but the surrounding box (grid + padding + border + bg) is identical,
           so conversions complete without shifting the file list or the sticky
-          action row below. */}
+          action row below.
+
+          Layout (flex column, not the old 4-col grid):
+            - Line 1: file info (icon + label + filename + target chip + size + status pill)
+            - Line 2: Download button, right-aligned (only when converted)
+          The Download button sits on its own line so the eye scans the
+          output row as file info → action, not file info → table → action. */}
       <div
         className={cls(
-          'mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_90px_120px]',
+          'mt-3 flex flex-col gap-3 rounded-xl border px-4 py-3',
           converted && conversion
             ? 'border-emerald-100 bg-emerald-50/60'
             : 'border-dashed border-slate-200 bg-slate-50/40'
         )}
       >
-        {converted && conversion ? (
-          <>
-            <div className="flex min-w-0 items-center gap-3">
-              {(() => {
-                const { Icon: OutIcon, bg, fg } = getFileTypeMeta(conversion.fileName);
-                return (
-                  <span className="relative">
-                    <span className={cls('grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-black/[0.04]', bg, fg)}>
-                      <OutIcon className="h-4 w-4" />
-                    </span>
-                    <span className="absolute -right-1 -bottom-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
-                      <CheckCircle2 className="h-2.5 w-2.5" />
-                    </span>
+        <div className="flex min-w-0 items-center gap-3">
+          {converted && conversion ? (
+            (() => {
+              const { Icon: OutIcon, bg, fg } = getFileTypeMeta(conversion.fileName);
+              return (
+                <span className="relative">
+                  <span className={cls('grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-black/[0.04]', bg, fg)}>
+                    <OutIcon className="h-4 w-4" />
                   </span>
-                );
-              })()}
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
-                  Converted output
-                </p>
-                <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="truncate text-sm font-black text-slate-900">{conversion.fileName}</span>
-                  <span className="rounded-full bg-white px-2 py-0.5 font-mono text-[10px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200">
-                    {currentTarget}
+                  <span className="absolute -right-1 -bottom-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
+                    <CheckCircle2 className="h-2.5 w-2.5" />
                   </span>
-                  <span className="text-xs font-semibold text-slate-500">{formatReadableFileSize(conversion.fileSize)}</span>
-                </div>
-              </div>
-            </div>
-            <div className="hidden lg:block" />
-            <div className="hidden lg:block" />
-            <div className="hidden text-xs font-semibold text-slate-500 lg:block lg:text-right">
-              <span className="rounded-full bg-emerald-100 px-2 py-1 font-mono text-[10px] font-black uppercase text-emerald-700">
-                Done
-              </span>
-            </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={onDownload}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </button>
-            </div>
-          </>
-        ) : (
-          /* Pending placeholder: same 5 grid cells as the converted branch so
-             the row's footprint (and therefore the article's height) is byte-
-             identical whether the file is done or still pending. */
-          <>
-            <div className="flex min-w-0 items-center gap-3">
-              {(() => {
-                const { Icon: OutIcon } = getFileTypeMeta(`placeholder.${currentTarget.toLowerCase()}`);
-                return (
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-dashed border-slate-200 bg-white">
-                    <OutIcon className="h-4 w-4 text-slate-300" />
-                  </span>
-                );
-              })()}
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Awaiting conversion
-                </p>
-                <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="truncate text-sm font-bold text-slate-400">
-                    {file.name.includes('.')
+                </span>
+              );
+            })()
+          ) : (
+            (() => {
+              const { Icon: OutIcon } = getFileTypeMeta(`placeholder.${currentTarget.toLowerCase()}`);
+              return (
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-dashed border-slate-200 bg-white">
+                  <OutIcon className="h-4 w-4 text-slate-300" />
+                </span>
+              );
+            })()
+          )}
+          <div className="min-w-0 flex-1">
+            <p className={cls(
+              'text-[10px] font-black uppercase tracking-wider',
+              converted && conversion ? 'text-emerald-700' : 'text-slate-400'
+            )}>
+              {converted && conversion ? 'Converted output' : 'Awaiting conversion'}
+            </p>
+            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+              <span className={cls(
+                'truncate text-sm',
+                converted && conversion ? 'font-black text-slate-900' : 'font-bold text-slate-400'
+              )}>
+                {converted && conversion
+                  ? conversion.fileName
+                  : (file.name.includes('.')
                       ? `${file.name.slice(0, file.name.lastIndexOf('.'))}.${currentTarget.toLowerCase()}`
-                      : `${file.name}.${currentTarget.toLowerCase()}`}
-                  </span>
-                  <span className="rounded-full bg-white px-2 py-0.5 font-mono text-[10px] font-black uppercase text-slate-500 ring-1 ring-slate-200">
-                    {currentTarget}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="hidden lg:block" />
-            <div className="hidden lg:block" />
-            <div className="hidden text-xs font-semibold text-slate-400 lg:block lg:text-right">
-              <span className="rounded-full bg-slate-100 px-2 py-1 font-mono text-[10px] font-black uppercase text-slate-500">
-                Pending
+                      : `${file.name}.${currentTarget.toLowerCase()}`)}
+              </span>
+              <span className={cls(
+                'rounded-full px-2 py-0.5 font-mono text-[10px] font-black uppercase ring-1',
+                converted && conversion
+                  ? 'bg-white text-emerald-700 ring-emerald-200'
+                  : 'bg-white text-slate-500 ring-slate-200'
+              )}>
+                {currentTarget}
+              </span>
+              {converted && conversion && (
+                <span className="text-xs font-semibold text-slate-500">{formatReadableFileSize(conversion.fileSize)}</span>
+              )}
+              <span className={cls(
+                'rounded-full px-2 py-1 font-mono text-[10px] font-black uppercase',
+                converted && conversion
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-slate-100 text-slate-500'
+              )}>
+                {converted && conversion ? 'Done' : 'Pending'}
               </span>
             </div>
-            <div className="flex justify-end">
-              <span
-                aria-disabled="true"
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-white px-4 text-xs font-black text-slate-300"
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </span>
-            </div>
-          </>
+          </div>
+        </div>
+
+        {/* Download button: only when converted. Sits on its own line, right-aligned.
+            Pending branch intentionally has no Download affordance — there is nothing
+            to download yet, and a disabled ghost button only adds noise. */}
+        {converted && conversion && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onDownload}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-white shadow-sm shadow-emerald-500/30 outline-none hover:bg-emerald-600 focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </button>
+          </div>
         )}
       </div>
 
@@ -1881,6 +1873,13 @@ export default function ConversionPanel({
     // button must require a non-empty conversions array too, otherwise the click
     // handler exits silently with no feedback.
     const canDownload = allConverted && conversions.length > 0;
+    // canConvert is the source of truth for the inline Convert button. The
+    // button must gray out (disabled) whenever there is nothing left to
+    // convert — including after every file has been converted (pendingCount
+    // becomes 0). It re-enables the moment a new file lands via "Add more
+    // files" or when the user changes a per-file target format so that
+    // target stops matching lastConvertedTargets.
+    const canConvert = files.length > 0 && pendingCount > 0 && !isProcessing;
     const primaryFile = files[0];
     const primarySourceFormat = primaryFile ? getFileExtension(primaryFile.name).toUpperCase() : selectedTool.input.split(',')[0].trim();
     const primaryTargetFormat = primaryFile
@@ -2045,10 +2044,10 @@ export default function ConversionPanel({
                 <button
                   type="button"
                   onClick={() => handleConvert(false)}
-                  disabled={isProcessing || files.length === 0 || pendingCount === 0}
+                  disabled={!canConvert}
                   className={cls(
                     'ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-xs font-black outline-none transition active:scale-[0.97]',
-                    pendingCount > 0 && !isProcessing
+                    canConvert
                       ? 'btn-primary text-white shadow-sm shadow-blue-500/20'
                       : 'cursor-not-allowed bg-slate-100 text-slate-400'
                   )}
