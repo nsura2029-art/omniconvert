@@ -1938,11 +1938,8 @@ export default function ConversionPanel({
               <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
               {/* ============== ROW: Unified action bar (Phase 1 cleanup) ==============
                   Phase 1 keeps the layout to a single horizontal action row:
-                    - Primary Convert button (left)
-                    - "Convert all to" bulk override select
-                    - Status counter (ml-auto pushes right)
-                    - Clear all + Download all
-                    - + Add more files (rightmost, opens native file picker directly)
+                    - LEFT cluster:  Convert all to (select) -> status counter -> Clear all
+                    - RIGHT cluster (pushed by ml-auto):  Convert -> Add more files -> Download
                   The previous three-row layout (Inputs / Bulk ops / Primary) and the
                   Save-destination popover are intentionally collapsed. */}
               <div className={cls(
@@ -1953,24 +1950,6 @@ export default function ConversionPanel({
                     ? 'border-b border-blue-100 bg-blue-50/40'
                     : 'border-b border-slate-100'
               )}>
-                <button
-                  type="button"
-                  onClick={() => handleConvert(false)}
-                  disabled={isProcessing || files.length === 0 || pendingCount === 0}
-                  className={cls(
-                    'inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-xs font-black outline-none transition active:scale-[0.97]',
-                    pendingCount > 0 && !isProcessing
-                      ? 'btn-primary text-white shadow-sm shadow-blue-500/20'
-                      : 'cursor-not-allowed bg-slate-100 text-slate-400'
-                  )}
-                >
-                  {isProcessing ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  )}
-                  {isProcessing ? 'Converting...' : `Convert ${pendingCount} ${pendingCount === 1 ? 'file' : 'files'}`}
-                </button>
                 <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Convert all to</label>
                 <select
                   value={cadConvertAllTarget}
@@ -1983,7 +1962,7 @@ export default function ConversionPanel({
                   ))}
                 </select>
                 <span className={cls(
-                  'ml-auto text-[11px] font-bold',
+                  'text-[11px] font-bold',
                   allConverted
                     ? 'font-black text-emerald-700'
                     : isProcessing
@@ -2009,6 +1988,35 @@ export default function ConversionPanel({
                   <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   Clear all
                 </button>
+
+                {/* Right cluster pushed to far right */}
+                <button
+                  type="button"
+                  onClick={() => handleConvert(false)}
+                  disabled={isProcessing || files.length === 0 || pendingCount === 0}
+                  className={cls(
+                    'ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-xs font-black outline-none transition active:scale-[0.97]',
+                    pendingCount > 0 && !isProcessing
+                      ? 'btn-primary text-white shadow-sm shadow-blue-500/20'
+                      : 'cursor-not-allowed bg-slate-100 text-slate-400'
+                  )}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  )}
+                  {isProcessing ? 'Converting...' : 'Convert'}
+                </button>
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 text-xs font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+                  Add more files
+                </button>
                 <button
                   type="button"
                   onClick={handleDownloadAllAsZip}
@@ -2022,15 +2030,6 @@ export default function ConversionPanel({
                 >
                   <Download className="h-3 w-3" />
                   Download all
-                </button>
-                <button
-                  type="button"
-                  disabled={isProcessing}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 text-xs font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14m-7-7h14"/></svg>
-                  Add more files
                 </button>
               </div>
 
