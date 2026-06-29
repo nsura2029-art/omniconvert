@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box, Music, FileCode, Sheet, FileType, BookOpen, Code, FileSpreadsheet, Presentation, Layers, Type } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
+import { computeConversionCost, spend, refund, getUser } from '../data/gamification';
+import UpvoteButton from './gamification/UpvoteButton';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -1497,6 +1499,28 @@ export default function ConversionPanel({
       return;
     }
 
+    // Compute + spend credit cost up front; refund on failure below.
+    const totalSizeMB = files.reduce((s, f) => s + f.size, 0) / (1024 * 1024);
+    const cost = computeConversionCost({
+      toolCategory: selectedTool.category ?? 'Documents',
+      inputFormat: selectedTool.input,
+      totalSizeMB,
+      fileCount: files.length || 1,
+    }, currentUser);
+    const spendResult = spend(cost, 'conversion_spend', {
+      description: `Convert ${selectedTool.name} · ${files.length || 1} file(s)`,
+      subtype: `${selectedTool.id}`,
+    });
+    if (!spendResult.ok) {
+      setIsProcessing(false);
+      const reason = 'reason' in spendResult ? spendResult.reason : 'insufficient';
+      setCadNotice(reason === 'insufficient'
+        ? `Not enough credits — this conversion costs ${cost} cr. Earn more via the floating pill.`
+        : 'Your account is restricted. Contact support.');
+      return;
+    }
+    const spendTxId = spendResult.tx.id;
+
     setIsProcessing(true);
     setShowLogs(true);
 
@@ -1767,6 +1791,7 @@ export default function ConversionPanel({
       } catch (err) {
         addLog(`[ERROR] High-speed client compilation threw unexpected error: ${err}`);
         updateProgress(currentFile.name, 'failed', 0, `Error occurred: ${err}`);
+        refund(spendTxId, 'conversion_refund', { description: `Refund: ${selectedTool.name} failed` });
       }
 
       // Real browser-side CAD conversion for the small subset that round-trips losslessly.
@@ -2028,7 +2053,17 @@ export default function ConversionPanel({
           {files.length > 0 && (
             <div className="bg-white">
               <div className="px-5 pb-7 pt-1 text-center">
-                <h2 className="text-2xl font-extrabold tracking-tight text-blue-600 sm:text-3xl">{converterTitle}</h2>
+                <div className="flex items-center justify-center gap-3">
+                  <h2 className="text-2xl font-extrabold tracking-tight text-blue-600 sm:text-3xl">{converterTitle}</h2>
+                  <UpvoteButton
+                    category={selectedTool.category ?? 'Documents'}
+                    source={primarySourceFormat}
+                    target={primaryTargetFormat}
+                    currentUser={getUser(currentUser)}
+                    size="sm"
+                    showLabel
+                  />
+                </div>
                 <p className="mt-2 text-sm font-semibold text-slate-600">{converterSubtitle}</p>
               </div>
 

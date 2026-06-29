@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard, BarChart3, Users, Activity, Settings, ShieldAlert,
+  LayoutDashboard, BarChart3, Users, Activity, Settings, ShieldAlert, Gem,
 } from 'lucide-react';
 import AdminDashboardSection from './AdminDashboardSection';
 import AdminAnalyticsSection from './AdminAnalyticsSection';
 import AdminUsersSection from './AdminUsersSection';
 import AdminConversionsSection from './AdminConversionsSection';
 import AdminSettingsSection from './AdminSettingsSection';
+import AdminGamificationSection from './AdminGamificationSection';
 
-export type AdminSection = 'dashboard' | 'analytics' | 'users' | 'conversions' | 'settings';
+export type AdminSection = 'dashboard' | 'analytics' | 'users' | 'conversions' | 'gamification' | 'settings';
 
 const NAV: Array<{ id: AdminSection; label: string; icon: React.ComponentType<{ className?: string }>; hint: string }> = [
-  { id: 'dashboard',   label: 'Dashboard',   icon: LayoutDashboard, hint: 'High-level admin overview' },
-  { id: 'analytics',   label: 'Analytics',   icon: BarChart3,       hint: 'Per-category conversion analytics' },
-  { id: 'users',       label: 'Users',       icon: Users,           hint: 'Registered users, plans, credits' },
-  { id: 'conversions', label: 'Conversions', icon: Activity,        hint: 'Realtime conversion logs' },
-  { id: 'settings',    label: 'Settings',    icon: Settings,        hint: 'Hero preset + system config' },
+  { id: 'dashboard',      label: 'Dashboard',     icon: LayoutDashboard, hint: 'High-level admin overview' },
+  { id: 'analytics',      label: 'Analytics',     icon: BarChart3,       hint: 'Per-category conversion analytics' },
+  { id: 'users',          label: 'Users',         icon: Users,           hint: 'Registered users, plans, credits' },
+  { id: 'conversions',    label: 'Conversions',   icon: Activity,        hint: 'Realtime conversion logs' },
+  { id: 'gamification',   label: 'Gamification',  icon: Gem,             hint: 'Credits, upvotes, referrals, shares' },
+  { id: 'settings',       label: 'Settings',      icon: Settings,        hint: 'Hero preset + system config' },
 ];
 
 interface AdminPanelProps {
@@ -75,11 +77,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialSection = 'dashboard', e
           <header className="mb-3">
             <p className="text-[11px] font-semibold text-slate-500">{currentHint}</p>
           </header>
-          {section === 'dashboard'   && <AdminDashboardSection />}
-          {section === 'analytics'   && <AdminAnalyticsSection />}
-          {section === 'users'       && <AdminUsersSection />}
-          {section === 'conversions' && <AdminConversionsSection />}
-          {section === 'settings'    && <AdminSettingsSection />}
+          {section === 'dashboard'      && <AdminDashboardSection />}
+          {section === 'analytics'      && <AdminAnalyticsSection />}
+          {section === 'users'          && <AdminUsersSection />}
+          {section === 'conversions'    && <AdminConversionsSection />}
+          {section === 'gamification'   && <AdminGamificationSection />}
+          {section === 'settings'       && <AdminSettingsSection />}
         </div>
       </main>
     </div>

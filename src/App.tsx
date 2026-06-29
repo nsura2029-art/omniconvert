@@ -11,6 +11,7 @@ import ConversionPanel from './components/ConversionPanel';
 import Dashboard from './components/Dashboard';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import Billing from './components/Billing';
+import Pricing from './pages/Pricing';
 import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
 import { getOrCreateUser, captureReferralFromUrl } from './data/gamification';
 import FloatingCreditPill from './components/gamification/FloatingCreditPill';
@@ -994,6 +995,17 @@ export default function App() {
               currentUser={currentUser}
               onUpgradePlan={handleUpgradePlan}
               onOpenAuth={() => setAuthModalOpen(true)}
+            />
+          </div>
+        )}
+
+        {/* VIEW 4b: PRICING + credit tiers */}
+        {currentPage === 'pricing' && (
+          <div className="animate-fade-in">
+            <Pricing
+              currentUser={currentUser}
+              onOpenAuth={() => setAuthModalOpen(true)}
+              onUpgradePlan={handleUpgradePlan}
             />
           </div>
         )}

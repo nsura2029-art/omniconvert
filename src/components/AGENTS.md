@@ -54,6 +54,58 @@
 - Run `npm run build` for component changes.
 - Use browser checks for changed interactions such as upload source selection, auth modals, dashboard tabs, or billing checkout.
 
+## Gamification System (Approach C)
+- **Foundation**: `src/data/gamification.ts` mirrors the D1 brief schema 1:1
+  (users / credit_transactions / upvotes / referrals / shares / daily_limits).
+  Swap to a Cloudflare Worker + D1 backend in Phase 2 by replacing the
+  storage primitives — function names + types stay the same.
+- **User tiers**: anonymous (5 start, 20 max), registered (20/100), paid
+  (500/9999). TIER_TABLE configures caps, daily login bonus, batch/file-size
+  limits, premium formats flag, history retention, and reward amounts per
+  tier. Reward amounts sourced from a single object so pricing updates are
+  one-file.
+- **Anonymous-first**: every visitor gets a UUID v4 session id stored in
+  localStorage + 30d cookie (`omni_session`). The session id is the primary
+  key for all credit / upvote / referral / share records.
+- **Cross-tab sync**: every gamification event broadcasts on
+  `BroadcastChannel('omniconvert-gamification')`. Admin tabs pick up changes
+  within ~50ms; the floating pill pulses; toasts slide up.
+- **FloatingCreditPill**: bottom-right sticky pill (desktop) / bottom-center
+  (mobile). Shows balance + trending score + open. Tapping the + opens
+  the GamificationModal.
+- **GamificationModal**: 5 tabs (Credits / Upvote / Refer / Share / Activity).
+  Spring entry, mobile bottom-sheet style. Credits tab: balance card with
+  gradient progress bar + earned/spent/streak mini-stats + daily-login
+  claim button + tier ladder + recent 8-tx history. Upvote tab: 6 suggested
+  pairs. Refer tab: copy-link + 4-tile stats + milestone ladder. Share tab:
+  7 platform tiles with tier-aware reward + cooldown state. Activity tab:
+  animated 25-tx feed.
+- **Upvote**: `castUpvote` checks daily limit (10/day per user) + dedupes by
+  (userId, category, source, target). Awards tier credit on success.
+  UpvoteButton animates (Framer Motion spring + thumb wiggle).
+- **Referral**: `?ref={code}` captured on app boot, stored in localStorage +
+  30d cookie. Click recorded immediately; signup/convert/paid events
+  attribute the referrer and credit both sides based on the event tier.
+- **Share**: 7 platforms (LinkedIn / Reddit / Twitter / Facebook / WhatsApp
+  / Telegram / Email) via `buildShareUrl()`. 24h cooldown per platform, max
+  3/day per platform. Reward credits tier-aware.
+- **ActivityFeed**: 25 most-recent txs, animated entry on new items via
+  AnimatePresence + motion.li. Polls every 2s + BroadcastChannel sync.
+- **Admin Gamification dashboard**: `AdminGamificationSection.tsx` (slot in
+  AdminPanel left nav as 'Gamification'). 8 KPI cards (active users,
+  credits given/spent, net flow, upvotes, shares, referrals, alerts). Live
+  credit-flow SVG line chart (custom, no recharts dep). Top earners +
+  trending pairs tables. Recent transactions table. Anti-gaming alerts.
+  CSV export of all user records.
+- **Admin Users drawer**: clicking the new 'View' button on any user opens a
+  right-side drawer with tier override, credit adjustment (with reason),
+  referral stats, recent transactions, ban/unban controls.
+- **Pricing page**: `src/pages/Pricing.tsx` — 3 tier cards, credit cost
+  calculator widget, earn-credits table, FAQ accordion.
+- **Integration**: `ConversionPanel.tsx` now spends credits on Convert click
+  (cost from `computeConversionCost`) and refunds on failure. Each converter
+  header shows an UpvoteButton for that pair.
+
 ## Per-Category Analytics Dashboard
 - Analytics is now an admin-only section inside the Admin Panel (alongside Dashboard, Users, Conversions, Settings). The host app routes `currentPage === 'analytics'` to `<AdminPanel initialSection="analytics" />`. Non-admin users see a "Admin only" sign-in prompt instead.
 - The Admin Panel (`src/pages/admin/AdminPanel.tsx`) ships a left-rail nav: **Dashboard · Analytics · Users · Conversions · Settings**. All five sections are gated by `currentUser?.email === 'admin@omniconvert.com'` in `App.tsx`.
