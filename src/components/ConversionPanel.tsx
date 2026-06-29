@@ -416,6 +416,42 @@ function UploadProgressBar({ value, label }: { value: number; label?: string }) 
   );
 }
 
+/**
+ * SingleProgressBar — a thin, single-fill, left-to-right progress bar placed
+ * directly below the input filename inside UploadedFileRow. Replaces the older
+ * dual-anchored UploadProgressBar that was jittering under rapid updates.
+ *
+ * Implementation notes:
+ *  - Plain <div> + CSS transition for the width property. No motion library.
+ *  - Solid blue fill on a slate-100 track so the filled portion is unambiguous
+ *    (no gradient meeting point, no overlapping dual fills to fight each other).
+ *  - Width = value% directly (no halving). Single fill, single source of truth.
+ *  - When value = 100 the bar fades to a transparent track via the inline
+ *    `opacity: 0` style; the parent UploadedFileRow swaps it for a static
+ *    "Complete" inline indicator anyway, so this is a fallback safety net.
+ */
+function SingleProgressBar({ value }: { value: number }) {
+  const safeValue = Math.max(0, Math.min(100, value));
+  return (
+    <div
+      className="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-100"
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={safeValue}
+    >
+      <div
+        className="absolute top-0 left-0 h-full rounded-full bg-blue-500"
+        style={{
+          width: `${safeValue}%`,
+          transition: 'width 200ms ease-out',
+          opacity: safeValue >= 100 ? 0 : 1,
+        }}
+      />
+    </div>
+  );
+}
+
 function UploadButton({
   label,
   onClick,
@@ -474,20 +510,23 @@ function UploadZone({
   children: React.ReactNode;
 }) {
   return (
-    <motion.div
+    /* Plain white browser background. No rounded card, no dashed border,
+       no grid pattern, no animated tint. Phase 1 strips the "card" feel
+       from the entire Choose Files flow. The drag affordance now lives
+       on the UploadPlaceholder's primary button + the file picker, not
+       on a bordered drop zone. */
+    <div
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      animate={{
-        borderColor: dragActive ? 'rgba(37, 99, 235, 0.58)' : 'rgba(191, 219, 254, 0.85)',
-        backgroundColor: dragActive ? 'rgba(219, 234, 254, 0.92)' : 'rgba(239, 246, 255, 0.62)',
-      }}
-      transition={{ duration: 0.18 }}
-      className="relative overflow-hidden rounded-[18px] border border-dashed bg-[linear-gradient(rgba(37,99,235,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.045)_1px,transparent_1px)] bg-[length:24px_24px]"
+      className={cls(
+        'relative w-full bg-white py-8 transition-colors',
+        dragActive ? 'bg-blue-50/40' : 'bg-white'
+      )}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -791,7 +830,7 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
       transition={{ duration: 0.2 }}
       className="border-b border-slate-100 bg-white px-4 py-3 last:border-b-0"
     >
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px] lg:items-center">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_90px_120px] lg:items-center">
         <div className="flex min-w-0 gap-3">
           {(() => {
             const { Icon: TypeIcon, bg, fg } = getFileTypeMeta(file.name);
@@ -801,7 +840,7 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
               </span>
             );
           })()}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <p className="truncate text-sm font-black text-slate-900">{file.name}</p>
               {(() => {
@@ -814,6 +853,23 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
               })()}
             </div>
             <p className="mt-1 text-xs font-semibold text-slate-500">{statusText}</p>
+
+            {/* Progress bar: SINGLE left-to-right fill, positioned directly below
+                the input filename. When converted, this whole strip swaps to a
+                static "Complete" inline indicator (no animated bar). */}
+            <div className="mt-2">
+              {converted ? (
+                <div className="flex items-center gap-2" aria-label="Complete 100%">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                    <CheckCircle2 className="h-3 w-3" />
+                  </span>
+                  <span className="text-[11px] font-black text-emerald-700">100%</span>
+                  <span className="text-[11px] font-bold text-slate-500">Complete</span>
+                </div>
+              ) : (
+                <SingleProgressBar value={progressValue} />
+              )}
+            </div>
           </div>
         </div>
 
@@ -827,25 +883,6 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
             size="md"
             ariaLabel={`Target format for ${file.name}`}
           />
-        </div>
-
-        <div className="min-w-[150px]">
-          {converted ? (
-            // Already converted — render a static Done indicator so the eye doesn't
-            // group it with the live bar of a currently-processing file.
-            <div className="flex items-center gap-2" aria-label="Complete 100%">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              </span>
-              <span className="text-xs font-black text-emerald-700">100%</span>
-              <span className="hidden text-xs font-bold text-slate-500 lg:inline">Complete</span>
-            </div>
-          ) : (
-            <UploadProgressBar
-              value={progressValue}
-              label={progress ? `${progress.statusText} ${progress.progress}%` : isAnalyzing ? 'Analyzing...' : 'Ready'}
-            />
-          )}
         </div>
 
         <div className="text-center text-xs font-semibold text-slate-500 lg:text-right">
@@ -877,7 +914,7 @@ const UploadedFileRow: React.FC<UploadedFileRowProps> = ({
           action row below. */}
       <div
         className={cls(
-          'mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_minmax(150px,190px)_90px_120px]',
+          'mt-3 grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 lg:grid-cols-[minmax(0,1fr)_170px_90px_120px]',
           converted && conversion
             ? 'border-emerald-100 bg-emerald-50/60'
             : 'border-dashed border-slate-200 bg-slate-50/40'
