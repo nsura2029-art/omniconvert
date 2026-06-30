@@ -46,8 +46,8 @@ export default function Navbar({
         <div className="flex h-16 items-center justify-between gap-4">
           
           {/* Logo */}
-          <div 
-            onClick={() => onChangePage('tools')}
+          <div
+            onClick={() => onChangePage('home')}
             className="flex items-center gap-2 cursor-pointer group"
             id="navbar-logo"
           >

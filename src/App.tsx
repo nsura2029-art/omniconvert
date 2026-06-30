@@ -9,6 +9,7 @@ import CadSeoPage from './components/CadSeoPage';
 import AuthModal from './components/AuthModal';
 import ConversionPanel from './components/ConversionPanel';
 import Dashboard from './components/Dashboard';
+import NewLanding from './components/NewLanding';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import Billing from './components/Billing';
 import Pricing from './pages/Pricing';
@@ -61,7 +62,7 @@ const upsertJsonLd = (id: string, payload: unknown) => {
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<string>('tools');
+  const [currentPage, setCurrentPage] = useState<string>('home');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedCadSlug, setSelectedCadSlug] = useState<string | null>(null);
@@ -580,7 +581,18 @@ export default function App() {
 
       {/* MAIN APP SECTION */}
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full" id="main-content-area">
-        
+
+        {/* VIEW 0: NEW LANDING PAGE (zero-friction drop-zone hero) */}
+        {currentPage === 'home' && (
+          <div className="animate-fade-in" id="home-page">
+            <NewLanding
+              currentUser={currentUser}
+              onSelectTool={(tool) => handleSelectTool(tool)}
+              onNavigateConverter={() => handleChangePage('tools')}
+            />
+          </div>
+        )}
+
         {/* VIEW 1: TOOLS DIRECTORY & LANDING PAGE */}
         {currentPage === 'tools' && (
           <div className="space-y-12 animate-fade-in" id="tools-page">
