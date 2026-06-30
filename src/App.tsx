@@ -589,6 +589,8 @@ export default function App() {
               currentUser={currentUser}
               onSelectTool={(tool) => handleSelectTool(tool)}
               onNavigateConverter={() => handleChangePage('tools')}
+              onNavigateCategoryPage={(cat) => handleSelectToolCategory(cat)}
+              onNavigateCadSeoPage={(slug) => handleOpenCadSeoPage(slug)}
             />
           </div>
         )}

@@ -10,6 +10,8 @@ interface NewLandingProps {
   currentUser?: User | null;
   onSelectTool: (tool: Tool) => void;
   onNavigateConverter: () => void;
+  onNavigateCategoryPage: (categoryId: string) => void;
+  onNavigateCadSeoPage: (slug: string) => void;
 }
 
 /** Map a file extension to the best-matching Tool from the catalog.
@@ -37,10 +39,17 @@ const formatBytes = (b: number): string => {
   return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 };
 
-const NewLanding: React.FC<NewLandingProps> = ({ currentUser, onSelectTool, onNavigateConverter }) => {
+const NewLanding: React.FC<NewLandingProps> = ({
+  currentUser,
+  onSelectTool,
+  onNavigateConverter,
+  onNavigateCategoryPage,
+  onNavigateCadSeoPage,
+}) => {
   const [dragActive, setDragActive] = useState(false);
   const [pickedFile, setPickedFile] = useState<File | null>(null);
   const [matchedTool, setMatchedTool] = useState<Tool | null>(null);
+  const [matchedSlug, setMatchedSlug] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const gamUser = getUser(currentUser);
 
@@ -52,17 +61,38 @@ const NewLanding: React.FC<NewLandingProps> = ({ currentUser, onSelectTool, onNa
     setPickedFile(first);
     setMatchedTool(tool);
     onSelectTool(tool);
+
+    // Find a CAD SEO page slug for this tool — that gives us the canonical
+    // /cad/<slug> URL (e.g. /cad/dxf-to-dwg for a .dxf file).
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const cadPages = (require('../data/cadSeoPages') as typeof import('../data/cadSeoPages')).CAD_SEO_PAGES;
+      const match = cadPages.find(p => p.toolId === tool.id);
+      setMatchedSlug(match ? match.slug : null);
+    } catch {
+      setMatchedSlug(null);
+    }
   }, [onSelectTool]);
 
-  // When a file is picked, redirect to the converter after a brief moment
-  // so the user sees the matched tool confirmation flash.
+  // When a file is picked, redirect to the category-specific URL after a
+  // brief moment so the user sees the matched tool confirmation flash.
+  // Priority:
+  //   1. CAD tools with a CAD SEO page → /cad/<slug>
+  //   2. Any other tool                → /<category>-converter/  (with tool pre-selected)
   useEffect(() => {
     if (!pickedFile || !matchedTool) return;
     const t = setTimeout(() => {
-      onNavigateConverter();
+      if (matchedTool.category === 'CAD' && matchedSlug) {
+        onNavigateCadSeoPage(matchedSlug);
+      } else {
+        onNavigateCategoryPage(matchedTool.category);
+      }
     }, 900);
     return () => clearTimeout(t);
-  }, [pickedFile, matchedTool, onNavigateConverter]);
+  }, [pickedFile, matchedTool, matchedSlug, onNavigateCadSeoPage, onNavigateCategoryPage]);
+
+  // keep onNavigateConverter prop referenced
+  void onNavigateConverter;
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -186,7 +216,7 @@ const NewLanding: React.FC<NewLandingProps> = ({ currentUser, onSelectTool, onNa
               </div>
 
               {/* Matched-tool confirmation (after file pick) */}
-              <AnimateIfPicked pickedFile={pickedFile} matchedTool={matchedTool} />
+              <AnimateIfPicked pickedFile={pickedFile} matchedTool={matchedTool} matchedSlug={matchedSlug} />
 
               {/* Source → target flow */}
               <div className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-50 px-4 py-1.5 text-[11px] font-black text-slate-600 ring-1 ring-slate-200">
@@ -231,14 +261,17 @@ const Feature: React.FC<{ icon: React.ReactNode; title: string; copy: string }> 
   </div>
 );
 
-const AnimateIfPicked: React.FC<{ pickedFile: File | null; matchedTool: Tool | null }> = ({ pickedFile, matchedTool }) => {
+const AnimateIfPicked: React.FC<{ pickedFile: File | null; matchedTool: Tool | null; matchedSlug: string | null }> = ({ pickedFile, matchedTool, matchedSlug }) => {
   if (!pickedFile || !matchedTool) return null;
+  const targetUrl = matchedTool.category === 'CAD' && matchedSlug
+    ? `/cad/${matchedSlug}`
+    : `/${(matchedTool.category ?? 'documents').toLowerCase()}-converter/`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-      className="mx-auto flex max-w-md items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left"
+      className="mx-auto flex max-w-lg flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left"
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
         <FileCheck2 className="h-4 w-4" />
@@ -246,7 +279,7 @@ const AnimateIfPicked: React.FC<{ pickedFile: File | null; matchedTool: Tool | n
       <div className="min-w-0 flex-1">
         <p className="truncate text-[11px] font-black text-emerald-800">{pickedFile.name}</p>
         <p className="text-[10px] font-semibold text-emerald-700">
-          {formatBytes(pickedFile.size)} · Routed to <span className="font-black">{matchedTool.name}</span>
+          {formatBytes(pickedFile.size)} · Routed to <span className="font-black">{matchedTool.name}</span> · <span className="font-mono">{targetUrl}</span>
         </p>
       </div>
       <UpvoteButton
