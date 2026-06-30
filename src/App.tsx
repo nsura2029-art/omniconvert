@@ -16,6 +16,7 @@ import Pricing from './pages/Pricing';
 import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
 import { getOrCreateUser, captureReferralFromUrl } from './data/gamification';
 import FloatingCreditPill from './components/gamification/FloatingCreditPill';
+import { installMegaRouter } from './lib/mega-menu-router';
 import OnboardingTour from './components/OnboardingTour';
 import InteractiveHeroSelector from './components/InteractiveHeroSelector';
 import SecurityPage from './components/SecurityPage';
@@ -388,6 +389,17 @@ export default function App() {
     setSelectedCategory(category);
     setSelectedCadSlug(null);
     setSearchQuery('');
+
+    // Wire mega-menu router (idempotent) so the new Compact Card Grid
+    // nav can route into the existing in-app navigation handlers.
+    installMegaRouter({
+      onChangePage: handleChangePage,
+      onSelectTool: (id) => {
+        const tool = TOOLS.find(t => t.id === id);
+        if (tool) handleSelectTool(tool);
+      },
+      onSelectCategory: handleSelectToolCategory,
+    });
 
     if (category === 'All') {
       setCurrentPage('tools');

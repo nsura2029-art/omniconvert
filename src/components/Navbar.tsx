@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import MegaMenu, { MegaMenuVariant } from './megamenu/MegaMenu';
+import MegaNavItem from './megamenu/MegaNavItem';
 import { Sparkles, User as UserIcon, LogOut, ShieldAlert, Library, Route, BarChart3, CreditCard, ChevronDown, HelpCircle, Sun, Moon, Gift, Activity } from 'lucide-react';
 import { User } from '../types';
 import type { Category } from '../data/tools';
@@ -33,6 +35,12 @@ export default function Navbar({
   onSelectToolCategory
 }: NavbarProps) {
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
+  const [megaOpen, setMegaOpen] = useState<string | null>(null);
+  const openMega = (k: string) => setMegaOpen(prev => (prev === k ? null : k));
+  const navigateMegaUrl = (url: string) => {
+    setMegaOpen(null);
+    if (window.__omniMegaRouter) window.__omniMegaRouter(url);
+  };
   const isAdmin = currentUser?.email === 'admin@omniconvert.com';
   const cadCategory = categories.find(category => category.id === 'CAD');
   const menuCategories = cadCategory
@@ -64,8 +72,13 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 glass p-1 rounded-xl" id="navbar-nav">
+          {/* Navigation Links — Mega Menu */}
+          <nav
+            className="hidden md:flex items-center gap-1 glass p-1 rounded-xl relative"
+            id="navbar-nav"
+            onMouseLeave={() => { setMegaOpen(null); setToolsMenuOpen(false); }}
+          >
+            {/* Existing legacy Tools menu — kept untouched */}
             <div className="relative group">
               <button
                 type="button"
@@ -219,6 +232,22 @@ export default function Navbar({
                 <ShieldAlert className="w-3.5 h-3.5" />
                 Admin Panel
               </button>
+            )}
+
+            <MegaNavItem label="All Tools" openKey="all-tools" active={megaOpen === 'all-tools'} onOpen={openMega} onNavigate={navigateMegaUrl} />
+            <MegaNavItem label="Documents" openKey="documents" active={megaOpen === 'documents'} onOpen={openMega} onNavigate={navigateMegaUrl} />
+            <MegaNavItem label="Images" openKey="images" active={megaOpen === 'images'} onOpen={openMega} onNavigate={navigateMegaUrl} />
+            <MegaNavItem label="Audio" openKey="audio" active={megaOpen === 'audio'} onOpen={openMega} onNavigate={navigateMegaUrl} />
+            <MegaNavItem label="More" openKey="more" active={megaOpen === 'more'} onOpen={openMega} onNavigate={navigateMegaUrl} />
+
+            {megaOpen && (
+              <MegaMenu
+                variant={megaOpen === 'all-tools' ? 'all-tools' : megaOpen === 'more' ? 'more' : 'category'}
+                categoryId={megaOpen === 'all-tools' || megaOpen === 'more' ? undefined : megaOpen}
+                open={!!megaOpen}
+                onOpenChange={o => setMegaOpen(o ? megaOpen : null)}
+                onNavigate={navigateMegaUrl}
+              />
             )}
           </nav>
 
