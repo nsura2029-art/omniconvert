@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Upload, File, Sparkles, CheckCircle2, AlertTriangle, Play, Loader2, Download, Eye, Terminal, Trash2, ArrowRight, Settings, HelpCircle, HardDrive, RefreshCw, Volume2, Video, Laptop, Link, Globe, FolderOpen, Search, FileText, Cloud, Lock, ChevronDown, ChevronRight, Image, FolderArchive, Box, Music, FileCode, Sheet, FileType, BookOpen, Code, FileSpreadsheet, Presentation, Layers, Type } from 'lucide-react';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { Tool, TOOLS, CATEGORIES } from '../data/tools';
+import ToolPicker from './ToolPicker';
 import { computeConversionCost, spend, refund, getUser } from '../data/gamification';
 import UpvoteButton from './gamification/UpvoteButton';
 import confetti from 'canvas-confetti';
@@ -14,6 +15,7 @@ interface ConversionPanelProps {
   onConversionCompleted: (conversion: FileConversion) => void;
   onOpenAuth: () => void;
   integrations: CloudIntegration[];
+  onSelectTool?: (tool: Tool) => void;
 }
 
 const GOOGLE_DRIVE_MOCK_FILES = [
@@ -1239,7 +1241,8 @@ export default function ConversionPanel({
   selectedTool,
   onConversionCompleted,
   onOpenAuth,
-  integrations
+  integrations,
+  onSelectTool,
 }: ConversionPanelProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -2236,6 +2239,19 @@ export default function ConversionPanel({
 
           {/* Spacer for fixed action bar — keeps file list last row clear. */}
           <div className="h-24" aria-hidden="true" />
+
+          {/* Tool picker — 3-step Category → From → To with popular combos.
+              Lives in the scrollable area so it doesn't fight the sticky bar.
+              When the user picks a tool, onSelectTool is called and the parent
+              (App.tsx) updates selectedTool + URL via pushState. */}
+          {onSelectTool && (
+            <ToolPicker
+              activeCategory={selectedTool.category}
+              activeFrom={selectedTool.input}
+              activeTo={selectedTool.output}
+              onChange={onSelectTool}
+            />
+          )}
 
           <input
             ref={fileInputRef}

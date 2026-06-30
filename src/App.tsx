@@ -125,6 +125,20 @@ export default function App() {
     });
   };
 
+  // Tool picker uses this — same as handleSelectTool but also updates the
+  // URL via pushState so the address bar reflects the current tool. The
+  // page does NOT re-render or scroll; only the URL changes.
+  const handleSelectToolSyncUrl = (tool: Tool) => {
+    handleSelectTool(tool);
+    const slug = toolSlug(tool.input, tool.output);
+    const url = tool.category === 'CAD'
+      ? `/cad/${slug}`
+      : `/${tool.category.toLowerCase()}/${slug}`;
+    if (window.location.pathname !== url) {
+      window.history.pushState({}, '', url);
+    }
+  };
+
   // Load conversions & limits from localStorage on boot
   useEffect(() => {
     // Bootstrap gamification: capture ?ref= and create session/user.
@@ -715,6 +729,7 @@ export default function App() {
                   onConversionCompleted={handleConversionCompleted}
                   onOpenAuth={() => setAuthModalOpen(true)}
                   integrations={integrations}
+                  onSelectTool={handleSelectToolSyncUrl}
                 />
               </div>
             )}
@@ -923,6 +938,7 @@ export default function App() {
                   onConversionCompleted={handleConversionCompleted}
                   onOpenAuth={() => setAuthModalOpen(true)}
                   integrations={integrations}
+                  onSelectTool={handleSelectToolSyncUrl}
                 />
               )
             }
@@ -961,6 +977,7 @@ export default function App() {
                   onConversionCompleted={handleConversionCompleted}
                   onOpenAuth={() => setAuthModalOpen(true)}
                   integrations={integrations}
+                  onSelectTool={handleSelectToolSyncUrl}
                 />
               )
             }

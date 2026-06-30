@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OmniConvert — Any Format. Zero Friction.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'], mono: ['ui-monospace','SFMono-Regular','Menlo','monospace'] } }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .glass { background: rgba(255,255,255,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+    .dark .glass { background: rgba(24,24,27,0.72); }
+    .chip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.02em; }
+    .fmt-pill { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .analyze-bar { background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+
+    /* step chips (Category / From / To) */
+    .step-chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.7rem; border-radius: 0.5rem; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: 11px; font-weight: 700; border: 1px solid #e4e4e7; background: #fff; color: #18181b; cursor: pointer; transition: all 0.15s; }
+    .dark .step-chip { background: #18181b; border-color: #27272a; color: #fafafa; }
+    .step-chip:hover { border-color: #3b82f6; background: #eff6ff; }
+    .dark .step-chip:hover { background: rgba(59,130,246,0.15); }
+    .step-chip.active { background: linear-gradient(135deg, #2563eb, #4f46e5); color: #fff; border-color: #2563eb; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+    .step-chip:disabled, .step-chip[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+    .step-section { min-height: 80px; }
+    .step-empty { font-size: 11px; color: #a1a1aa; font-style: italic; padding: 1rem 0; }
+
+    .cat-btn.active { background: #eff6ff; color: #1d4ed8; border-color: #3b82f6; }
+    .dark .cat-btn.active { background: rgba(59,130,246,0.15); color: #93c5fd; border-color: #3b82f6; }
+
+    /* Sticky bottom action bar */
+    .sticky-bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid #e4e4e7; box-shadow: 0 -4px 16px rgba(0,0,0,0.04);
+    }
+    .dark .sticky-bar { background: rgba(9,9,11,0.92); border-top-color: #27272a; }
+    /* page bottom padding so content isn't hidden behind sticky bar */
+    body { padding-bottom: 96px; }
+  </style>
+</head>
+<body class="bg-zinc-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 antialiased">
+
+  <!-- ============================================ -->
+  <!-- Top nav                                      -->
+  <!-- ============================================ -->
+  <header class="sticky top-0 z-30 glass border-b border-zinc-200/70 dark:border-zinc-800/70">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center gap-3 md:gap-4 text-sm">
+      <a href="/" class="flex items-center gap-2 font-bold whitespace-nowrap">
+        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center text-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </span>
+        <div class="leading-tight">
+          <div class="text-slate-900 dark:text-white">OmniConvert</div>
+          <div class="text-[9px] text-slate-500 dark:text-slate-400 tracking-widest font-semibold">SAAS · ENGINE</div>
+        </div>
+      </a>
+      <div class="hidden md:flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-xl px-1 h-10">
+        <a class="px-3 h-9 inline-flex items-center gap-1 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-zinc-800 text-sm">Tools <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></a>
+        <a class="px-3 h-9 inline-flex items-center gap-1 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-zinc-800 text-sm">Custom Workflows</a>
+        <a class="px-3 h-9 inline-flex items-center gap-1 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-zinc-800 text-sm">Dashboard</a>
+        <a class="px-3 h-9 inline-flex items-center gap-1 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-zinc-800 text-sm">Analytics</a>
+        <a class="px-3 h-9 inline-flex items-center gap-1 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-zinc-800 text-sm">Pricing &amp; Shop</a>
+      </div>
+      <div class="flex-1"></div>
+      <button class="hidden md:inline-grid place-items-center w-9 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="inline-flex items-center gap-2 px-2 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+        <span class="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 grid place-items-center text-white text-[10px] font-bold">CH</span>
+        <span class="text-sm font-medium pr-2">Chief</span>
+        <svg class="w-3 h-3 text-slate-400 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+
+    <!-- ============================================ -->
+    <!-- HERO                                         -->
+    <!-- ============================================ -->
+    <section class="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-6 md:p-8">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          CAD CONVERTER
+        </span>
+        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">CAD</span>
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          BROWSER-SAFE · NO SIGNUP
+        </span>
+      </div>
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 id="hero-title" class="text-3xl md:text-4xl font-bold tracking-tight">DWG to STL Online</h1>
+          <p class="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl">
+            Use OmniConvert to convert <span id="hero-source-doc">DWG</span> files into <span id="hero-target-doc">STL</span> meshes for 3D printing. Browser-side, no signup, no upload.
+          </p>
+        </div>
+        <button class="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          0 Upvote
+        </button>
+      </div>
+      <div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Source</div>
+          <div id="hero-source" class="mt-1 font-bold">DWG</div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Target</div>
+          <div id="hero-target" class="mt-1 font-bold">STL</div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
+          <div class="mt-1 font-bold">100% client-side</div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
+          <div class="mt-1 font-bold">Seconds</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CONVERTER CARD — file list (unchanged)       -->
+    <!-- ============================================ -->
+    <section class="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-5 md:p-7">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">
+          <span id="cf-title-from" class="text-blue-600 dark:text-blue-400">DWG</span> to <span id="cf-title-to" class="text-blue-600 dark:text-blue-400">STL</span> Converter
+        </h2>
+        <button class="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          0 Upvote
+        </button>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Transform <span id="cf-sub-from">DWG</span> files into <span id="cf-sub-to">STL</span> online</p>
+
+      <!-- file rows (existing) -->
+      <div class="space-y-1.5">
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 grid place-items-center text-[10px] font-bold font-mono">DWG</div>
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <p class="text-sm font-semibold truncate">sample-dwg-floorplan.dwg</p>
+            <span class="fmt-pill bg-sky-500/10 text-sky-700 dark:text-sky-300">DWG</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+              100% Complete
+            </span>
+          </div>
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+            <span>TO</span>
+            <button class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-blue-400 text-xs">
+              <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300">STL</span>
+              <svg class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <span class="text-xs text-slate-500 w-12 text-right">349 B</span>
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            Converted
+          </span>
+          <button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/30">
+          <div class="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 grid place-items-center text-[10px] font-bold font-mono">STL</div>
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <p class="text-sm font-semibold truncate">sample-dwg-floorplan.stl</p>
+            <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300">STL</span>
+            <span class="text-xs text-slate-500">416 B</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">DONE</span>
+          </div>
+          <div class="flex-1"></div>
+          <button class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 grid place-items-center text-[10px] font-bold font-mono">IGS</div>
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <p class="text-sm font-semibold truncate">sample-iges-plate.igs</p>
+            <span class="fmt-pill bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">IGS</span>
+          </div>
+          <div class="hidden md:flex flex-1 items-center">
+            <div class="h-1 flex-1 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+              <div class="h-full w-1/2 rounded-full analyze-bar"></div>
+            </div>
+          </div>
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+            <span>TO</span>
+            <button class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-blue-400 text-xs">
+              <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300">STL</span>
+              <svg class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <span class="text-xs text-slate-500 w-12 text-right">537 B</span>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-500/10 text-slate-600 dark:text-slate-300">Pending</span>
+          <button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/5 border-2 border-dashed border-amber-300/60 dark:border-amber-700/40">
+          <div class="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 grid place-items-center text-[10px] font-bold font-mono opacity-60">STL</div>
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <p class="text-sm font-medium text-slate-500 truncate">sample-iges-plate.stl</p>
+            <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300 opacity-60">STL</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300">PENDING</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60">
+          <div class="w-8 h-8 rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400 grid place-items-center text-[10px] font-bold font-mono">OBJ</div>
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <p class="text-sm font-semibold truncate">sample-obj-cube.obj</p>
+            <span class="fmt-pill bg-pink-500/10 text-pink-700 dark:text-pink-300">OBJ</span>
+          </div>
+          <div class="hidden md:flex flex-1 items-center">
+            <div class="h-1 flex-1 rounded-full bg-zinc-200 dark:bg-zinc-800"></div>
+          </div>
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+            <span>TO</span>
+            <button class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-blue-400 text-xs">
+              <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300">STL</span>
+              <svg class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <span class="text-xs text-slate-500 w-12 text-right">181 B</span>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-500/10 text-slate-600 dark:text-slate-300">Pending</span>
+          <button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/5 border-2 border-dashed border-amber-300/60 dark:border-amber-700/40">
+          <div class="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 grid place-items-center text-[10px] font-bold font-mono opacity-60">STL</div>
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <p class="text-sm font-medium text-slate-500 truncate">sample-obj-cube.stl</p>
+            <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300 opacity-60">STL</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300">PENDING</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- PICK A TOOL — simplified 3-step picker        -->
+    <!-- Categories (left) | From | To                 -->
+    <!-- ============================================ -->
+    <section class="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-5 md:p-7">
+      <div class="flex items-end justify-between gap-3 flex-wrap mb-5">
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold tracking-tight">Pick a tool</h2>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Pick a category, then a source format, then a target. The URL updates instantly.
+          </p>
+        </div>
+        <div class="text-[11px] text-slate-500 flex items-center gap-1.5 font-mono">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          URL: <span id="url-preview" class="text-slate-700 dark:text-slate-300 font-semibold">/cad/dwg-to-stl</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- STEP 1 — Category (vertical) -->
+        <div class="lg:col-span-3">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 grid place-items-center text-[9px] font-bold">1</span>
+            Category
+          </div>
+          <div id="cat-list" class="flex flex-col gap-1.5">
+            <button data-cat="CAD" class="cat-btn active w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 grid place-items-center text-[10px] font-bold">3D</span>
+              <span class="flex-1 text-sm font-semibold">CAD</span>
+              <span class="text-[10px] text-slate-500">21</span>
+            </button>
+            <button data-cat="Documents" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 grid place-items-center text-[10px] font-bold">DOC</span>
+              <span class="flex-1 text-sm font-semibold">Documents</span>
+              <span class="text-[10px] text-slate-500">30</span>
+            </button>
+            <button data-cat="Images" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 grid place-items-center text-[10px] font-bold">IMG</span>
+              <span class="flex-1 text-sm font-semibold">Images</span>
+              <span class="text-[10px] text-slate-500">18</span>
+            </button>
+            <button data-cat="Video" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 grid place-items-center text-[10px] font-bold">VID</span>
+              <span class="flex-1 text-sm font-semibold">Video</span>
+              <span class="text-[10px] text-slate-500">12</span>
+            </button>
+            <button data-cat="Audio" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 grid place-items-center text-[10px] font-bold">AUD</span>
+              <span class="flex-1 text-sm font-semibold">Audio</span>
+              <span class="text-[10px] text-slate-500">10</span>
+            </button>
+            <button data-cat="Archives" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 grid place-items-center text-[10px] font-bold">ZIP</span>
+              <span class="flex-1 text-sm font-semibold">Archives</span>
+              <span class="text-[10px] text-slate-500">5</span>
+            </button>
+            <button data-cat="Spreadsheets" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 grid place-items-center text-[10px] font-bold">XLS</span>
+              <span class="flex-1 text-sm font-semibold">Spreadsheets</span>
+              <span class="text-[10px] text-slate-500">8</span>
+            </button>
+            <button data-cat="Presentations" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-red-500/10 text-red-600 dark:text-red-400 grid place-items-center text-[10px] font-bold">PPT</span>
+              <span class="flex-1 text-sm font-semibold">Presentations</span>
+              <span class="text-[10px] text-slate-500">4</span>
+            </button>
+            <button data-cat="eBooks" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 grid place-items-center text-[10px] font-bold">EPUB</span>
+              <span class="flex-1 text-sm font-semibold">eBooks</span>
+              <span class="text-[10px] text-slate-500">5</span>
+            </button>
+            <button data-cat="Fonts" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 grid place-items-center text-[10px] font-bold">FNT</span>
+              <span class="flex-1 text-sm font-semibold">Fonts</span>
+              <span class="text-[10px] text-slate-500">3</span>
+            </button>
+            <button data-cat="Data" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 grid place-items-center text-[10px] font-bold">DB</span>
+              <span class="flex-1 text-sm font-semibold">Data</span>
+              <span class="text-[10px] text-slate-500">6</span>
+            </button>
+            <button data-cat="3D" class="cat-btn w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <span class="w-7 h-7 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 grid place-items-center text-[10px] font-bold">3D</span>
+              <span class="flex-1 text-sm font-semibold">3D Models</span>
+              <span class="text-[10px] text-slate-500">7</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2 — From (dynamic) -->
+        <div class="lg:col-span-4 step-section">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 grid place-items-center text-[9px] font-bold">2</span>
+            From
+          </div>
+          <div id="from-list" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- STEP 3 — To (dynamic) -->
+        <div class="lg:col-span-5 step-section">
+          <div class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 grid place-items-center text-[9px] font-bold">3</span>
+            To
+          </div>
+          <div id="to-list" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================ -->
+  <!-- STICKY BOTTOM ACTION BAR                    -->
+  <!-- Convert all + counter + Convert + etc.       -->
+  <!-- ============================================ -->
+  <div class="sticky-bar">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center gap-2.5 flex-wrap">
+      <!-- Convert all target picker -->
+      <div class="flex items-center gap-1.5 text-xs text-slate-500">
+        <span class="uppercase tracking-wider font-semibold">Convert all to</span>
+        <button class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-blue-400 text-xs">
+          <span class="fmt-pill bg-orange-500/10 text-orange-700 dark:text-orange-300">STL</span>
+          <svg class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+      <span class="text-xs text-slate-500 hidden sm:inline">1 of 5 converted · 4 pending</span>
+      <div class="flex-1"></div>
+      <button class="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-300 text-xs font-medium hover:bg-red-50 dark:hover:bg-red-500/10">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+        Clear all
+      </button>
+      <button class="inline-flex items-center gap-1.5 px-4 h-9 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 shadow">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Convert
+      </button>
+      <button class="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Add more files
+      </button>
+      <button class="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-slate-500 opacity-60" disabled>
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download all
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // Category x From x To data
+    // ============================================
+    const MATRIX = {
+      CAD: {
+        fromTo: {
+          DWG:  ['DXF','PDF','SVG','PNG','JPG','DWG','STL'],
+          DXF:  ['DWG','PDF','SVG','PNG','JPG'],
+          STEP: ['STP','STL','OBJ','IGES','PDF'],
+          STP:  ['STEP','STL','OBJ'],
+          STL:  ['STEP','OBJ','PLY','GLTF','3MF'],
+          OBJ:  ['STL','STEP','PLY','GLTF','3MF'],
+          IGES: ['STP','STEP','STL','PDF'],
+          IGS:  ['STEP','STL','PDF'],
+          '3DS':['OBJ','STL'],
+          FBX:  ['OBJ','STL','GLTF'],
+          SVG:  ['PNG','JPG','PDF','DXF','DWG'],
+          PDF:  ['DWG','DXF','SVG','PNG','JPG'],
+          PNG:  ['DWG','DXF','SVG','JPG','PDF'],
+          JPG:  ['DWG','DXF','SVG','PNG','PDF'],
+        }
+      },
+      Documents: {
+        fromTo: {
+          PDF:  ['DOCX','DOC','TXT','RTF','HTML','ODT','MD'],
+          DOCX: ['PDF','TXT','HTML','MD','ODT','RTF'],
+          DOC:  ['PDF','DOCX','TXT','RTF'],
+          TXT:  ['PDF','DOCX','MD','HTML','RTF'],
+          RTF:  ['PDF','DOCX','TXT','HTML'],
+          ODT:  ['PDF','DOCX','TXT'],
+          MD:   ['PDF','HTML','DOCX','TXT'],
+          HTML: ['PDF','MD','DOCX','TXT'],
+        }
+      },
+      Images: {
+        fromTo: {
+          JPG:  ['PNG','WEBP','GIF','BMP','TIFF','SVG','PDF'],
+          JPEG: ['PNG','WEBP','GIF','BMP','TIFF','SVG','PDF'],
+          PNG:  ['JPG','WEBP','GIF','BMP','TIFF','SVG','PDF'],
+          WEBP: ['PNG','JPG','GIF','BMP','PDF'],
+          GIF:  ['PNG','JPG','WEBP','MP4','BMP','PDF'],
+          BMP:  ['PNG','JPG','WEBP','TIFF','PDF'],
+          SVG:  ['PNG','JPG','PDF','WEBP'],
+          TIFF: ['PNG','JPG','BMP','WEBP','PDF'],
+          HEIC: ['JPG','PNG','WEBP','PDF'],
+        }
+      },
+      Video: {
+        fromTo: {
+          MP4:  ['AVI','MOV','MKV','WEBM','GIF','MP3','WAV'],
+          MOV:  ['MP4','AVI','MKV','WEBM','GIF','MP3'],
+          AVI:  ['MP4','MOV','MKV','WEBM','GIF'],
+          MKV:  ['MP4','AVI','MOV','WEBM','MP3'],
+          WEBM: ['MP4','AVI','MOV','MKV','GIF','MP3'],
+          GIF:  ['MP4','WEBM','PNG'],
+        }
+      },
+      Audio: {
+        fromTo: {
+          MP3:  ['WAV','AAC','FLAC','OGG','M4A','OPUS'],
+          WAV:  ['MP3','AAC','FLAC','OGG','M4A','OPUS'],
+          AAC:  ['MP3','WAV','FLAC','M4A','OGG'],
+          FLAC: ['MP3','WAV','AAC','OGG','M4A'],
+          OGG:  ['MP3','WAV','AAC','FLAC','M4A'],
+          M4A:  ['MP3','WAV','AAC','FLAC','OGG'],
+          OPUS: ['MP3','WAV','AAC','OGG','M4A'],
+        }
+      },
+      Archives: {
+        fromTo: {
+          ZIP:  ['Extracted','7Z','TAR','GZ'],
+          RAR:  ['ZIP','Extracted','7Z'],
+          '7Z': ['ZIP','Extracted','TAR'],
+          TAR:  ['ZIP','GZ','Extracted'],
+          GZ:   ['ZIP','TAR','Extracted'],
+        }
+      },
+      Spreadsheets: {
+        fromTo: {
+          XLSX: ['CSV','XLS','ODS','TSV','PDF'],
+          XLS:  ['XLSX','CSV','ODS','TSV','PDF'],
+          CSV:  ['XLSX','TSV','ODS','JSON','PDF'],
+          ODS:  ['XLSX','CSV','XLS','PDF'],
+          TSV:  ['CSV','XLSX','JSON','PDF'],
+        }
+      },
+      Presentations: {
+        fromTo: {
+          PPTX: ['PDF','PPT','ODP','KEY','PNG','JPG'],
+          PPT:  ['PDF','PPTX','ODP','PNG','JPG'],
+          ODP:  ['PPTX','PDF','PPT','PNG'],
+          KEY:  ['PPTX','PDF','PNG','MP4'],
+        }
+      },
+      eBooks: {
+        fromTo: {
+          EPUB: ['MOBI','AZW3','PDF','FB2','TXT'],
+          MOBI: ['EPUB','AZW3','PDF','TXT'],
+          AZW3: ['EPUB','MOBI','PDF','TXT'],
+          PDF:  ['EPUB','MOBI','TXT'],
+          FB2:  ['EPUB','MOBI','PDF','TXT'],
+        }
+      },
+      Fonts: {
+        fromTo: {
+          TTF:   ['WOFF','WOFF2','OTF','EOT'],
+          OTF:   ['TTF','WOFF','WOFF2','EOT'],
+          WOFF:  ['TTF','WOFF2','OTF','EOT'],
+          WOFF2: ['TTF','WOFF','OTF','EOT'],
+          EOT:   ['TTF','WOFF','OTF'],
+        }
+      },
+      Data: {
+        fromTo: {
+          JSON: ['CSV','XML','YAML','SQL','TSV'],
+          CSV:  ['JSON','XML','YAML','SQL','TSV','XLSX'],
+          XML:  ['JSON','CSV','YAML','SQL'],
+          YAML: ['JSON','XML','CSV','SQL'],
+          SQL:  ['JSON','CSV','XML','YAML'],
+        }
+      },
+      '3D': {
+        fromTo: {
+          STL:  ['OBJ','PLY','GLTF','GLB','3MF'],
+          OBJ:  ['STL','PLY','GLTF','GLB','3MF'],
+          PLY:  ['STL','OBJ','GLTF','GLB'],
+          GLTF: ['GLB','OBJ','STL','FBX'],
+          GLB:  ['GLTF','OBJ','STL','FBX'],
+          FBX:  ['GLTF','GLB','OBJ','STL'],
+          '3DS':['OBJ','STL','GLTF','GLB'],
+        }
+      },
+    };
+
+    const COLORS = {
+      PDF:'red', DOCX:'blue', DOC:'blue', TXT:'slate', RTF:'slate', MD:'slate', HTML:'orange', ODT:'blue',
+      DWG:'sky', DXF:'sky', STEP:'blue', STP:'blue', STL:'emerald', OBJ:'pink', IGES:'emerald', IGS:'emerald', '3DS':'slate', FBX:'orange', SVG:'cyan', PNG:'purple', JPG:'pink', JPEG:'pink',
+      MP4:'rose', MOV:'rose', AVI:'rose', MKV:'rose', WEBM:'rose', GIF:'amber',
+      MP3:'emerald', WAV:'cyan', AAC:'emerald', FLAC:'emerald', OGG:'emerald', M4A:'emerald', OPUS:'emerald',
+      ZIP:'orange', RAR:'orange', '7Z':'orange', TAR:'yellow', GZ:'yellow', 'Extracted':'slate',
+      XLSX:'green', XLS:'green', CSV:'green', ODS:'green', TSV:'green',
+      PPTX:'red', PPT:'red', ODP:'red', KEY:'slate',
+      EPUB:'indigo', MOBI:'pink', AZW3:'pink', FB2:'indigo',
+      TTF:'pink', OTF:'pink', WOFF:'pink', WOFF2:'pink', EOT:'pink',
+      JSON:'teal', XML:'teal', YAML:'teal', SQL:'teal',
+      PLY:'violet', GLTF:'violet', GLB:'violet', '3MF':'violet',
+      HEIC:'pink', BMP:'pink', TIFF:'pink', WEBP:'purple',
+    };
+    const color = f => COLORS[f] || 'slate';
+    const fmtPill = f => `<span class="fmt-pill bg-${color(f)}-500/10 text-${color(f)}-700 dark:text-${color(f)}-300">${f}</span>`;
+
+    let activeCat  = 'CAD';
+    let activeFrom = 'DWG';
+    let activeTo   = 'STL';
+
+    function renderFrom() {
+      const fromTo = MATRIX[activeCat].fromTo;
+      const froms = Object.keys(fromTo);
+      const wrap = document.getElementById('from-list');
+      if (froms.length === 0) { wrap.innerHTML = '<div class="step-empty">No formats in this category.</div>'; return; }
+      wrap.innerHTML = froms.map(f => `<button data-from="${f}" class="step-chip ${f === activeFrom ? 'active' : ''}">${fmtPill(f)}</button>`).join('');
+      wrap.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeFrom = btn.dataset.from;
+          // pick first valid TO as default
+          const candidates = MATRIX[activeCat].fromTo[activeFrom] || [];
+          activeTo = candidates[0] || '';
+          renderFrom();
+          renderTo();
+          syncTool();
+        });
+      });
+    }
+
+    function renderTo() {
+      const tos = MATRIX[activeCat].fromTo[activeFrom] || [];
+      const wrap = document.getElementById('to-list');
+      if (tos.length === 0) { wrap.innerHTML = '<div class="step-empty">Pick a source format first.</div>'; return; }
+      wrap.innerHTML = tos.map(t => `<button data-to="${t}" class="step-chip ${t === activeTo ? 'active' : ''}">${fmtPill(t)}</button>`).join('');
+      wrap.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeTo = btn.dataset.to;
+          renderTo();
+          syncTool();
+        });
+      });
+    }
+
+    function syncTool() {
+      const cat = activeCat.toLowerCase() === 'cad' ? 'cad' : activeCat.toLowerCase();
+      const slug = (activeFrom + '-to-' + activeTo).toLowerCase().replace(/[^a-z0-9-]/g,'');
+      const url = (activeCat === 'CAD') ? `/cad/${slug}` : `/${cat}/${slug}`;
+      window.history.pushState({}, '', url);
+
+      document.getElementById('url-preview').textContent = url;
+      document.getElementById('hero-title').textContent   = `${activeFrom} to ${activeTo} Online`;
+      document.getElementById('hero-source').textContent = activeFrom;
+      document.getElementById('hero-target').textContent = activeTo;
+      document.getElementById('hero-source-doc').textContent = activeFrom;
+      document.getElementById('hero-target-doc').textContent = activeTo;
+      document.getElementById('cf-title-from').textContent = activeFrom;
+      document.getElementById('cf-title-to').textContent   = activeTo;
+      document.getElementById('cf-sub-from').textContent   = activeFrom;
+      document.getElementById('cf-sub-to').textContent     = activeTo;
+    }
+
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCat = btn.dataset.cat;
+        const fromTo = MATRIX[activeCat].fromTo;
+        activeFrom = Object.keys(fromTo)[0] || '';
+        activeTo   = (fromTo[activeFrom] || [])[0] || '';
+        renderFrom();
+        renderTo();
+        syncTool();
+      });
+    });
+
+    renderFrom();
+    renderTo();
+    syncTool();
+  </script>
+</body>
+</html>
