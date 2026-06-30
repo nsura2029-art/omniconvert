@@ -41,7 +41,7 @@ export default function Dashboard({
 
   if (!currentUser) {
     return (
-      <div className="w-full max-w-lg mx-auto py-16 px-6 text-center space-y-8 animate-fade-in" id="dashboard-locked-screen">
+      <div className="w-full max-w-lg mx-auto py-16 px-6 text-center space-y-8 " id="dashboard-locked-screen">
         <div className="relative mx-auto w-20 h-20 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-xl shadow-indigo-500/5">
           <div className="absolute inset-0 bg-indigo-500/20 rounded-3xl blur-md -z-10 animate-pulse" />
           <Key className="w-10 h-10" />
@@ -194,9 +194,9 @@ export default function Dashboard({
         <button
           onClick={() => setActiveTab('history')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'history' 
-              ? 'border-indigo-500 text-white' 
-              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+            activeTab === 'history'
+              ? 'border-indigo-500 text-slate-900 dark:text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
           }`}
         >
           <div className="flex items-center gap-1.5">
@@ -207,9 +207,9 @@ export default function Dashboard({
         <button
           onClick={() => setActiveTab('cloud')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'cloud' 
-              ? 'border-indigo-500 text-white' 
-              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+            activeTab === 'cloud'
+              ? 'border-indigo-500 text-slate-900 dark:text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
           }`}
         >
           <div className="flex items-center gap-1.5">
@@ -220,9 +220,9 @@ export default function Dashboard({
         <button
           onClick={() => setActiveTab('referral')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
-            activeTab === 'referral' 
-              ? 'border-indigo-500 text-white' 
-              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+            activeTab === 'referral'
+              ? 'border-indigo-500 text-slate-900 dark:text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
           }`}
         >
           <div className="flex items-center gap-1.5">
@@ -234,8 +234,8 @@ export default function Dashboard({
           onClick={() => setActiveTab('gamification')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'gamification'
-              ? 'border-indigo-500 text-white'
-              : 'border-transparent text-zinc-500 hover:text-zinc-300'
+              ? 'border-indigo-500 text-slate-900 dark:text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
           }`}
         >
           <div className="flex items-center gap-1.5">
@@ -250,7 +250,7 @@ export default function Dashboard({
         
         {/* STATS VIEW */}
         {activeTab === 'stats' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" id="dashboard-stats-panel">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 " id="dashboard-stats-panel">
             
             {/* Chart */}
             <div className="md:col-span-2 p-5 rounded-2xl glass-card border border-white/5 space-y-4 bg-white/2">
@@ -319,7 +319,7 @@ export default function Dashboard({
 
         {/* LEDGER VIEW */}
         {activeTab === 'history' && (
-          <div className="rounded-2xl glass-card border border-white/5 overflow-hidden animate-fade-in bg-white/2" id="dashboard-history-panel">
+          <div className="rounded-2xl glass-card border border-white/5 overflow-hidden bg-white/2" id="dashboard-history-panel">
             <div className="p-5 border-b border-white/5">
               <h3 className="text-sm font-bold text-zinc-100">Processed Conversions Ledger</h3>
               <p className="text-xs text-zinc-400 mt-0.5">Comprehensive chronological log of every file format compilation session</p>
@@ -376,7 +376,7 @@ export default function Dashboard({
 
         {/* CLOUD CONNECTORS VIEW */}
         {activeTab === 'cloud' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" id="dashboard-cloud-panel">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 " id="dashboard-cloud-panel">
             
             {integrations.map((c) => (
               <div 
@@ -470,7 +470,7 @@ export default function Dashboard({
 
         {/* REFERRAL VIEW */}
         {activeTab === 'referral' && (
-          <div className="space-y-6 animate-fade-in" id="dashboard-referrals-panel">
+          <div className="space-y-6 " id="dashboard-referrals-panel">
             {/* Referral Hero Block */}
             <div className="p-6 rounded-3xl bg-gradient-to-tr from-indigo-500/10 to-purple-500/5 border border-indigo-500/15 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -700,7 +700,7 @@ const DashboardGamificationPanel: React.FC<{ currentUser?: User | null }> = ({ c
   const cfg = TIER_TABLE[gamUser.tier];
 
   return (
-    <div className="space-y-5 animate-fade-in" id="dashboard-gamification-panel">
+    <div className="space-y-5 " id="dashboard-gamification-panel">
       {/* Top: credit balance + daily claim */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-2">

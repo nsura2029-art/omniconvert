@@ -1519,7 +1519,7 @@ export default function ConversionPanel({
     const spendResult = spend(cost, 'conversion_spend', {
       description: `Convert ${selectedTool.name} · ${files.length || 1} file(s)`,
       subtype: `${selectedTool.id}`,
-    });
+    }, currentUser);
     if (!spendResult.ok) {
       setIsProcessing(false);
       const reason = 'reason' in spendResult ? spendResult.reason : 'insufficient';
@@ -1800,7 +1800,7 @@ export default function ConversionPanel({
       } catch (err) {
         addLog(`[ERROR] High-speed client compilation threw unexpected error: ${err}`);
         updateProgress(currentFile.name, 'failed', 0, `Error occurred: ${err}`);
-        refund(spendTxId, 'conversion_refund', { description: `Refund: ${selectedTool.name} failed` });
+        refund(spendTxId, 'conversion_refund', { description: `Refund: ${selectedTool.name} failed` }, currentUser);
       }
 
       // Real browser-side CAD conversion for the small subset that round-trips losslessly.

@@ -377,14 +377,16 @@ export interface AwardOptions {
   silent?: boolean;
 }
 
-export const award = (amount: number, type: TxType, opts: AwardOptions = {}): CreditTransaction | null => {
-  const user = loadUser(getOrCreateSessionId());
+export const award = (amount: number, type: TxType, opts: AwardOptions = {}, currentUser?: any): CreditTransaction | null => {
+  const ctx = resolveTierContext(currentUser);
+  const user = getOrCreateUser(currentUser);
   if (!user || user.banned) return null;
   const cfg = TIER_TABLE[user.tier];
-  const newBalance = Math.min(cfg.maxCredits, Math.max(0, user.credits + amount));
+  // Admin accounts have effectively unlimited credits (cap at 999_999).
+  const cap = (currentUser && currentUser.email === 'admin@omniconvert.com') ? 999_999 : cfg.maxCredits;
+  const newBalance = Math.min(cap, Math.max(0, user.credits + amount));
   const actualAmount = newBalance - user.credits;
   if (actualAmount === 0 && amount !== 0) {
-    // cap reached
     return null;
   }
   const updated: GamificationUser = {
@@ -401,16 +403,31 @@ export const award = (amount: number, type: TxType, opts: AwardOptions = {}): Cr
   };
   const txs = read<CreditTransaction[]>(KEY.tx, []);
   txs.unshift(tx);
-  write(KEY.tx, txs.slice(0, 500));   // cap history
+  write(KEY.tx, txs.slice(0, 500));
   broadcast('tx', tx);
   if (!opts.silent) broadcast('toast', tx);
   return tx;
 };
 
-export const spend = (amount: number, type: TxType, opts: AwardOptions = {}): { ok: true; tx: CreditTransaction } | { ok: false; reason: 'insufficient' | 'banned' | 'capped' } => {
-  const user = loadUser(getOrCreateSessionId());
+export const spend = (amount: number, type: TxType, opts: AwardOptions = {}, currentUser?: any): { ok: true; tx: CreditTransaction } | { ok: false; reason: 'insufficient' | 'banned' | 'capped' } => {
+  const user = getOrCreateUser(currentUser);
   if (!user) return { ok: false, reason: 'banned' };
   if (user.banned) return { ok: false, reason: 'banned' };
+  // Admin bypass: never block conversion with insufficient credits.
+  if (currentUser && currentUser.email === 'admin@omniconvert.com') {
+    const newBalance = user.credits; // unchanged — admin doesn't pay
+    saveUser({ ...user, lastLoginAt: now() });
+    const tx: CreditTransaction = {
+      id: uuid(), userId: user.id, amount: 0, type,
+      subtype: (opts.subtype ?? '') + ':admin-bypass', description: (opts.description ?? '') + ' (admin bypass)',
+      relatedId: opts.relatedId, balanceAfter: newBalance, createdAt: now(),
+    };
+    const txs = read<CreditTransaction[]>(KEY.tx, []);
+    txs.unshift(tx);
+    write(KEY.tx, txs.slice(0, 500));
+    broadcast('tx', tx);
+    return { ok: true, tx };
+  }
   if (user.credits < amount) return { ok: false, reason: 'insufficient' };
   const newBalance = user.credits - amount;
   const updated: GamificationUser = {
@@ -431,11 +448,11 @@ export const spend = (amount: number, type: TxType, opts: AwardOptions = {}): { 
   return { ok: true, tx };
 };
 
-export const refund = (originalTxId: string, type: TxType, opts: AwardOptions = {}): CreditTransaction | null => {
+export const refund = (originalTxId: string, type: TxType, opts: AwardOptions = {}, currentUser?: any): CreditTransaction | null => {
   const txs = read<CreditTransaction[]>(KEY.tx, []);
   const original = txs.find(t => t.id === originalTxId);
   if (!original || original.amount >= 0) return null;
-  return award(Math.abs(original.amount), type, { ...opts, relatedId: originalTxId });
+  return award(Math.abs(original.amount), type, { ...opts, relatedId: originalTxId }, currentUser);
 };
 
 export const getBalance = (currentUser?: any): number => {
@@ -475,7 +492,7 @@ export const claimDailyLogin = (currentUser?: any): { credited: boolean; streak:
   const tx = award(cfg.dailyLogin, 'daily_login', {
     description: continued ? `Daily login · streak day ${newStreak}` : 'Daily login bonus',
     subtype: 'streak:' + newStreak,
-  });
+  }, currentUser);
   return { credited: !!tx, streak: newStreak, amount: cfg.dailyLogin };
 };
 
