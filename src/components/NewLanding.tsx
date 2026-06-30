@@ -1,61 +1,37 @@
+// NewLanding — the single landing page. Holds:
+//   1. SaaS hero (tool name + dynamic description + trust strip)
+//   2. ChooseFiles card (drop zone + file list + file state)
+//   3. Sticky action bar (Convert all + counter + Clear + Convert +
+//      Add more + Download all) — pinned to the viewport bottom
+//   4. ToolPicker (Category | From | To + Popular chips + dynamic
+//      description + live URL preview)
+//
+// All on one page. No separate "tool page". When the user picks a
+// tool, the parent (App.tsx) updates selectedTool + URL via
+// pushState, and the hero + ChooseFiles re-render in place.
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Upload, Lock, ArrowRight, Sparkles, Zap, ShieldCheck, ChevronRight, FileCheck2 } from 'lucide-react';
+import {
+  Upload, ArrowRight, ChevronRight, FileCheck2, Download,
+  Sparkles, ShieldCheck, Zap, Lock, X,
+} from 'lucide-react';
 import { Tool, TOOLS } from '../data/tools';
-import { User } from '../types';
+import { User, FileConversion, CloudIntegration } from '../types';
 import { getUser } from '../data/gamification';
-import { CAD_SEO_PAGES } from '../data/cadSeoPages';
+import ToolPicker from './ToolPicker';
+import { colorForFormat, iconLetter } from '../lib/format-colors';
+import { getDescriptionForTool } from '../lib/tool-description';
 import { toolSlug } from '../lib/tool-slug';
-import UpvoteButton from './gamification/UpvoteButton';
 
 interface NewLandingProps {
   currentUser?: User | null;
+  selectedTool: Tool;
   onSelectTool: (tool: Tool) => void;
-  onNavigateConverter: () => void;
-  onNavigateCategoryPage: (categoryId: string) => void;
-  onNavigateCategoryToolPage: (categoryId: string, slug: string) => void;
-  onNavigateCadSeoPage: (slug: string) => void;
+  onConversionCompleted: (conversion: FileConversion) => void;
+  onOpenAuth: () => void;
+  integrations: CloudIntegration[];
 }
-
-/** Map a file extension to the best-matching Tool from the catalog.
- *  Falls back to the user's recent tools or the default first tool. */
-const matchToolForFile = (filename: string, recentToolIds: number[]): Tool => {
-  const ext = filename.includes('.') ? filename.slice(filename.lastIndexOf('.') + 1).toLowerCase() : '';
-  if (!ext) {
-    const recent = TOOLS.find(t => recentToolIds.includes(t.id));
-    return recent ?? TOOLS[0];
-  }
-
-  // 1. Recent tools whose primary input matches the extension
-  const recentPrimary = TOOLS.find(t =>
-    recentToolIds.includes(t.id) &&
-    t.input.toLowerCase().split(/[,\s]+/)[0] === ext
-  );
-  if (recentPrimary) return recentPrimary;
-
-  // 2. Primary-input match across the catalog (DXF -> 'DXF to DWG')
-  const primary = TOOLS.find(t =>
-    t.input.toLowerCase().split(/[,\s]+/)[0] === ext
-  );
-  if (primary) return primary;
-
-  // 3. Any-input match (DXF -> 'DWG to PDF' which also accepts DXF)
-  const anyInput = TOOLS.find(t =>
-    t.input.toLowerCase().split(/[,\s]+/).includes(ext)
-  );
-  if (anyInput) return anyInput;
-
-  // 4. Substring fallback
-  const fuzzy = TOOLS.find(t =>
-    t.input.toLowerCase().includes(ext) ||
-    ext.includes(t.input.toLowerCase().split(/[,\s]+/)[0])
-  );
-  if (fuzzy) return fuzzy;
-
-  // 5. Recent tools, then default first tool
-  const recent = TOOLS.find(t => recentToolIds.includes(t.id));
-  return recent ?? TOOLS[0];
-};
 
 const formatBytes = (b: number): string => {
   if (b < 1024) return b + ' B';
@@ -64,261 +40,379 @@ const formatBytes = (b: number): string => {
   return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 };
 
-const NewLanding: React.FC<NewLandingProps> = ({
-  currentUser,
-  onSelectTool,
-  onNavigateConverter,
-  onNavigateCategoryPage,
-  onNavigateCategoryToolPage,
-  onNavigateCadSeoPage,
-}) => {
-  const [dragActive, setDragActive] = useState(false);
-  const [pickedFile, setPickedFile] = useState<File | null>(null);
-  const [matchedTool, setMatchedTool] = useState<Tool | null>(null);
-  const [matchedSlug, setMatchedSlug] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const gamUser = getUser(currentUser);
+const matchToolForFile = (filename: string, recentToolIds: number[]): Tool => {
+  const ext = filename.includes('.') ? filename.slice(filename.lastIndexOf('.') + 1).toLowerCase() : '';
+  if (!ext) {
+    const recent = TOOLS.find(t => recentToolIds.includes(t.id));
+    return recent ?? TOOLS[0];
+  }
+  const recentPrimary = TOOLS.find(t =>
+    recentToolIds.includes(t.id) &&
+    t.input.toLowerCase().split(/[,\s]+/)[0] === ext
+  );
+  if (recentPrimary) return recentPrimary;
+  const primary = TOOLS.find(t =>
+    t.input.toLowerCase().split(/[,\s]+/)[0] === ext
+  );
+  if (primary) return primary;
+  const anyInput = TOOLS.find(t =>
+    t.input.toLowerCase().split(/[,\s]+/).includes(ext)
+  );
+  if (anyInput) return anyInput;
+  const fuzzy = TOOLS.find(t =>
+    t.input.toLowerCase().includes(ext) ||
+    ext.includes(t.input.toLowerCase().split(/[,\s]+/)[0])
+  );
+  if (fuzzy) return fuzzy;
+  const recent = TOOLS.find(t => recentToolIds.includes(t.id));
+  return recent ?? TOOLS[0];
+};
 
-  const onFiles = useCallback((files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const first = files[0];
-    const recentIds: number[] = JSON.parse(localStorage.getItem('omni_recent_tools') || '[]');
-    const tool = matchToolForFile(first.name, recentIds);
-    setPickedFile(first);
-    setMatchedTool(tool);
-    onSelectTool(tool);
-
-    // Find a CAD SEO page slug for this tool — that gives us the canonical
-    // /cad/<slug> URL (e.g. /cad/dxf-to-dwg for a .dxf file).
-    // Fallback: build a tool-slug from input/output (e.g. dxf-to-dwg).
-    const cadMatch = CAD_SEO_PAGES.find(p => p.toolId === tool.id);
-    const slug = cadMatch?.slug || toolSlug(tool.input, tool.output);
-    setMatchedSlug(slug || null);
-  }, [onSelectTool]);
-
-  // When a file is picked, redirect to the category-specific tool URL
-  // after a brief moment so the user sees the matched tool confirmation
-  // flash. Priority:
-  //   1. CAD tool with a CAD SEO page → /cad/<slug>  (full SEO shell)
-  //   2. Any other tool                → /<category>/<slug>  (e.g.
-  //                                      /documents/pdf-to-docx,
-  //                                      /images/jpg-to-png)
-  useEffect(() => {
-    if (!pickedFile || !matchedTool) return;
-    const t = setTimeout(() => {
-      if (matchedTool.category === 'CAD' && matchedSlug) {
-        onNavigateCadSeoPage(matchedSlug);
-        return;
-      }
-      if (matchedSlug) {
-        const cat = matchedTool.category.toLowerCase();
-        onNavigateCategoryToolPage(cat, matchedSlug);
-        return;
-      }
-      onNavigateCategoryPage(matchedTool.category);
-    }, 900);
-    return () => clearTimeout(t);
-  }, [pickedFile, matchedTool, matchedSlug, onNavigateCadSeoPage, onNavigateCategoryPage, onNavigateCategoryToolPage]);
-
-  // keep onNavigateConverter prop referenced
-  void onNavigateConverter;
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragActive(false);
-    onFiles(e.dataTransfer.files);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragActive(true);
-  };
-
-  const handleDragLeave = () => setDragActive(false);
-
-  const sourceFormat = matchedTool ? matchedTool.input.split(/[,\s]+/)[0].toUpperCase() : (pickedFile ? pickedFile.name.split('.').pop()?.toUpperCase() ?? 'FILE' : 'PDF');
-  const targetFormat = matchedTool ? matchedTool.output.split(/[,\s]+/)[0].toUpperCase() : 'DOCX';
-
+const FormatIcon: React.FC<{ fmt: string; size?: 'sm' | 'md' | 'lg' }> = ({ fmt, size = 'md' }) => {
+  const c = colorForFormat(fmt);
+  const letter = iconLetter(fmt);
+  const sizeCls = size === 'lg' ? 'w-10 h-10 text-sm' : size === 'md' ? 'w-9 h-9 text-[10px]' : 'w-8 h-8 text-[10px]';
   return (
-    <div className="space-y-10">
-      {/* HERO */}
-      <section className="text-center max-w-4xl mx-auto space-y-4 pt-4 pb-2">
-        <motion.span
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 text-[10px] uppercase tracking-wider font-mono text-indigo-600 font-bold bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-500/20"
-        >
-          <Sparkles className="h-3 w-3" />
-          🚀 Multi-Format Cloud Transcoder
-        </motion.span>
-        <motion.h1
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.05 }}
-          className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight"
-        >
-          Any Format.{' '}
-          <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Zero Friction.
-          </span>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed"
-        >
-          Drop a file. We pick the right converter, route it through the engine, hand it back. No signup. No friction.
-        </motion.p>
-      </section>
-
-      {/* CHOOSE FILES — same reusable shape as ConversionPanel's UploadPlaceholder */}
-      <section className="mx-auto max-w-3xl">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="relative"
-        >
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            className={`relative overflow-hidden rounded-3xl border bg-white p-10 text-center shadow-sm transition ${
-              dragActive ? 'border-blue-400 ring-4 ring-blue-100' : 'border-slate-200'
-            }`}
-          >
-            <div
-              aria-hidden="true"
-              className={`pointer-events-none absolute inset-0 transition-colors ${
-                dragActive ? 'bg-blue-50/70' : 'bg-transparent'
-              }`}
-            />
-            {/* Soft decorative blob */}
-            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-indigo-100/40 blur-3xl" aria-hidden="true" />
-
-            <div className="relative space-y-5">
-              {/* Trust strip */}
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-700">
-                  <ShieldCheck className="h-3 w-3" /> Browser-safe
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700">
-                  <Zap className="h-3 w-3" /> Seconds
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-violet-700">
-                  <Lock className="h-3 w-3" /> No signup
-                </span>
-              </div>
-
-              {/* Big button */}
-              <div className="flex items-center justify-center">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={e => onFiles(e.target.files)}
-                  className="hidden"
-                  aria-label="Choose a file to convert"
-                  id="newlanding-file-input"
-                />
-                <motion.button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 text-base font-black text-white shadow-[0_18px_42px_rgba(37,99,235,0.28)] ring-1 ring-blue-700/20"
-                >
-                  <Upload className="h-5 w-5" />
-                  Choose Files
-                  <ChevronRight className="h-4 w-4" />
-                </motion.button>
-              </div>
-
-              {/* Drop hint + capabilities */}
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500">
-                <span>{dragActive ? 'Release to upload' : 'Or drop a file anywhere here'}</span>
-                <span className="hidden sm:inline">·</span>
-                <span>1 GB max per file</span>
-                <span className="hidden sm:inline">·</span>
-                <span>PDF, DOCX, STL, OBJ, MP4, PNG, 180+ formats</span>
-              </div>
-
-              {/* Matched-tool confirmation (after file pick) */}
-              <AnimateIfPicked pickedFile={pickedFile} matchedTool={matchedTool} matchedSlug={matchedSlug} />
-
-              {/* Source → target flow */}
-              <div className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-50 px-4 py-1.5 text-[11px] font-black text-slate-600 ring-1 ring-slate-200">
-                Converting <span className="font-mono uppercase text-blue-700">{sourceFormat}</span>
-                <ArrowRight className="h-3 w-3 text-slate-400" />
-                <span className="font-mono uppercase text-blue-700">{targetFormat}</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* FEATURE STRIP */}
-      <section className="mx-auto max-w-5xl grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Feature
-          icon={<Zap className="h-4 w-4 text-blue-600" />}
-          title="Edge-fast"
-          copy="Workers + WASM engines return conversions in seconds, not minutes."
-        />
-        <Feature
-          icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />}
-          title="Private"
-          copy="Your file never leaves the browser when a browser-side engine exists."
-        />
-        <Feature
-          icon={<Sparkles className="h-4 w-4 text-violet-600" />}
-          title="Earn credits"
-          copy="Sign up for daily login, upvote your favorites, share to stack."
-        />
-      </section>
+    <div className={`${sizeCls} ${c.bg} ${c.fg} rounded-lg grid place-items-center font-bold font-mono shrink-0`}>
+      {letter}
     </div>
   );
 };
 
-const Feature: React.FC<{ icon: React.ReactNode; title: string; copy: string }> = ({ icon, title, copy }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-    <div className="flex items-center gap-2">
-      {icon}
-      <p className="text-xs font-black uppercase tracking-wider text-slate-700">{title}</p>
-    </div>
-    <p className="mt-2 text-[11px] font-semibold text-slate-500">{copy}</p>
-  </div>
-);
+const NewLanding: React.FC<NewLandingProps> = ({
+  currentUser,
+  selectedTool,
+  onSelectTool,
+  onConversionCompleted,
+  onOpenAuth,
+  integrations,
+}) => {
+  const gamUser = getUser(currentUser);
 
-const AnimateIfPicked: React.FC<{ pickedFile: File | null; matchedTool: Tool | null; matchedSlug: string | null }> = ({ pickedFile, matchedTool, matchedSlug }) => {
-  if (!pickedFile || !matchedTool) return null;
-  const targetUrl = matchedTool.category === 'CAD' && matchedSlug
-    ? `/cad/${matchedSlug}`
-    : `/${(matchedTool.category ?? 'documents').toLowerCase()}-converter/`;
+  // ── file state ──
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileProgresses, setFileProgresses] = useState<Record<string, { status: 'pending' | 'analyzing' | 'ready' | 'converting' | 'done' | 'failed'; statusText: string }>>({});
+  const [conversions, setConversions] = useState<FileConversion[]>([]);
+  const [dragActive, setDragActive] = useState(false);
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const previousFileCountRef = useRef(0);
+
+  // ── analyze on file add (just mark as 'ready' for the demo) ──
+  useEffect(() => {
+    if (files.length > previousFileCountRef.current) {
+      const newFiles = files.slice(previousFileCountRef.current);
+      const next: typeof fileProgresses = { ...fileProgresses };
+      newFiles.forEach(f => {
+        next[f.name] = { status: 'analyzing', statusText: 'Analyzing' };
+      });
+      setFileProgresses(next);
+      // simulate analysis
+      setTimeout(() => {
+        setFileProgresses(prev => {
+          const r = { ...prev };
+          newFiles.forEach(f => { r[f.name] = { status: 'ready', statusText: 'Ready' }; });
+          return r;
+        });
+      }, 700);
+    }
+    previousFileCountRef.current = files.length;
+  }, [files]);
+
+  // ── file pick handlers ──
+  const onFiles = useCallback((filesList: FileList | null) => {
+    if (!filesList || filesList.length === 0) return;
+    const arr = Array.from(filesList);
+    setFiles(prev => [...prev, ...arr]);
+    const first = arr[0];
+    setPickedFile(first);
+    const recentIds: number[] = JSON.parse(localStorage.getItem('omni_recent_tools') || '[]');
+    const tool = matchToolForFile(first.name, recentIds);
+    onSelectTool(tool);
+  }, [onSelectTool]);
+
+  // ── sticky action bar handlers ──
+  const handleClearAll = () => {
+    setFiles([]);
+    setFileProgresses({});
+    setConversions([]);
+    setPickedFile(null);
+  };
+
+  const handleAddMore = () => fileInputRef.current?.click();
+
+  const handleConvert = () => {
+    if (files.length === 0) return;
+    if (!currentUser) {
+      onOpenAuth();
+      return;
+    }
+    files.forEach(f => {
+      setFileProgresses(prev => ({ ...prev, [f.name]: { status: 'converting', statusText: 'Converting' } }));
+      setTimeout(() => {
+        setFileProgresses(prev => ({ ...prev, [f.name]: { status: 'done', statusText: '100% Complete' } }));
+        const conv: FileConversion = {
+          id: 'conv-' + Date.now() + '-' + f.name,
+          fileName: f.name,
+          fileSize: f.size,
+          toolId: selectedTool.id,
+          toolName: selectedTool.name,
+          category: selectedTool.category,
+          status: 'completed',
+          progress: 100,
+          creditCost: selectedTool.creditCost,
+          timestamp: new Date().toISOString(),
+          logs: [`Converted via ${selectedTool.name}`],
+        };
+        setConversions(prev => [conv, ...prev]);
+        onConversionCompleted(conv);
+      }, 1200);
+    });
+  };
+
+  type Prog = { status: 'pending' | 'analyzing' | 'ready' | 'converting' | 'done' | 'failed'; statusText: string };
+  const completedCount = (Object.values(fileProgresses) as Prog[]).filter(p => p.status === 'done').length;
+  const pendingCount   = (Object.values(fileProgresses) as Prog[]).filter(p => p.status === 'ready' || p.status === 'analyzing').length;
+  const canConvert     = files.length > 0 && pendingCount > 0;
+  const canDownload    = completedCount > 0;
+  const isProcessing   = (Object.values(fileProgresses) as Prog[]).some(p => p.status === 'converting');
+
+  // ── render helpers ──
+  const heroFrom = selectedTool.input.split(',')[0].trim();
+  const heroTo = selectedTool.output.split(',')[0].trim();
+  const description = getDescriptionForTool(selectedTool);
+  const currentUrl = selectedTool.category === 'CAD'
+    ? `/cad/${toolSlug(selectedTool.input, selectedTool.output)}`
+    : `/${selectedTool.category.toLowerCase()}/${toolSlug(selectedTool.input, selectedTool.output)}`;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-      className="mx-auto flex max-w-lg flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left"
-    >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
-        <FileCheck2 className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[11px] font-black text-emerald-800">{pickedFile.name}</p>
-        <p className="text-[10px] font-semibold text-emerald-700">
-          {formatBytes(pickedFile.size)} · Routed to <span className="font-black">{matchedTool.name}</span> · <span className="font-mono">{targetUrl}</span>
-        </p>
-      </div>
-      <UpvoteButton
-        category={matchedTool.category ?? 'Documents'}
-        source={matchedTool.input.split(/[,\s]+/)[0]}
-        target={matchedTool.output.split(/[,\s]+/)[0]}
-        currentUser={getUser()}
-        size="sm"
+    <div className="space-y-6 pb-32">
+      {/* ─────────────── HERO ─────────────── */}
+      <section className="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-6 md:p-8">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
+            <Sparkles className="w-3 h-3" />
+            {selectedTool.category.toUpperCase()} CONVERTER
+          </span>
+          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
+            {selectedTool.category}
+          </span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <ShieldCheck className="w-3 h-3" />
+            BROWSER-SAFE · NO SIGNUP
+          </span>
+        </div>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              {heroFrom} to {heroTo} Online
+            </h1>
+            <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl line-clamp-2">
+              {description}
+            </p>
+          </div>
+          <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm shrink-0">
+            <FileCheck2 className="w-4 h-4" />
+            0 Upvote
+          </button>
+        </div>
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Source</div>
+            <div className="mt-1 font-bold">{heroFrom}</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Target</div>
+            <div className="mt-1 font-bold">{heroTo}</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
+            <div className="mt-1 font-bold">100% client-side</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
+            <div className="mt-1 font-bold">Seconds</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────── CHOOSEFILES CARD ─────────────── */}
+      <section className="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-5 md:p-7">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+            <span className="text-blue-600 dark:text-blue-400">{heroFrom}</span> to <span className="text-blue-600 dark:text-blue-400">{heroTo}</span> Converter
+          </h2>
+          <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm">
+            <FileCheck2 className="w-4 h-4" />
+            0 Upvote
+          </button>
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Transform {heroFrom} files into {heroTo} online</p>
+
+        {/* Drop zone (when empty) */}
+        {files.length === 0 && (
+          <label
+            htmlFor="landing-file-input"
+            className={`drop-zone flex flex-col items-center justify-center w-full min-h-[200px] border-2 border-dashed rounded-2xl cursor-pointer transition-colors ${
+              dragActive
+                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-500/10'
+                : 'border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-500/5'
+            }`}
+            onDragEnter={e => { e.preventDefault(); setDragActive(true); }}
+            onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={e => { e.preventDefault(); setDragActive(false); onFiles(e.dataTransfer.files); }}
+          >
+            <div className="flex flex-col items-center gap-2 text-center px-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white grid place-items-center shadow">
+                <Upload className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-semibold">Drop files here, or click to browse</p>
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-medium shadow">
+                Choose Files <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+              <p className="text-[11px] text-slate-400">We'll detect the format and update the converter.</p>
+            </div>
+            <input
+              ref={fileInputRef}
+              id="landing-file-input"
+              type="file"
+              multiple
+              onChange={e => onFiles(e.target.files)}
+              className="hidden"
+            />
+          </label>
+        )}
+
+        {/* File list (when files present) */}
+        {files.length > 0 && (
+          <div className="space-y-1.5 max-h-[50vh] overflow-y-auto">
+            {files.map((f, i) => {
+              const prog = fileProgresses[f.name] ?? { status: 'analyzing', statusText: 'Pending' };
+              const outExt = heroTo;
+              return (
+                <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60">
+                  <FormatIcon fmt={f.name.split('.').pop()?.toUpperCase() || '?'} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold truncate">{f.name}</p>
+                      {prog.status === 'ready' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Ready
+                        </span>
+                      )}
+                      {prog.status === 'analyzing' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          ⟳ Analyzing
+                        </span>
+                      )}
+                      {prog.status === 'converting' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-300">
+                          ⟳ Converting
+                        </span>
+                      )}
+                      {prog.status === 'done' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                          ✓ 100% Complete
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">{formatBytes(f.size)}</p>
+                  </div>
+                  {prog.status === 'done' ? (
+                    <button className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600">
+                      <Download className="w-3 h-3" /> Download
+                    </button>
+                  ) : (
+                    <>
+                      <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-500">
+                        <span>TO</span>
+                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300">{outExt}</span>
+                      </div>
+                      <span className="text-xs text-slate-500 w-12 text-right">{formatBytes(f.size)}</span>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-500/10 text-slate-600 dark:text-slate-300">
+                        {prog.status === 'ready' ? 'Pending' : prog.statusText}
+                      </span>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ─────────────── TOOL PICKER (3-step + popular) ─────────────── */}
+      <ToolPicker
+        activeCategory={selectedTool.category}
+        activeFrom={selectedTool.input}
+        activeTo={selectedTool.output}
+        onChange={onSelectTool}
       />
-    </motion.div>
+
+      {/* ─────────────── STICKY BOTTOM ACTION BAR ─────────────── */}
+      <div className="fixed inset-x-0 bottom-0 z-40 glass border-t border-zinc-200/70 dark:border-zinc-800/70 shadow-[0_-8px_24px_rgba(0,0,0,0.06)]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <span className="uppercase tracking-wider font-semibold">Convert all to</span>
+            <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-blue-400 text-xs">
+              <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300">{heroTo}</span>
+              <ChevronRight className="w-3 h-3 text-slate-400 -rotate-90" />
+            </button>
+          </div>
+          <span className="text-xs text-slate-500 hidden sm:inline">
+            {files.length > 0
+              ? `${completedCount} of ${files.length} converted${isProcessing ? ' · in progress' : pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`
+              : '0 files'}
+          </span>
+          <div className="flex-1" />
+          <button
+            onClick={handleClearAll}
+            disabled={files.length === 0 || isProcessing}
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-300 text-xs font-medium hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <X className="w-3.5 h-3.5" />
+            Clear all
+          </button>
+          <button
+            onClick={handleConvert}
+            disabled={!canConvert || isProcessing}
+            className={`inline-flex items-center gap-1.5 px-4 h-9 rounded-lg text-xs font-semibold shadow transition ${
+              canConvert && !isProcessing
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-md'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            {isProcessing ? '⟳ Converting...' : '▶ Convert'}
+          </button>
+          <button
+            onClick={handleAddMore}
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-xs font-medium hover:bg-blue-50 dark:hover:bg-blue-500/10"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Add more files
+          </button>
+          <button
+            disabled={!canDownload}
+            className={`inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-xs font-medium transition ${
+              canDownload
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download all
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

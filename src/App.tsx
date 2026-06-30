@@ -206,7 +206,9 @@ export default function App() {
       setSelectedCadSlug(cadSlug);
       if (cadPage) {
         setSelectedTool(cadPage.tool);
-        setCurrentPage('cad-detail');
+        // Single landing page handles every tool URL. The SaaS hero +
+        // file rows + ToolPicker all live in NewLanding.
+        setCurrentPage('home');
       } else {
         setCurrentPage('cad-not-found');
       }
@@ -215,6 +217,7 @@ export default function App() {
 
     // Per-category tool URLs e.g. /documents/pdf-to-docx,
     // /images/jpg-to-png, /video/mp4-to-gif.
+    // All route to the single landing page.
     const toolUrlMatch = window.location.pathname.toLowerCase().match(/^\/([a-z0-9-]+)\/([^/]+)\/?$/);
     if (toolUrlMatch) {
       const [, catSlug, toolSlugPart] = toolUrlMatch;
@@ -224,7 +227,7 @@ export default function App() {
         if (entry && entry.tool.category.toLowerCase() === catSlug) {
           setSelectedCategory(cat.id);
           setSelectedTool(entry.tool);
-          setCurrentPage('tools');
+          setCurrentPage('home');
           return;
         }
       }
@@ -237,7 +240,7 @@ export default function App() {
       if (entry) {
         setSelectedCategory(entry.category);
         setSelectedTool(entry.tool);
-        setCurrentPage('tools');
+        setCurrentPage('home');
         return;
       }
     }
@@ -655,11 +658,11 @@ export default function App() {
           <div className="animate-fade-in" id="home-page">
             <NewLanding
               currentUser={currentUser}
-              onSelectTool={(tool) => handleSelectTool(tool)}
-              onNavigateConverter={() => handleChangePage('tools')}
-              onNavigateCategoryPage={(cat) => handleSelectToolCategory(cat)}
-              onNavigateCategoryToolPage={(cat, slug) => handleSelectCategoryTool(cat, slug)}
-              onNavigateCadSeoPage={(slug) => handleOpenCadSeoPage(slug)}
+              selectedTool={selectedTool}
+              onSelectTool={handleSelectToolSyncUrl}
+              onConversionCompleted={handleConversionCompleted}
+              onOpenAuth={() => setAuthModalOpen(true)}
+              integrations={integrations}
             />
           </div>
         )}
@@ -729,7 +732,6 @@ export default function App() {
                   onConversionCompleted={handleConversionCompleted}
                   onOpenAuth={() => setAuthModalOpen(true)}
                   integrations={integrations}
-                  onSelectTool={handleSelectToolSyncUrl}
                 />
               </div>
             )}
@@ -938,7 +940,6 @@ export default function App() {
                   onConversionCompleted={handleConversionCompleted}
                   onOpenAuth={() => setAuthModalOpen(true)}
                   integrations={integrations}
-                  onSelectTool={handleSelectToolSyncUrl}
                 />
               )
             }
@@ -977,7 +978,6 @@ export default function App() {
                   onConversionCompleted={handleConversionCompleted}
                   onOpenAuth={() => setAuthModalOpen(true)}
                   integrations={integrations}
-                  onSelectTool={handleSelectToolSyncUrl}
                 />
               )
             }
