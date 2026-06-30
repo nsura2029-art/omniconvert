@@ -16,6 +16,7 @@ import Pricing from './pages/Pricing';
 import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
 import { getOrCreateUser, captureReferralFromUrl } from './data/gamification';
 import FloatingCreditPill from './components/gamification/FloatingCreditPill';
+import { resolveSlug, toolSlug } from './lib/tool-slug';
 import OnboardingTour from './components/OnboardingTour';
 import InteractiveHeroSelector from './components/InteractiveHeroSelector';
 import SecurityPage from './components/SecurityPage';
@@ -196,6 +197,35 @@ export default function App() {
         setCurrentPage('cad-not-found');
       }
       return;
+    }
+
+    // Per-category tool URLs e.g. /documents/pdf-to-docx,
+    // /images/jpg-to-png, /video/mp4-to-gif.
+    const toolUrlMatch = window.location.pathname.toLowerCase().match(/^\/([a-z0-9-]+)\/([^/]+)\/?$/);
+    if (toolUrlMatch) {
+      const [, catSlug, toolSlugPart] = toolUrlMatch;
+      const cat = CATEGORIES.find(c => c.id.toLowerCase() === catSlug);
+      if (cat && toolSlugPart) {
+        const entry = resolveSlug(toolSlugPart);
+        if (entry && entry.tool.category.toLowerCase() === catSlug) {
+          setSelectedCategory(cat.id);
+          setSelectedTool(entry.tool);
+          setCurrentPage('tools');
+          return;
+        }
+      }
+    }
+
+    // ?tool=<slug> query param (fallback for any category).
+    const toolParam = urlParams.get('tool');
+    if (toolParam) {
+      const entry = resolveSlug(toolParam);
+      if (entry) {
+        setSelectedCategory(entry.category);
+        setSelectedTool(entry.tool);
+        setCurrentPage('tools');
+        return;
+      }
     }
 
     const matchedCategory = CATEGORIES.find(cat => window.location.pathname.toLowerCase() === categoryPath(cat.id));
