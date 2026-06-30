@@ -434,6 +434,30 @@ export default function App() {
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   };
 
+  // Route to a per-category tool URL: /<category>/<slug>
+  // (e.g. /documents/pdf-to-docx, /images/jpg-to-png).
+  // Falls back to /<category>-converter/ if the slug is unknown.
+  const handleSelectCategoryTool = (category: string, slug: string) => {
+    const entry = resolveSlug(slug);
+    const cat = CATEGORIES.find(c => c.id.toLowerCase() === category.toLowerCase());
+    if (!cat) {
+      handleSelectToolCategory(category);
+      return;
+    }
+    if (!entry || entry.tool.category.toLowerCase() !== category.toLowerCase()) {
+      // unknown slug for this category -> fall back to category landing
+      handleSelectToolCategory(category);
+      return;
+    }
+    setSelectedCategory(cat.id);
+    setSelectedCadSlug(null);
+    setSearchQuery('');
+    setSelectedTool(entry.tool);
+    setCurrentPage('tools');
+    window.history.pushState({}, '', `/${cat.id.toLowerCase()}/${slug}`);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
   const handleOpenCadSeoPage = (slug: string) => {
     const cadPage = getCadSeoPageBySlug(slug);
     setSelectedCategory('CAD');
@@ -620,6 +644,7 @@ export default function App() {
               onSelectTool={(tool) => handleSelectTool(tool)}
               onNavigateConverter={() => handleChangePage('tools')}
               onNavigateCategoryPage={(cat) => handleSelectToolCategory(cat)}
+              onNavigateCategoryToolPage={(cat, slug) => handleSelectCategoryTool(cat, slug)}
               onNavigateCadSeoPage={(slug) => handleOpenCadSeoPage(slug)}
             />
           </div>

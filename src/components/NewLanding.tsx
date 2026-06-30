@@ -4,6 +4,8 @@ import { Upload, Lock, ArrowRight, Sparkles, Zap, ShieldCheck, ChevronRight, Fil
 import { Tool, TOOLS } from '../data/tools';
 import { User } from '../types';
 import { getUser } from '../data/gamification';
+import { CAD_SEO_PAGES } from '../data/cadSeoPages';
+import { toolSlug } from '../lib/tool-slug';
 import UpvoteButton from './gamification/UpvoteButton';
 
 interface NewLandingProps {
@@ -11,6 +13,7 @@ interface NewLandingProps {
   onSelectTool: (tool: Tool) => void;
   onNavigateConverter: () => void;
   onNavigateCategoryPage: (categoryId: string) => void;
+  onNavigateCategoryToolPage: (categoryId: string, slug: string) => void;
   onNavigateCadSeoPage: (slug: string) => void;
 }
 
@@ -22,12 +25,34 @@ const matchToolForFile = (filename: string, recentToolIds: number[]): Tool => {
     const recent = TOOLS.find(t => recentToolIds.includes(t.id));
     return recent ?? TOOLS[0];
   }
-  // exact input match takes priority
-  const exact = TOOLS.find(t => t.input.toLowerCase().split(/[,\s]+/).includes(ext));
-  if (exact) return exact;
-  // fallback: substring match against category typical inputs
-  const fuzzy = TOOLS.find(t => t.input.toLowerCase().includes(ext) || ext.includes(t.input.toLowerCase().split(/[,\s]+/)[0]));
+
+  // 1. Recent tools whose primary input matches the extension
+  const recentPrimary = TOOLS.find(t =>
+    recentToolIds.includes(t.id) &&
+    t.input.toLowerCase().split(/[,\s]+/)[0] === ext
+  );
+  if (recentPrimary) return recentPrimary;
+
+  // 2. Primary-input match across the catalog (DXF -> 'DXF to DWG')
+  const primary = TOOLS.find(t =>
+    t.input.toLowerCase().split(/[,\s]+/)[0] === ext
+  );
+  if (primary) return primary;
+
+  // 3. Any-input match (DXF -> 'DWG to PDF' which also accepts DXF)
+  const anyInput = TOOLS.find(t =>
+    t.input.toLowerCase().split(/[,\s]+/).includes(ext)
+  );
+  if (anyInput) return anyInput;
+
+  // 4. Substring fallback
+  const fuzzy = TOOLS.find(t =>
+    t.input.toLowerCase().includes(ext) ||
+    ext.includes(t.input.toLowerCase().split(/[,\s]+/)[0])
+  );
   if (fuzzy) return fuzzy;
+
+  // 5. Recent tools, then default first tool
   const recent = TOOLS.find(t => recentToolIds.includes(t.id));
   return recent ?? TOOLS[0];
 };
@@ -44,6 +69,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
   onSelectTool,
   onNavigateConverter,
   onNavigateCategoryPage,
+  onNavigateCategoryToolPage,
   onNavigateCadSeoPage,
 }) => {
   const [dragActive, setDragActive] = useState(false);
@@ -64,32 +90,35 @@ const NewLanding: React.FC<NewLandingProps> = ({
 
     // Find a CAD SEO page slug for this tool — that gives us the canonical
     // /cad/<slug> URL (e.g. /cad/dxf-to-dwg for a .dxf file).
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const cadPages = (require('../data/cadSeoPages') as typeof import('../data/cadSeoPages')).CAD_SEO_PAGES;
-      const match = cadPages.find(p => p.toolId === tool.id);
-      setMatchedSlug(match ? match.slug : null);
-    } catch {
-      setMatchedSlug(null);
-    }
+    // Fallback: build a tool-slug from input/output (e.g. dxf-to-dwg).
+    const cadMatch = CAD_SEO_PAGES.find(p => p.toolId === tool.id);
+    const slug = cadMatch?.slug || toolSlug(tool.input, tool.output);
+    setMatchedSlug(slug || null);
   }, [onSelectTool]);
 
-  // When a file is picked, redirect to the category-specific URL after a
-  // brief moment so the user sees the matched tool confirmation flash.
-  // Priority:
-  //   1. CAD tools with a CAD SEO page → /cad/<slug>
-  //   2. Any other tool                → /<category>-converter/  (with tool pre-selected)
+  // When a file is picked, redirect to the category-specific tool URL
+  // after a brief moment so the user sees the matched tool confirmation
+  // flash. Priority:
+  //   1. CAD tool with a CAD SEO page → /cad/<slug>  (full SEO shell)
+  //   2. Any other tool                → /<category>/<slug>  (e.g.
+  //                                      /documents/pdf-to-docx,
+  //                                      /images/jpg-to-png)
   useEffect(() => {
     if (!pickedFile || !matchedTool) return;
     const t = setTimeout(() => {
       if (matchedTool.category === 'CAD' && matchedSlug) {
         onNavigateCadSeoPage(matchedSlug);
-      } else {
-        onNavigateCategoryPage(matchedTool.category);
+        return;
       }
+      if (matchedSlug) {
+        const cat = matchedTool.category.toLowerCase();
+        onNavigateCategoryToolPage(cat, matchedSlug);
+        return;
+      }
+      onNavigateCategoryPage(matchedTool.category);
     }, 900);
     return () => clearTimeout(t);
-  }, [pickedFile, matchedTool, matchedSlug, onNavigateCadSeoPage, onNavigateCategoryPage]);
+  }, [pickedFile, matchedTool, matchedSlug, onNavigateCadSeoPage, onNavigateCategoryPage, onNavigateCategoryToolPage]);
 
   // keep onNavigateConverter prop referenced
   void onNavigateConverter;
