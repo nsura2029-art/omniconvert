@@ -98,7 +98,6 @@ const MegaMenuAllTools: React.FC<Props> = ({ onNavigate }) => {
       <MegaMenuFooter
         leftText="View all 12 categories"
         rightText={`${totalTools} tools · ${totalFormats} formats`}
-        highlightBadge={{ icon: <span>🔥</span>, label: 'STL→OBJ trending +234%' }}
       />
     </div>
   );

@@ -1,6 +1,5 @@
 import React from 'react';
 import { MegaMenuCategory } from '../../types/mega-menu';
-import CategoryIcon from './CategoryIcon';
 
 interface Props {
   categories: MegaMenuCategory[];
@@ -8,7 +7,7 @@ interface Props {
   onChange: (id: string) => void;
 }
 
-/** Horizontal scrollable row of category chips. */
+/** Horizontal scrollable row of category chips. Text only — no icons. */
 const MegaMenuTabs: React.FC<Props> = ({ categories, activeId, onChange }) => (
   <div
     role="tablist"
@@ -31,7 +30,6 @@ const MegaMenuTabs: React.FC<Props> = ({ categories, activeId, onChange }) => (
               : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
           }`}
         >
-          <CategoryIcon emoji={cat.icon} size="sm" />
           <span className="whitespace-nowrap">{cat.name}</span>
           <span className={`ml-1 inline-flex items-center justify-center rounded-md px-1 py-0.5 text-[9px] font-black tabular-nums ${
             active ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
