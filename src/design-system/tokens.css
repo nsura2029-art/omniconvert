@@ -63,7 +63,7 @@
   --d-rose-500: #e0254a;
 
   /* ── Semantic tokens (must match @theme inline in tailwind-theme.css) ─ */
-  --color-canvas:        #fbfaf7;
+  --color-canvas:        #ffffff;
   --color-surface:       #ffffff;
   --color-surface-2:     #f5f4ef;
   --color-surface-hover: #ffffff;
@@ -144,11 +144,8 @@
   --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ── Hero mesh backdrop ────────────────────────────────────────── */
-  --mesh-canvas:
-    radial-gradient(at 8% 0%, rgba(220, 232, 255, 0.7) 0, transparent 42%),
-    radial-gradient(at 84% 2%, rgba(210, 245, 234, 0.55) 0, transparent 38%),
-    radial-gradient(at 52% 100%, rgba(254, 243, 199, 0.5) 0, transparent 42%);
+  /* ── Hero mesh backdrop (disabled — page uses browser default white) ─ */
+  --mesh-canvas: none;
 }
 
 /* ============================================================================
@@ -159,7 +156,7 @@
  * so there's no cascade fight. .dark wins because it's higher specificity.
  * ========================================================================== */
 .dark {
-  --color-canvas:        #0b1220;
+  --color-canvas:        #ffffff;
   --color-surface:       #111a2e;
   --color-surface-2:     #0f172a;
   --color-surface-hover: #18223c;
@@ -194,8 +191,5 @@
   --shadow-card:        0 6px 16px rgba(0, 0, 0, 0.40), 0 2px 4px rgba(0, 0, 0, 0.24);
   --shadow-card-hover:  0 16px 32px rgba(0, 0, 0, 0.48), 0 4px 8px rgba(0, 0, 0, 0.28);
 
-  --mesh-canvas:
-    radial-gradient(at 8% 0%, rgba(47, 100, 240, 0.22) 0, transparent 44%),
-    radial-gradient(at 82% 0%, rgba(17, 163, 135, 0.18) 0, transparent 38%),
-    radial-gradient(at 50% 100%, rgba(224, 146, 19, 0.08) 0, transparent 42%);
+  --mesh-canvas: none;
 }

@@ -22,7 +22,7 @@
 
 @theme inline {
   /* ─── Semantic colors (light mode, literal values) ──────────────── */
-  --color-canvas:        #fbfaf7;            /* family.co cream */
+  --color-canvas:        #ffffff;            /* browser default white */
   --color-surface:       #ffffff;
   --color-surface-2:     #f5f4ef;
   --color-surface-hover: #ffffff;
@@ -175,7 +175,7 @@
   .ds-bg-accent-soft  { background-color: var(--color-accent-soft); }
   .ds-bg-mesh {
     background-color: var(--color-canvas);
-    background-image: var(--mesh-canvas);
+    /* background-image disabled — page uses browser default white */
   }
 
   /* ── Section spacing (family.co: lots of vertical room) ────────── */
