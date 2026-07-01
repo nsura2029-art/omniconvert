@@ -637,19 +637,6 @@ export default function App() {
               </div>
             )}
 
-            {/* CHOSEN WORKSPACE STAGE */}
-            {!limitExceeded && (
-              <div className="pt-4 scroll-mt-20" id="tool-active-stage">
-                <ConversionPanel 
-                  currentUser={currentUser}
-                  selectedTool={selectedTool}
-                  onConversionCompleted={handleConversionCompleted}
-                  onOpenAuth={() => setAuthModalOpen(true)}
-                  integrations={integrations}
-                />
-              </div>
-            )}
-
             <SecurityTrustBand onOpenSecurity={() => handleChangePage('security')} />
 
             {/* SEPARATOR DIVIDER */}
