@@ -309,7 +309,7 @@ const TargetDropdown: React.FC<{
       role="dialog"
       aria-label="Choose output format"
       className="absolute z-40 mt-1 w-[280px] rounded-xl border border-slate-200 bg-white shadow-xl"
-      style={{ right: 0 }}
+      style={{ right: 0, top: 'calc(100% + 4px)' }}
     >
       <div className="grid grid-cols-[100px_1fr] gap-0">
         <div className="border-r border-slate-100 bg-slate-50/80 rounded-l-xl p-1.5 flex flex-col">
@@ -317,6 +317,10 @@ const TargetDropdown: React.FC<{
             <button
               key={c.category}
               type="button"
+              /* Hover (mouseover) swaps the active category — no click
+                 required. Click is preserved for keyboard / touch users. */
+              onMouseEnter={() => setActiveCat(c.category)}
+              onFocus={() => setActiveCat(c.category)}
               onClick={() => setActiveCat(c.category)}
               className={cls(
                 'flex items-center justify-between gap-1 rounded-lg px-2 py-1.5 text-left text-[11px] font-bold',
@@ -421,6 +425,7 @@ const FileInputRow: React.FC<{
       {/* Status pill */}
       <StatusPill status={file.status} text={statusText} />
 
+      {/* Spacer #1 — pushes the TO picker toward the row's center */}
       <span className="flex-1" />
 
       {/* TO label */}
@@ -428,7 +433,9 @@ const FileInputRow: React.FC<{
         TO
       </span>
 
-      {/* Target dropdown */}
+      {/* Target dropdown — pops up anchored RIGHT-aligned with the trigger
+          so it never bleeds off-screen. Two spacers (#1 above, #2 below)
+          keep the trigger centered in the row. */}
       <div className="relative shrink-0">
         <button
           type="button"
@@ -452,6 +459,9 @@ const FileInputRow: React.FC<{
           catalog={catalog}
         />
       </div>
+
+      {/* Spacer #2 — balances Spacer #1 to keep the TO cluster centered */}
+      <span className="flex-1" />
 
       {/* Size */}
       <span className="font-mono text-[10px] tabular-nums text-slate-400 min-w-[50px] text-right shrink-0">
@@ -715,6 +725,9 @@ const BulkTargetDropdown: React.FC<{
             <button
               key={c.category}
               type="button"
+              /* Hover swaps the active category — no click required. */
+              onMouseEnter={() => setActiveCat(c.category)}
+              onFocus={() => setActiveCat(c.category)}
               onClick={() => setActiveCat(c.category)}
               className={cls(
                 'flex items-center justify-between gap-1 rounded-lg px-2 py-1.5 text-left text-[11px] font-bold',
