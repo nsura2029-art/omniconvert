@@ -1,126 +1,184 @@
 /* ============================================================================
- * Tailwind v4 @theme — bridges design tokens to utility classes.
+ * Tailwind v4 @theme inline — bridges design tokens to utility classes.
  *
- * After this file is loaded, you can use:
- *   bg-canvas, bg-surface, text-fg-primary, text-fg-secondary
- *   border-border, border-border-strong
- *   shadow-card, shadow-card-hover, shadow-ring
- *   rounded-sm/md/lg/xl/2xl, radius-* aliases
- *   font-sans, font-display, font-mono
- *   text-xs through text-display, tracking-tight/wide/widest
- *   duration-fast/normal/slow, ease-out-quint, ease-spring
- *   z-sticky/overlay/modal/toast
+ * IMPORTANT — uses `@theme inline`, with literal values.
  *
- * Tailwind v4 reads @theme and converts each --token into a utility.
+ * Why literal values (not var-of-var chains)?
+ *   Tailwind v4 only processes `@theme` blocks in the entry CSS file (not
+ *   nested @import'd files). So we declare all theme tokens here, with
+ *   literal values, so Tailwind can statically emit:
+ *     - :root,:host { --color-canvas: #fbfaf7; ... }   (utility CSS vars)
+ *     - utilities   .text-fg-primary { color: var(--color-fg-primary); }
+ *
+ * The companion tokens.css file holds the SAME values in :root + .dark so
+ * that .dark { --color-canvas: #0b1220; ... } overrides at runtime.
+ * Tailwind's auto-generated :root block and our :root block have identical
+ * values, so there's no cascade conflict.
+ *
+ * After this file is loaded, utilities like these become available:
+ *   text-fg-primary, bg-canvas, font-display, rounded-xl, shadow-card,
+ *   text-display, duration-normal, ease-out-quint, …
  * ========================================================================== */
-@import './tokens.css';
 
-@theme {
-  /* ─── Colors ─── */
-  --color-canvas:        var(--color-canvas);
-  --color-surface:       var(--color-surface);
-  --color-surface-2:     var(--color-surface-2);
-  --color-surface-hover: var(--color-surface-hover);
+@theme inline {
+  /* ─── Semantic colors (light mode, literal values) ──────────────── */
+  --color-canvas:        #fbfaf7;            /* family.co cream */
+  --color-surface:       #ffffff;
+  --color-surface-2:     #f5f4ef;
+  --color-surface-hover: #ffffff;
+  --color-overlay:       rgba(15, 14, 12, 0.55);
 
-  --color-fg-primary:    var(--color-fg-primary);
-  --color-fg-secondary:  var(--color-fg-secondary);
-  --color-fg-tertiary:   var(--color-fg-tertiary);
-  --color-fg-inverse:    var(--color-fg-inverse);
-  --color-fg-link:       var(--color-fg-link);
-  --color-fg-link-hover: var(--color-fg-link-hover);
+  --color-fg-primary:    #0f0e0c;            /* near-black ink */
+  --color-fg-secondary:  #6b6a63;
+  --color-fg-tertiary:   #94928a;
+  --color-fg-inverse:    #ffffff;
+  --color-fg-link:       #1f4ed8;
+  --color-fg-link-hover: #1b40b0;
 
-  --color-border:         var(--color-border);
-  --color-border-strong:  var(--color-border-strong);
-  --color-border-subtle:  var(--color-border-subtle);
-  --color-border-accent:  var(--color-border-accent);
+  --color-border:        #e2e0d8;
+  --color-border-strong: #c8c6bd;
+  --color-border-subtle: #eeece5;
+  --color-border-accent: #8ab2ff;
 
-  --color-accent:        var(--color-accent);
-  --color-accent-hover:  var(--color-accent-hover);
-  --color-accent-soft:   var(--color-accent-soft);
-  --color-accent-fg:     var(--color-accent-fg);
+  --color-accent:        #1f4ed8;
+  --color-accent-hover:  #1b40b0;
+  --color-accent-soft:   #eff5ff;
+  --color-accent-fg:     #ffffff;
 
-  --color-success:       var(--color-success);
-  --color-success-soft:  var(--color-success-soft);
-  --color-warning:       var(--color-warning);
-  --color-warning-soft:  var(--color-warning-soft);
-  --color-danger:        var(--color-danger);
-  --color-danger-soft:   var(--color-danger-soft);
+  --color-success:       #0d8a70;
+  --color-success-soft:  #ebfbf7;
+  --color-warning:       #b87510;
+  --color-warning-soft:  #fef7e6;
+  --color-danger:        #e0254a;
+  --color-danger-soft:   #fff1f3;
 
-  /* ─── Fonts ─── */
-  --font-sans:    var(--font-sans);
-  --font-display: var(--font-display);
-  --font-mono:    var(--font-mono);
+  --color-focus-ring:    rgba(31, 78, 216, 0.40);
 
-  /* ─── Type scale ─── */
-  --text-2xs: var(--text-2xs);
-  --text-xs:  var(--text-xs);
-  --text-sm:  var(--text-sm);
-  --text-base:var(--text-base);
-  --text-lg:  var(--text-lg);
-  --text-xl:  var(--text-xl);
-  --text-2xl: var(--text-2xl);
-  --text-3xl: var(--text-3xl);
-  --text-4xl: var(--text-4xl);
-  --text-5xl: var(--text-5xl);
-  --text-6xl: var(--text-6xl);
-  --text-display: var(--text-display);
+  /* ─── Fonts ─────────────────────────────────────────────────────── */
+  --font-sans:    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* ─── Radii ─── */
-  --radius-xs:   var(--radius-xs);
-  --radius-sm:   var(--radius-sm);
-  --radius-md:   var(--radius-md);
-  --radius-lg:   var(--radius-lg);
-  --radius-xl:   var(--radius-xl);
-  --radius-2xl:  var(--radius-2xl);
-  --radius-full: var(--radius-full);
+  /* ─── Type scale (modular 1.25 anchored on 16px) ───────────────── */
+  --text-2xs:     0.6875rem;
+  --text-xs:      0.75rem;
+  --text-sm:      0.875rem;
+  --text-base:    1rem;
+  --text-lg:      1.125rem;
+  --text-xl:      1.375rem;
+  --text-2xl:     1.75rem;
+  --text-3xl:     2.25rem;
+  --text-4xl:     3rem;
+  --text-5xl:     3.75rem;
+  --text-6xl:     4.75rem;
+  --text-display: clamp(2.5rem, 5vw + 1rem, 5.25rem);
 
-  /* ─── Shadows ─── */
-  --shadow-xs:           var(--shadow-xs);
-  --shadow-sm:           var(--shadow-sm);
-  --shadow-md:           var(--shadow-md);
-  --shadow-lg:           var(--shadow-lg);
-  --shadow-xl:           var(--shadow-xl);
-  --shadow-ring:         var(--shadow-ring);
-  --shadow-card:         var(--shadow-card);
-  --shadow-card-hover:   var(--shadow-card-hover);
+  /* ─── Weights ───────────────────────────────────────────────────── */
+  --font-weight-regular:    400;
+  --font-weight-medium:     500;
+  --font-weight-semibold:   600;
+  --font-weight-bold:       700;
+  --font-weight-extrabold:  800;
 
-  /* ─── Duration / easing ─── */
-  --duration-fast:       var(--duration-fast);
-  --duration-normal:     var(--duration-normal);
-  --duration-slow:       var(--duration-slow);
-  --duration-deliberate: var(--duration-deliberate);
+  /* ─── Leading / tracking ────────────────────────────────────────── */
+  --leading-tight:    1.1;
+  --leading-snug:     1.25;
+  --leading-normal:   1.5;
+  --leading-relaxed:  1.65;
 
-  --ease-out-quint:  var(--ease-out-quint);
-  --ease-out-cubic:  var(--ease-out-cubic);
-  --ease-in-out:     var(--ease-in-out);
-  --ease-spring:     var(--ease-spring);
+  --tracking-tight:   -0.02em;
+  --tracking-snug:    -0.01em;
+  --tracking-wide:    0.04em;
+  --tracking-widest:  0.16em;
 
-  /* ─── Layout widths ─── */
-  --width-prose:    var(--layout-prose);
-  --width-narrow:   var(--layout-narrow);
-  --width-content:  var(--layout-content);
-  --width-wide:     var(--layout-wide);
-  --width-bleed:    var(--layout-bleed);
+  /* ─── Spacing (4px base) ────────────────────────────────────────── */
+  --spacing-1:   0.25rem;
+  --spacing-2:   0.5rem;
+  --spacing-3:   0.75rem;
+  --spacing-4:   1rem;
+  --spacing-5:   1.5rem;
+  --spacing-6:   2rem;
+  --spacing-8:   3rem;
+  --spacing-10:  4rem;
+  --spacing-12:  5rem;
 
-  /* ─── Nav height (used by sticky bars) ─── */
-  --spacing-nav-h: var(--layout-nav-h);
+  /* ─── Radius (family.co: generous) ──────────────────────────────── */
+  --radius-xs:    4px;
+  --radius-sm:    8px;
+  --radius-md:    12px;
+  --radius-lg:    16px;
+  --radius-xl:    24px;
+  --radius-2xl:   32px;
+  --radius-full:  9999px;
+
+  /* ─── Shadow (restrained, low-spread) ───────────────────────────── */
+  --shadow-xs:    0 1px 2px rgba(15, 14, 12, 0.04);
+  --shadow-sm:    0 2px 4px rgba(15, 14, 12, 0.05), 0 1px 2px rgba(15, 14, 12, 0.03);
+  --shadow-md:    0 6px 16px rgba(15, 14, 12, 0.06), 0 2px 4px rgba(15, 14, 12, 0.04);
+  --shadow-lg:    0 16px 32px rgba(15, 14, 12, 0.08), 0 4px 8px rgba(15, 14, 12, 0.05);
+  --shadow-xl:    0 24px 48px rgba(15, 14, 12, 0.10), 0 8px 16px rgba(15, 14, 12, 0.06);
+  --shadow-ring:  0 0 0 3px var(--color-focus-ring);
+  --shadow-card:        var(--shadow-md);
+  --shadow-card-hover:  var(--shadow-lg);
+
+  /* ─── Border weight ─────────────────────────────────────────────── */
+  --border-thin:   1px;
+  --border-medium: 1.5px;
+  --border-thick:  2px;
+
+  /* ─── Layout ────────────────────────────────────────────────────── */
+  --width-prose:    64ch;
+  --width-narrow:   48rem;
+  --width-content:  72rem;
+  --width-wide:     84rem;
+  --width-bleed:    96rem;
+  --spacing-nav-h:  64px;
+
+  /* ─── Motion ────────────────────────────────────────────────────── */
+  --duration-fast:        120ms;
+  --duration-normal:      200ms;
+  --duration-slow:        320ms;
+  --duration-deliberate:  480ms;
+
+  --ease-out-quint:  cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-cubic:  cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ─── Z-index scale ─────────────────────────────────────────────── */
+  --z-base:      0;
+  --z-raised:    10;
+  --z-sticky:    100;
+  --z-overlay:   500;
+  --z-modal:     1000;
+  --z-toast:     2000;
 }
 
 /* ============================================================================
- * Utility classes — semantic shorthand built on top of the tokens.
+ * .ds-* helper classes — semantic shorthands built on top of the tokens above.
  * ========================================================================== */
 @layer utilities {
-  /* ── Surface helpers (thin wrappers around bg colors) ── */
-  .ds-bg-canvas { background-color: var(--color-canvas); }
-  .ds-bg-surface { background-color: var(--color-surface); }
-  .ds-bg-surface-2 { background-color: var(--color-surface-2); }
-  .ds-bg-accent-soft { background-color: var(--color-accent-soft); }
+  /* ── Font shorthand (Tailwind v4 conflicts on `font-display` with the
+       CSS `font-display` property, so we hand-write it.) ───────────── */
+  .font-display { font-family: var(--font-display); }
+
+  /* ── Duration shorthands (Tailwind v4 only ships numeric durations like
+       duration-150 / duration-200, not custom semantic tokens.) ──────── */
+  .duration-fast   { transition-duration: var(--duration-fast); }
+  .duration-normal { transition-duration: var(--duration-normal); }
+  .duration-slow   { transition-duration: var(--duration-slow); }
+
+  /* ── Surface helpers ───────────────────────────────────────────── */
+  .ds-bg-canvas       { background-color: var(--color-canvas); }
+  .ds-bg-surface      { background-color: var(--color-surface); }
+  .ds-bg-surface-2    { background-color: var(--color-surface-2); }
+  .ds-bg-accent-soft  { background-color: var(--color-accent-soft); }
   .ds-bg-mesh {
     background-color: var(--color-canvas);
     background-image: var(--mesh-canvas);
   }
 
-  /* ── Section spacing — family.co: lots of vertical room ── */
+  /* ── Section spacing (family.co: lots of vertical room) ────────── */
   .ds-section {
     padding-top: clamp(3rem, 6vw + 1rem, 6rem);
     padding-bottom: clamp(3rem, 6vw + 1rem, 6rem);
@@ -130,7 +188,7 @@
     padding-bottom: clamp(2rem, 4vw + 0.5rem, 4rem);
   }
 
-  /* ── Card — restrained, family.co style ── */
+  /* ── Card — restrained, family.co style ────────────────────────── */
   .ds-card {
     background-color: var(--color-surface);
     border: var(--border-thin) solid var(--color-border);
@@ -146,7 +204,7 @@
     transform: translateY(-2px);
   }
 
-  /* ── Eyebrow — uppercase tracker, family.co's small caps ── */
+  /* ── Eyebrow — uppercase tracker ───────────────────────────────── */
   .ds-eyebrow {
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
@@ -156,7 +214,7 @@
     font-weight: var(--weight-semibold);
   }
 
-  /* ── Display heading — gradient + tight tracking ── */
+  /* ── Display headings ──────────────────────────────────────────── */
   .ds-heading-display {
     font-family: var(--font-display);
     font-size: var(--text-display);
@@ -165,7 +223,6 @@
     font-weight: var(--weight-bold);
     color: var(--color-fg-primary);
   }
-
   .ds-heading-1 {
     font-family: var(--font-display);
     font-size: var(--text-4xl);
@@ -174,7 +231,6 @@
     font-weight: var(--weight-bold);
     color: var(--color-fg-primary);
   }
-
   .ds-heading-2 {
     font-family: var(--font-display);
     font-size: var(--text-3xl);
@@ -184,14 +240,15 @@
     color: var(--color-fg-primary);
   }
 
+  /* ── Body copy ─────────────────────────────────────────────────── */
   .ds-body {
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
     color: var(--color-fg-secondary);
-    max-width: var(--layout-prose);
+    max-width: var(--width-prose);
   }
 
-  /* ── Focus ring (must be visible on any bg) ── */
+  /* ── Focus ring ────────────────────────────────────────────────── */
   .ds-focus-ring:focus-visible {
     outline: none;
     box-shadow: var(--shadow-ring);
