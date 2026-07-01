@@ -15,6 +15,7 @@ import Billing from './components/Billing';
 import Pricing from './pages/Pricing';
 import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
 import { getOrCreateUser, captureReferralFromUrl } from './data/gamification';
+import { getTopToolForCategory } from './data/popular-conversions';
 import FloatingCreditPill from './components/gamification/FloatingCreditPill';
 import { resolveSlug, toolSlug } from './lib/tool-slug';
 import OnboardingTour from './components/OnboardingTour';
@@ -67,6 +68,9 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedCadSlug, setSelectedCadSlug] = useState<string | null>(null);
+  // True when the URL is exactly /<category>/ (no slug) — the picker
+  // collapses to a 2-column from/to matrix and the category chip is fixed.
+  const [categoryLocked, setCategoryLocked] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool>(TOOLS[0]); // Default: PDF to Word
   
@@ -137,6 +141,8 @@ export default function App() {
     if (window.location.pathname !== url) {
       window.history.pushState({}, '', url);
     }
+    // The URL now has a slug, so the category is no longer "locked".
+    setCategoryLocked(false);
   };
 
   // Load conversions & limits from localStorage on boot
@@ -209,10 +215,27 @@ export default function App() {
         // Single landing page handles every tool URL. The SaaS hero +
         // file rows + ToolPicker all live in NewLanding.
         setCurrentPage('home');
+        setCategoryLocked(false);
       } else {
         setCurrentPage('cad-not-found');
       }
       return;
+    }
+
+    // /<category>/  (no slug) — locks the category picker. User sees
+    // only the from/to matrix for that category.
+    const catOnlyMatch = window.location.pathname.toLowerCase().match(/^\/([a-z0-9-]+)\/?$/);
+    if (catOnlyMatch) {
+      const catSlug = catOnlyMatch[1];
+      const cat = CATEGORIES.find(c => c.id.toLowerCase() === catSlug);
+      if (cat) {
+        const top = getTopToolForCategory(cat.id);
+        setSelectedCategory(cat.id);
+        if (top) setSelectedTool(top);
+        setCurrentPage('home');
+        setCategoryLocked(true);
+        return;
+      }
     }
 
     // Per-category tool URLs e.g. /documents/pdf-to-docx,
@@ -228,6 +251,7 @@ export default function App() {
           setSelectedCategory(cat.id);
           setSelectedTool(entry.tool);
           setCurrentPage('home');
+          setCategoryLocked(false);
           return;
         }
       }
@@ -241,6 +265,7 @@ export default function App() {
         setSelectedCategory(entry.category);
         setSelectedTool(entry.tool);
         setCurrentPage('home');
+        setCategoryLocked(false);
         return;
       }
     }
@@ -663,6 +688,7 @@ export default function App() {
               onConversionCompleted={handleConversionCompleted}
               onOpenAuth={() => setAuthModalOpen(true)}
               integrations={integrations}
+              categoryLocked={categoryLocked}
             />
           </div>
         )}

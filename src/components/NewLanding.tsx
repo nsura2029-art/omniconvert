@@ -31,6 +31,10 @@ interface NewLandingProps {
   onConversionCompleted: (conversion: FileConversion) => void;
   onOpenAuth: () => void;
   integrations: CloudIntegration[];
+  // When true, the ToolPicker hides the Category column. Triggered
+  // when the URL is /<category>/ (no slug). Tool-pick and file-pick
+  // can still switch category, which clears the lock via the parent.
+  categoryLocked?: boolean;
 }
 
 const formatBytes = (b: number): string => {
@@ -86,6 +90,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
   onConversionCompleted,
   onOpenAuth,
   integrations,
+  categoryLocked = false,
 }) => {
   const gamUser = getUser(currentUser);
 
@@ -355,6 +360,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
         activeFrom={selectedTool.input}
         activeTo={selectedTool.output}
         onChange={onSelectTool}
+        lockedCategory={categoryLocked ? selectedTool.category : undefined}
       />
 
       {/* ─────────────── STICKY BOTTOM ACTION BAR ─────────────── */}

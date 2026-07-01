@@ -16,6 +16,9 @@ interface ToolPickerProps {
   activeFrom: string;
   activeTo: string;
   onChange: (tool: Tool) => void;
+  // When set, the Category column is hidden and the From/To columns
+  // expand to fill the space. The activeCategory becomes read-only.
+  lockedCategory?: string;
 }
 
 const normalize = (s: string): string =>
@@ -75,7 +78,7 @@ const FormatChip: React.FC<{ fmt: string; size?: 'sm' | 'md' }> = ({ fmt, size =
 };
 
 const ToolPicker: React.FC<ToolPickerProps> = ({
-  activeCategory, activeFrom, activeTo, onChange,
+  activeCategory, activeFrom, activeTo, onChange, lockedCategory,
 }) => {
   const fromOptions = useMemo(() => getFromOptions(activeCategory), [activeCategory]);
   const toOptions = useMemo(() => getToOptions(activeCategory, activeFrom), [activeCategory, activeFrom]);
@@ -136,9 +139,10 @@ const ToolPicker: React.FC<ToolPickerProps> = ({
         </div>
       </div>
 
-      {/* 3-step picker */}
+      {/* 3-step picker (or 2-step when category is locked) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Step 1 — Category */}
+        {/* Step 1 — Category (hidden when locked) */}
+        {!lockedCategory && (
         <div className="lg:col-span-3">
           <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
             <span className="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 grid place-items-center text-[9px] font-bold">1</span>
@@ -167,9 +171,10 @@ const ToolPicker: React.FC<ToolPickerProps> = ({
             })}
           </div>
         </div>
+        )}
 
         {/* Step 2 — From */}
-        <div className="lg:col-span-4">
+        <div className={lockedCategory ? 'lg:col-span-6' : 'lg:col-span-4'}>
           <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
             <span className="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 grid place-items-center text-[9px] font-bold">2</span>
             From
@@ -199,7 +204,7 @@ const ToolPicker: React.FC<ToolPickerProps> = ({
         </div>
 
         {/* Step 3 — To */}
-        <div className="lg:col-span-5">
+        <div className={lockedCategory ? 'lg:col-span-6' : 'lg:col-span-5'}>
           <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2 flex items-center gap-1.5">
             <span className="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 grid place-items-center text-[9px] font-bold">3</span>
             To
