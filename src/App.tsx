@@ -71,6 +71,11 @@ export default function App() {
   // True when the URL is exactly /<category>/ (no slug) — the picker
   // collapses to a 2-column from/to matrix and the category chip is fixed.
   const [categoryLocked, setCategoryLocked] = useState(false);
+  // True when the ToolPicker should be visible. Shown on the home page
+  // before the user makes a selection. Hidden as soon as the user picks
+  // a tool, drops a file, or clicks a category — the page collapses to
+  // just the ChooseFile section. A "Change tool" button re-opens it.
+  const [pickerVisible, setPickerVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool>(TOOLS[0]); // Default: PDF to Word
   
@@ -462,17 +467,21 @@ export default function App() {
     setSearchQuery('');
 
     if (category === 'All') {
-      setCurrentPage('tools');
+      setCurrentPage('home');
       window.history.pushState({}, '', '/');
+      setCategoryLocked(false);
+      setPickerVisible(true);
       return;
     }
 
-    const firstCategoryTool = TOOLS.find(tool => tool.category === category);
-    if (firstCategoryTool) {
-      setSelectedTool(firstCategoryTool);
-    }
-    setCurrentPage('category');
-    window.history.pushState({}, '', categoryPath(category));
+    // Use the top popular tool (or first available) as the default.
+    // The user can change it via the picker or by dropping a file.
+    const top = getTopToolForCategory(category);
+    if (top) setSelectedTool(top);
+    setCurrentPage('home');
+    setCategoryLocked(true);
+    setPickerVisible(false);
+    window.history.pushState({}, '', `/${category.toLowerCase()}/`);
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   };
 
@@ -689,6 +698,8 @@ export default function App() {
               onOpenAuth={() => setAuthModalOpen(true)}
               integrations={integrations}
               categoryLocked={categoryLocked}
+              pickerVisible={pickerVisible}
+              onShowPicker={() => setPickerVisible(true)}
             />
           </div>
         )}

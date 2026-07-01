@@ -14,7 +14,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Upload, ArrowRight, ChevronRight, FileCheck2, Download,
-  Sparkles, ShieldCheck, Zap, Lock, X,
+  Sparkles, ShieldCheck, Zap, Lock, X, Sliders,
 } from 'lucide-react';
 import { Tool, TOOLS } from '../data/tools';
 import { User, FileConversion, CloudIntegration } from '../types';
@@ -35,6 +35,10 @@ interface NewLandingProps {
   // when the URL is /<category>/ (no slug). Tool-pick and file-pick
   // can still switch category, which clears the lock via the parent.
   categoryLocked?: boolean;
+  // When false, the entire ToolPicker section is hidden. The user
+  // sees only the hero + ChooseFile. A "Change tool" button re-opens.
+  pickerVisible?: boolean;
+  onShowPicker?: () => void;
 }
 
 const formatBytes = (b: number): string => {
@@ -91,6 +95,8 @@ const NewLanding: React.FC<NewLandingProps> = ({
   onOpenAuth,
   integrations,
   categoryLocked = false,
+  pickerVisible = true,
+  onShowPicker,
 }) => {
   const gamUser = getUser(currentUser);
 
@@ -216,10 +222,22 @@ const NewLanding: React.FC<NewLandingProps> = ({
               {description}
             </p>
           </div>
-          <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm shrink-0">
-            <FileCheck2 className="w-4 h-4" />
-            0 Upvote
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* "Change tool" re-opens the picker when it's been collapsed */}
+            {!pickerVisible && onShowPicker && (
+              <button
+                onClick={onShowPicker}
+                className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-500/20"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                Change tool
+              </button>
+            )}
+            <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm">
+              <FileCheck2 className="w-4 h-4" />
+              0 Upvote
+            </button>
+          </div>
         </div>
         <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
           <div>
@@ -355,13 +373,18 @@ const NewLanding: React.FC<NewLandingProps> = ({
       </section>
 
       {/* ─────────────── TOOL PICKER (3-step + popular) ─────────────── */}
-      <ToolPicker
-        activeCategory={selectedTool.category}
-        activeFrom={selectedTool.input}
-        activeTo={selectedTool.output}
-        onChange={onSelectTool}
-        lockedCategory={categoryLocked ? selectedTool.category : undefined}
-      />
+      {/* Hidden after the user makes a selection (file pick, from+to
+          pick, or category click). A "Change tool" button in the hero
+          re-opens it via onShowPicker. */}
+      {pickerVisible && (
+        <ToolPicker
+          activeCategory={selectedTool.category}
+          activeFrom={selectedTool.input}
+          activeTo={selectedTool.output}
+          onChange={onSelectTool}
+          lockedCategory={categoryLocked ? selectedTool.category : undefined}
+        />
+      )}
 
       {/* ─────────────── STICKY BOTTOM ACTION BAR ─────────────── */}
       <div className="fixed inset-x-0 bottom-0 z-40 glass border-t border-zinc-200/70 dark:border-zinc-800/70 shadow-[0_-8px_24px_rgba(0,0,0,0.06)]">
