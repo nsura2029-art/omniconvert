@@ -714,6 +714,13 @@ export default function App() {
               pickerVisible={pickerVisible}
               onShowPicker={() => { setPickerVisible(true); setHeroVariant('generic'); }}
               heroVariant={heroVariant}
+              // File pick on the landing → after the confirmation flash,
+              // switch to the tool-specific converter page. Restores the
+              // pre-771a024 navigation behavior (the bb11bae pattern).
+              onNavigateToTool={(tool) => {
+                handleSelectTool(tool);
+                setCurrentPage('tools');
+              }}
             />
           </div>
         )}

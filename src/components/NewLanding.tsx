@@ -48,6 +48,12 @@ interface NewLandingProps {
   //   'category' — "{Category} Converter" + category copy
   //   'tool'     — "{From} to {To} Converter" + tool copy
   heroVariant?: 'generic' | 'category' | 'tool';
+  // Fired after a file is picked and the matched-tool confirmation
+  // flash plays. Parent (App.tsx) uses this to actually leave
+  // NewLanding and land on the tool-specific converter page.
+  // Mirrors the bb11bae-era `onNavigateConverter` pattern that was
+  // killed by the 771a024 consolidation.
+  onNavigateToTool?: (tool: Tool, file: File) => void;
 }
 
 const formatBytes = (b: number): string => {
@@ -283,6 +289,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
   pickerVisible = true,
   onShowPicker,
   heroVariant = 'tool',
+  onNavigateToTool,
 }) => {
   const gamUser = getUser(currentUser);
 
@@ -323,10 +330,12 @@ const NewLanding: React.FC<NewLandingProps> = ({
   }, [files]);
 
   // ── file pick handlers ──
-  // ALWAYS calls onSelectTool with the matched tool so the parent
-  // (App.tsx) updates selectedTool + URL + heroVariant + pickerVisible.
-  // Even if the matched tool equals the current one, we still want
-  // the side effects (URL push, hero variant switch).
+  // 1. Match the file's extension to a tool via matchToolForFile.
+  // 2. Call onSelectTool so the parent syncs URL / heroVariant.
+  // 3. After a short confirmation flash, fire onNavigateToTool so the
+  //    parent actually leaves NewLanding and lands on the tool's
+  //    dedicated converter page (currentPage='tools'). Mirrors the
+  //    bb11bae-era auto-navigate-to-converter behavior.
   const onFiles = useCallback((filesList: FileList | null) => {
     if (!filesList || filesList.length === 0) return;
     const arr = Array.from(filesList);
@@ -341,7 +350,12 @@ const NewLanding: React.FC<NewLandingProps> = ({
       (window as any).__omni_lastPick = { name: first.name, toolId: tool.id, toolName: tool.name, category: tool.category };
     }
     onSelectTool(tool);
-  }, [onSelectTool]);
+    // After the 700ms "Ready" analyze transition completes, fire the
+    // navigate-away so the user lands on the tool-specific page.
+    if (onNavigateToTool) {
+      window.setTimeout(() => onNavigateToTool(tool, first), 750);
+    }
+  }, [onSelectTool, onNavigateToTool]);
 
   // ── sticky action bar handlers ──
   const handleClearAll = () => {
@@ -491,7 +505,12 @@ const NewLanding: React.FC<NewLandingProps> = ({
   return (
     <div className="space-y-6 pb-32">
       {/* ─────────────── HERO ─────────────── */}
-      <section className="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-6 md:p-8">
+      {/*
+        Flattened: no rounded-3xl, no glass, no bordered card wrapper.
+        The hero now renders directly in the page flow with just
+        spacing. Matches the pre-9686df6 single-page hero style.
+      */}
+      <div className="py-4 md:py-6">
         {heroVariant === 'generic' && (
           <GenericHero onShowPicker={onShowPicker} pickerVisible={pickerVisible} />
         )}
@@ -509,7 +528,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
             pickerVisible={pickerVisible}
           />
         )}
-      </section>
+      </div>
 
       {/* ─────────────── CHOOSEFILES CARD ─────────────── */}
       <section className="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-5 md:p-7">
