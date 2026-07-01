@@ -370,8 +370,7 @@ const FileInputRow: React.FC<{
   onChangeOutput: (id: string, ext: string) => void;
   onRemove: (id: string) => void;
   onDownload: (id: string) => void;
-  onConvertOne: (id: string) => void;
-}> = ({ file, catalog, brandColor, isLocked, onChangeOutput, onRemove, onDownload, onConvertOne }) => {
+}> = ({ file, catalog, brandColor, isLocked, onChangeOutput, onRemove, onDownload }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -381,7 +380,6 @@ const FileInputRow: React.FC<{
   }, [isLocked]);
 
   const showDownload = file.status === 'done';
-  const showConvert = file.status === 'pending' && !isLocked;
   const showConverted = file.status === 'done';
 
   const statusText = useMemo(() => {
@@ -472,12 +470,11 @@ const FileInputRow: React.FC<{
           {formatBytes(file.size)}
         </span>
 
-        {/* Right-rail action: Converted pill OR per-row Convert OR per-row Download */}
-        {showConverted ? (
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-700 shrink-0 border border-emerald-200 whitespace-nowrap">
-            Converted
-          </span>
-        ) : showDownload ? (
+        {/* Right-rail action: Download (only when done). The per-row
+            ▶ Convert button was removed — conversion now auto-fires when
+            the file is added or its TO target changes. The sticky-bar
+            Convert button remains as a manual "Reconvert all" override. */}
+        {showDownload ? (
           <button
             type="button"
             onClick={() => onDownload(file.id)}
@@ -485,20 +482,7 @@ const FileInputRow: React.FC<{
           >
             <Download className="h-3 w-3" /> Download
           </button>
-        ) : showConvert ? (
-          <button
-            type="button"
-            onClick={() => onConvertOne(file.id)}
-            className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[11px] font-extrabold shrink-0 whitespace-nowrap"
-            style={{ backgroundColor: brandColor, color: 'white' }}
-          >
-            <Play className="h-3 w-3" fill="currentColor" /> Convert
-          </button>
-        ) : (
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-600 shrink-0 border border-slate-200 whitespace-nowrap">
-            Pending
-          </span>
-        )}
+        ) : null}
 
         {/* Trash */}
         {file.status !== 'done' && (
@@ -877,14 +861,20 @@ const StickyActionBar: React.FC<StickyBarProps> = ({
           <button
             type="button"
             onClick={onConvert}
-            disabled={isWorking || pendingCount === 0}
+            disabled={isWorking || (pendingCount === 0 && convertedCount === 0)}
             style={{ backgroundColor: brandColor }}
+            title="Re-run conversion on every file"
             className="inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-xs font-extrabold text-white transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(31,78,216,0.25)]"
           >
             {isWorking ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Converting…
+              </>
+            ) : convertedCount > 0 && pendingCount === 0 && inProgressCount === 0 ? (
+              <>
+                <Play className="h-3.5 w-3.5" fill="currentColor" />
+                Reconvert all
               </>
             ) : (
               <>
@@ -1098,6 +1088,52 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
   // per-row conversion state — set when the user clicks Convert
   const conversionTimersRef = useRef<Map<string, number[]>>(new Map());
 
+  /* ── Auto-convert scheduler ──
+   *
+   * One shared debounce timer keeps a Set of file ids that need conversion.
+   * Every trigger (file added, per-row TO changed, bulk TO changed) adds
+   * ids to the Set and (re)schedules a 400ms debounced run. This ensures:
+   *   • a 3-file multi-pick fires ONE batch, not three sequential runs
+   *   • rapid TO-clicks during a sweep don't fire 5 conversions
+   *   • the always-at-end choice wins when the user is mid-hover-sweep
+   *
+   * Declared BEFORE the callbacks that reference it (addFiles /
+   * changePerFileOutput / changeBulkOutput) so the closure can capture
+   * it cleanly. The body only references setFiles via the ref'd
+   * closure-free `filesRef` so we don't need it in the dep list.
+   */
+  const AUTO_CONVERT_DELAY_MS = 400;
+  const schedulerRef = useRef<{ timer: number | null; affected: Set<string> }>({ timer: null, affected: new Set() });
+
+  /* Latest files accessible from inside the scheduler's setTimeout. */
+  const filesRef = useRef<FileMeta[]>([]);
+  useEffect(() => { filesRef.current = files; }, [files]);
+
+  /** Schedule conversions for the given file ids. Idempotent — repeated
+   *  calls within the debounce window accumulate ids rather than firing
+   *  one-shot runs. */
+  const scheduleAutoConvert = useCallback((ids: string[]) => {
+    const s = schedulerRef.current;
+    ids.forEach(id => s.affected.add(id));
+    if (s.timer !== null) window.clearTimeout(s.timer);
+    s.timer = window.setTimeout(() => {
+      const idsToConvert = Array.from(s.affected);
+      s.affected.clear();
+      s.timer = null;
+      idsToConvert.forEach(id => {
+        const f = filesRef.current.find(x => x.id === id);
+        if (!f) return;
+        runSimulatedConversion(id);
+      });
+    }, AUTO_CONVERT_DELAY_MS);
+  }, []);
+
+  /* Cancel any pending scheduler debounce when the component unmounts. */
+  useEffect(() => () => {
+    const t = schedulerRef.current.timer;
+    if (t !== null) window.clearTimeout(t);
+  }, []);
+
   /* ── derived ── */
   const visibleCatalog: ReadonlyArray<OutputOption> = useMemo(() => {
     // Phase 1: expose everything; could be narrowed per tool.
@@ -1112,17 +1148,22 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
     setFiles(prev => {
       const existing = new Set(prev.map(f => `${f.name}::${f.size}`));
       const fresh = metas.filter(m => !existing.has(`${m.name}::${m.size}`));
-      const next = [...prev, ...fresh];
+      // Auto-convert the FRESH picks only (dedup-aware). Calling
+      // scheduleAutoConvert inside the state updater is safe because
+      // it just queues a setTimeout — no setState, no React warning.
+      if (fresh.length > 0) {
+        scheduleAutoConvert(fresh.map(m => m.id));
+      }
       // If the bulk output is still the default and there are no rows,
       // adopt the freshly-added file's suggested output so the sticky
       // bar stays meaningful.
       if (prev.length === 0 && fresh.length > 0) {
         setBulkOutput(fresh[0].output);
       }
-      return next;
+      return [...prev, ...fresh];
     });
     onFilesAdd?.(metas);
-  }, [onFilesAdd]);
+  }, [onFilesAdd, scheduleAutoConvert]);
 
   const removeFile = useCallback((id: string) => {
     // Cancel any pending timers for this row
@@ -1148,18 +1189,46 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
     // overridden (i.e. all rows, since Phase 1 has no per-row override UI yet
     // — the Target dropdown stays available but the bulk change takes
     // precedence for synced state).
-    setFiles(prev => prev.map(f => ({ ...f, output: v })));
+    let allIds: string[] = [];
+    setFiles(prev => {
+      allIds = prev.map(f => f.id);
+      return prev.map(f => ({ ...f, output: v }));
+    });
     onBulkOutputChange?.(v);
-  }, [onBulkOutputChange]);
+    /* Auto-convert every row with the new bulk target. The scheduler
+     * dedupes ids so per-row TO changes fired in the same window will
+     * collapse into a single batch run per file. */
+    if (allIds.length > 0) scheduleAutoConvert(allIds);
+  }, [onBulkOutputChange, scheduleAutoConvert]);
 
   const changePerFileOutput = useCallback((id: string, ext: string) => {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, output: ext } : f));
     onPerFileOutputChange?.(id, ext);
-  }, [onPerFileOutputChange]);
+    /* Auto-convert this row with the new target. */
+    scheduleAutoConvert([id]);
+  }, [onPerFileOutputChange, scheduleAutoConvert]);
 
   /* ── Phase 1: simulate a conversion cycle ── */
 
   const runSimulatedConversion = useCallback((id: string) => {
+    /* Cancel any in-flight timers for this row (handles: re-conversion
+     * of a done file, or cancellation of a previous run). */
+    const existingTimers = conversionTimersRef.current.get(id);
+    if (existingTimers) existingTimers.forEach(t => window.clearTimeout(t));
+    conversionTimersRef.current.delete(id);
+
+    /* Reset the row to the pending state. Wipe any stale output blob /
+     * filename so the output row will unmount until the new run completes.
+     * This is what makes reconversion of a done file work cleanly. */
+    setFiles(prev => prev.map(f => f.id === id ? {
+      ...f,
+      status: 'pending' as FileStatus,
+      statusText: 'Pending',
+      progress: 0,
+      outputName: undefined,
+      outputBlob: undefined,
+    } : f));
+
     const timers: number[] = [];
 
     // Stage 1: Analyzing (~400ms)
@@ -1221,9 +1290,17 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
   }, [files, runSimulatedConversion]);
 
   const convertAll = useCallback(() => {
-    const pending = files.filter(f => f.status === 'pending');
-    if (pending.length === 0) return;
-    pending.forEach(f => runSimulatedConversion(f.id));
+    /* Manual override — re-runs conversion on EVERY row, regardless of
+     * current status. Skips files that are currently mid-conversion
+     * (they'll finish on their own). Used by the sticky bar's
+     * Reconvert-all button + via the imperative handle. */
+    const all = files.filter(f =>
+      f.status === 'pending' ||
+      f.status === 'done' ||
+      f.status === 'failed'
+    );
+    if (all.length === 0) return;
+    all.forEach(f => runSimulatedConversion(f.id));
     onConvertAll?.(files);
   }, [files, onConvertAll, runSimulatedConversion]);
 
@@ -1410,11 +1487,10 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
                     file={f}
                     catalog={visibleCatalog}
                     brandColor={brandColor}
-                    isLocked={f.status !== 'pending'}
+                    isLocked={f.status === 'analyzing' || f.status === 'loading_libs' || f.status === 'converting'}
                     onChangeOutput={changePerFileOutput}
                     onRemove={removeFile}
                     onDownload={downloadOne}
-                    onConvertOne={convertOne}
                   />
                 </div>
 
