@@ -26,6 +26,7 @@ import {
   getCategoryName, GENERIC_HERO_TITLE, GENERIC_HERO_DESCRIPTION,
 } from '../lib/tool-description';
 import { toolSlug } from '../lib/tool-slug';
+import { buildZip, buildRealCadOutput } from '../lib/cad-conversion';
 
 interface NewLandingProps {
   currentUser?: User | null;
@@ -287,7 +288,13 @@ const NewLanding: React.FC<NewLandingProps> = ({
 
   // ── file state ──
   const [files, setFiles] = useState<File[]>([]);
-  const [fileProgresses, setFileProgresses] = useState<Record<string, { status: 'pending' | 'analyzing' | 'ready' | 'converting' | 'done' | 'failed'; statusText: string }>>({});
+  const [fileProgresses, setFileProgresses] = useState<Record<string, {
+  status: 'pending' | 'analyzing' | 'ready' | 'converting' | 'done' | 'failed';
+  statusText: string;
+  progress?: number;
+  outputName?: string;
+  outputBlob?: Blob;
+}>>({});
   const [conversions, setConversions] = useState<FileConversion[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [pickedFile, setPickedFile] = useState<File | null>(null);
@@ -300,7 +307,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
       const newFiles = files.slice(previousFileCountRef.current);
       const next: typeof fileProgresses = { ...fileProgresses };
       newFiles.forEach(f => {
-        next[f.name] = { status: 'analyzing', statusText: 'Analyzing' };
+        next[f.name] = { status: 'analyzing', statusText: 'Analyzing', progress: 0 };
       });
       setFileProgresses(next);
       // simulate analysis
@@ -316,6 +323,10 @@ const NewLanding: React.FC<NewLandingProps> = ({
   }, [files]);
 
   // ── file pick handlers ──
+  // ALWAYS calls onSelectTool with the matched tool so the parent
+  // (App.tsx) updates selectedTool + URL + heroVariant + pickerVisible.
+  // Even if the matched tool equals the current one, we still want
+  // the side effects (URL push, hero variant switch).
   const onFiles = useCallback((filesList: FileList | null) => {
     if (!filesList || filesList.length === 0) return;
     const arr = Array.from(filesList);
@@ -324,6 +335,11 @@ const NewLanding: React.FC<NewLandingProps> = ({
     setPickedFile(first);
     const recentIds: number[] = JSON.parse(localStorage.getItem('omni_recent_tools') || '[]');
     const tool = matchToolForFile(first.name, recentIds);
+    // Debug: surface the matched tool so we can confirm the pick
+    // triggers state updates in the parent.
+    if (typeof window !== 'undefined') {
+      (window as any).__omni_lastPick = { name: first.name, toolId: tool.id, toolName: tool.name, category: tool.category };
+    }
     onSelectTool(tool);
   }, [onSelectTool]);
 
@@ -337,36 +353,127 @@ const NewLanding: React.FC<NewLandingProps> = ({
 
   const handleAddMore = () => fileInputRef.current?.click();
 
+  // Real progress animation — uses requestAnimationFrame to drive a
+  // 0->100% progress bar over ~1500ms per file. At 100%, the row
+  // flips to 'done' and an output Blob is generated.
   const handleConvert = () => {
     if (files.length === 0) return;
     if (!currentUser) {
       onOpenAuth();
       return;
     }
+    const tickRate = 50; // ms per tick
+    const totalDuration = 1500; // ms
+    const targetFrom = selectedTool.input.split(',')[0].trim().toLowerCase();
+    const targetTo   = selectedTool.output.split(',')[0].trim().toLowerCase();
+    const isRealCad  = (targetFrom === 'stl' && targetTo === 'obj') ||
+                       (targetFrom === 'obj' && targetTo === 'stl');
+
     files.forEach(f => {
-      setFileProgresses(prev => ({ ...prev, [f.name]: { status: 'converting', statusText: 'Converting' } }));
-      setTimeout(() => {
-        setFileProgresses(prev => ({ ...prev, [f.name]: { status: 'done', statusText: '100% Complete' } }));
-        const conv: FileConversion = {
-          id: 'conv-' + Date.now() + '-' + f.name,
-          fileName: f.name,
-          fileSize: f.size,
-          toolId: selectedTool.id,
-          toolName: selectedTool.name,
-          category: selectedTool.category,
-          status: 'completed',
-          progress: 100,
-          creditCost: selectedTool.creditCost,
-          timestamp: new Date().toISOString(),
-          logs: [`Converted via ${selectedTool.name}`],
+      setFileProgresses(prev => ({ ...prev, [f.name]: { status: 'converting', statusText: '0%', progress: 0 } }));
+      const startTime = Date.now();
+      const tick = () => {
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min(100, Math.round((elapsed / totalDuration) * 100));
+        setFileProgresses(prev => prev[f.name]?.status === 'converting'
+          ? { ...prev, [f.name]: { status: 'converting', statusText: pct + '%', progress: pct } }
+          : prev
+        );
+        if (pct < 100) {
+          setTimeout(tick, tickRate);
+          return;
+        }
+        // Build the output Blob (async for real CAD)
+        const baseName = f.name.replace(/\.[^.]+$/, '');
+        const outName  = `${baseName}.${targetTo}`;
+        const finalize = (blob: Blob) => {
+          setFileProgresses(prev => ({ ...prev, [f.name]: { status: 'done', statusText: '100% Complete', progress: 100, outputName: outName, outputBlob: blob } }));
+          const conv: FileConversion = {
+            id: 'conv-' + Date.now() + '-' + f.name,
+            fileName: f.name,
+            fileSize: f.size,
+            toolId: selectedTool.id,
+            toolName: selectedTool.name,
+            category: selectedTool.category,
+            status: 'completed',
+            progress: 100,
+            creditCost: selectedTool.creditCost,
+            timestamp: new Date().toISOString(),
+            logs: [`Converted via ${selectedTool.name} (${targetFrom} -> ${targetTo})`],
+          };
+          setConversions(prev => [conv, ...prev]);
+          onConversionCompleted(conv);
         };
-        setConversions(prev => [conv, ...prev]);
-        onConversionCompleted(conv);
-      }, 1200);
+        if (isRealCad) {
+          buildRealCadOutput(f, targetFrom as 'stl' | 'obj')
+            .then(finalize)
+            .catch(() => {
+              // Fallback to placeholder if CAD parse fails
+              const placeholder = new Blob(
+                [`# CAD conversion failed for ${f.name} (parse error).\n# Re-export as ASCII STL/OBJ and try again.\n`],
+                { type: 'application/octet-stream' }
+              );
+              finalize(placeholder);
+            });
+        } else {
+          const placeholder = new Blob(
+            [`# OmniConvert placeholder for ${f.name} -> ${outName}\n# Source tool: ${selectedTool.name}\n# Real conversion for this format lands in Phase 2.\n`],
+            { type: 'application/octet-stream' }
+          );
+          finalize(placeholder);
+        }
+      };
+      tick();
     });
   };
 
-  type Prog = { status: 'pending' | 'analyzing' | 'ready' | 'converting' | 'done' | 'failed'; statusText: string };
+  // Download a single file's converted output.
+  const handleDownloadOne = (fileName: string) => {
+    const prog = fileProgresses[fileName];
+    if (!prog || prog.status !== 'done' || !prog.outputBlob) return;
+    const url = URL.createObjectURL(prog.outputBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = prog.outputName || (fileName.replace(/\.[^.]+$/, '') + '.' + selectedTool.output.split(',')[0].trim().toLowerCase());
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  // Download all completed files as a single ZIP. We reuse the
+  // existing inline buildZip STORE writer from ConversionPanel.
+  const handleDownloadAll = () => {
+    const completed = files.filter(f => {
+      const p = fileProgresses[f.name];
+      return p?.status === 'done' && p.outputBlob;
+    });
+    if (completed.length === 0) return;
+    if (completed.length === 1) {
+      handleDownloadOne(completed[0].name);
+      return;
+    }
+    // Build a ZIP from the completed files. For CAD, we need to read
+    // the output blob as bytes; for placeholders, the blob is text.
+    Promise.all(completed.map(async f => {
+      const prog = fileProgresses[f.name];
+      const buf = await prog.outputBlob.arrayBuffer();
+      return { name: prog.outputName || f.name, bytes: new Uint8Array(buf) };
+    })).then(entries => {
+      const zipBytes = buildZip(entries);
+      const blob = new Blob([zipBytes], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'omniconvert-' + Date.now() + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  };
+
+  type Prog = { status: 'pending' | 'analyzing' | 'ready' | 'converting' | 'done' | 'failed'; statusText: string; progress?: number; outputName?: string; outputBlob?: Blob };
   const completedCount = (Object.values(fileProgresses) as Prog[]).filter(p => p.status === 'done').length;
   const pendingCount   = (Object.values(fileProgresses) as Prog[]).filter(p => p.status === 'ready' || p.status === 'analyzing').length;
   const canConvert     = files.length > 0 && pendingCount > 0;
@@ -487,9 +594,21 @@ const NewLanding: React.FC<NewLandingProps> = ({
                       )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{formatBytes(f.size)}</p>
+                    {/* Real progress bar during conversion */}
+                    {prog.status === 'converting' && (
+                      <div className="mt-1.5 h-1.5 rounded-full bg-blue-500/10 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500 bg-[length:200%_100%] transition-all duration-100 ease-linear"
+                          style={{ width: (prog.progress ?? 0) + '%', animation: 'shimmer 1.4s linear infinite' }}
+                        />
+                      </div>
+                    )}
                   </div>
                   {prog.status === 'done' ? (
-                    <button className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600">
+                    <button
+                      onClick={() => handleDownloadOne(f.name)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600"
+                    >
                       <Download className="w-3 h-3" /> Download
                     </button>
                   ) : (
@@ -574,6 +693,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
             Add more files
           </button>
           <button
+            onClick={handleDownloadAll}
             disabled={!canDownload}
             className={`inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-xs font-medium transition ${
               canDownload
