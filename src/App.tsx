@@ -76,6 +76,11 @@ export default function App() {
   // a tool, drops a file, or clicks a category — the page collapses to
   // just the ChooseFile section. A "Change tool" button re-opens it.
   const [pickerVisible, setPickerVisible] = useState(true);
+  // Hero copy variant:
+  //   'generic'  — no tool selected, default copy
+  //   'category' — category-locked (e.g. /<category>/), category copy
+  //   'tool'     — specific tool selected, tool copy
+  const [heroVariant, setHeroVariant] = useState<'generic' | 'category' | 'tool'>('generic');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool>(TOOLS[0]); // Default: PDF to Word
   
@@ -221,6 +226,8 @@ export default function App() {
         // file rows + ToolPicker all live in NewLanding.
         setCurrentPage('home');
         setCategoryLocked(false);
+        setPickerVisible(false);
+        setHeroVariant('tool');
       } else {
         setCurrentPage('cad-not-found');
       }
@@ -257,6 +264,8 @@ export default function App() {
           setSelectedTool(entry.tool);
           setCurrentPage('home');
           setCategoryLocked(false);
+          setPickerVisible(false);
+          setHeroVariant('tool');
           return;
         }
       }
@@ -271,6 +280,8 @@ export default function App() {
         setSelectedTool(entry.tool);
         setCurrentPage('home');
         setCategoryLocked(false);
+        setPickerVisible(false);
+        setHeroVariant('tool');
         return;
       }
     }
@@ -471,6 +482,7 @@ export default function App() {
       window.history.pushState({}, '', '/');
       setCategoryLocked(false);
       setPickerVisible(true);
+      setHeroVariant('generic');
       return;
     }
 
@@ -481,6 +493,7 @@ export default function App() {
     setCurrentPage('home');
     setCategoryLocked(true);
     setPickerVisible(false);
+    setHeroVariant('category');
     window.history.pushState({}, '', `/${category.toLowerCase()}/`);
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   };
@@ -699,7 +712,8 @@ export default function App() {
               integrations={integrations}
               categoryLocked={categoryLocked}
               pickerVisible={pickerVisible}
-              onShowPicker={() => setPickerVisible(true)}
+              onShowPicker={() => { setPickerVisible(true); setHeroVariant('generic'); }}
+              heroVariant={heroVariant}
             />
           </div>
         )}

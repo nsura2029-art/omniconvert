@@ -21,7 +21,10 @@ import { User, FileConversion, CloudIntegration } from '../types';
 import { getUser } from '../data/gamification';
 import ToolPicker from './ToolPicker';
 import { colorForFormat, iconLetter } from '../lib/format-colors';
-import { getDescriptionForTool } from '../lib/tool-description';
+import {
+  getDescriptionForTool, getCategoryDescription, getCategoryFormats,
+  getCategoryName, GENERIC_HERO_TITLE, GENERIC_HERO_DESCRIPTION,
+} from '../lib/tool-description';
 import { toolSlug } from '../lib/tool-slug';
 
 interface NewLandingProps {
@@ -39,6 +42,11 @@ interface NewLandingProps {
   // sees only the hero + ChooseFile. A "Change tool" button re-opens.
   pickerVisible?: boolean;
   onShowPicker?: () => void;
+  // Which hero copy to show:
+  //   'generic'  — "Convert Any File" + generic copy
+  //   'category' — "{Category} Converter" + category copy
+  //   'tool'     — "{From} to {To} Converter" + tool copy
+  heroVariant?: 'generic' | 'category' | 'tool';
 }
 
 const formatBytes = (b: number): string => {
@@ -87,6 +95,182 @@ const FormatIcon: React.FC<{ fmt: string; size?: 'sm' | 'md' | 'lg' }> = ({ fmt,
   );
 };
 
+const ChangeToolButton: React.FC<{ onClick?: () => void }> = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-500/20"
+  >
+    <Sliders className="w-3.5 h-3.5" />
+    Change tool
+  </button>
+);
+
+const UpvoteButton: React.FC = () => (
+  <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm">
+    <FileCheck2 className="w-4 h-4" />
+    0 Upvote
+  </button>
+);
+
+const GenericHero: React.FC<{ onShowPicker?: () => void; pickerVisible: boolean }> = ({ onShowPicker, pickerVisible }) => (
+  <>
+    <div className="flex flex-wrap items-center gap-2 mb-3">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
+        <Sparkles className="w-3 h-3" />
+        OMNICONVERT
+      </span>
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+        <ShieldCheck className="w-3 h-3" />
+        BROWSER-SAFE · NO SIGNUP
+      </span>
+    </div>
+    <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex-1 min-w-0">
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
+          {GENERIC_HERO_TITLE}
+        </h1>
+        <p className="mt-3 text-sm md:text-lg text-slate-600 dark:text-slate-400 max-w-3xl">
+          {GENERIC_HERO_DESCRIPTION}
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {!pickerVisible && onShowPicker && <ChangeToolButton onClick={onShowPicker} />}
+        <UpvoteButton />
+      </div>
+    </div>
+    <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+      <div>
+        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Formats</div>
+        <div className="mt-1 font-bold">200+ supported</div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
+        <div className="mt-1 font-bold">100% client-side</div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
+        <div className="mt-1 font-bold">Seconds</div>
+      </div>
+    </div>
+  </>
+);
+
+const CategoryHero: React.FC<{ categoryId: string; onShowPicker?: () => void; pickerVisible: boolean }> = ({ categoryId, onShowPicker, pickerVisible }) => {
+  const catName = getCategoryName(categoryId);
+  const formats = getCategoryFormats(categoryId).slice(0, 4);
+  const description = getCategoryDescription(categoryId);
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
+          <Sparkles className="w-3 h-3" />
+          {categoryId.toUpperCase()} CONVERTER
+        </span>
+        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
+          {categoryId}
+        </span>
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+          <ShieldCheck className="w-3 h-3" />
+          BROWSER-SAFE · NO SIGNUP
+        </span>
+      </div>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            {catName} Converter
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl">
+            {description}
+          </p>
+          {formats.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {formats.map(f => (
+                <span key={f} className="inline-flex items-center font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
+                  {f}
+                </span>
+              ))}
+              <span className="text-[11px] text-slate-500 self-center">+ more</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {!pickerVisible && onShowPicker && <ChangeToolButton onClick={onShowPicker} />}
+          <UpvoteButton />
+        </div>
+      </div>
+      <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Formats</div>
+          <div className="mt-1 font-bold">{formats.length > 0 ? `${formats.length}+ in this category` : 'Multiple formats'}</div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
+          <div className="mt-1 font-bold">100% client-side</div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
+          <div className="mt-1 font-bold">Seconds</div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const ToolHero: React.FC<{ tool: Tool; onShowPicker?: () => void; pickerVisible: boolean }> = ({ tool, onShowPicker, pickerVisible }) => {
+  const from = tool.input.split(',')[0].trim();
+  const to = tool.output.split(',')[0].trim();
+  const description = getDescriptionForTool(tool);
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
+          <Sparkles className="w-3 h-3" />
+          {tool.category.toUpperCase()} CONVERTER
+        </span>
+        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
+          {tool.category}
+        </span>
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+          <ShieldCheck className="w-3 h-3" />
+          BROWSER-SAFE · NO SIGNUP
+        </span>
+      </div>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            {from} to {to} Converter
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl line-clamp-2">
+            {description}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {!pickerVisible && onShowPicker && <ChangeToolButton onClick={onShowPicker} />}
+          <UpvoteButton />
+        </div>
+      </div>
+      <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Source</div>
+          <div className="mt-1 font-bold">{from}</div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Target</div>
+          <div className="mt-1 font-bold">{to}</div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
+          <div className="mt-1 font-bold">100% client-side</div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
+          <div className="mt-1 font-bold">Seconds</div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const NewLanding: React.FC<NewLandingProps> = ({
   currentUser,
   selectedTool,
@@ -97,6 +281,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
   categoryLocked = false,
   pickerVisible = true,
   onShowPicker,
+  heroVariant = 'tool',
 }) => {
   const gamUser = getUser(currentUser);
 
@@ -200,63 +385,23 @@ const NewLanding: React.FC<NewLandingProps> = ({
     <div className="space-y-6 pb-32">
       {/* ─────────────── HERO ─────────────── */}
       <section className="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-6 md:p-8">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
-            <Sparkles className="w-3 h-3" />
-            {selectedTool.category.toUpperCase()} CONVERTER
-          </span>
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
-            {selectedTool.category}
-          </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-            <ShieldCheck className="w-3 h-3" />
-            BROWSER-SAFE · NO SIGNUP
-          </span>
-        </div>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-              {heroFrom} to {heroTo} Online
-            </h1>
-            <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl line-clamp-2">
-              {description}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {/* "Change tool" re-opens the picker when it's been collapsed */}
-            {!pickerVisible && onShowPicker && (
-              <button
-                onClick={onShowPicker}
-                className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-500/20"
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                Change tool
-              </button>
-            )}
-            <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-sm">
-              <FileCheck2 className="w-4 h-4" />
-              0 Upvote
-            </button>
-          </div>
-        </div>
-        <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Source</div>
-            <div className="mt-1 font-bold">{heroFrom}</div>
-          </div>
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Target</div>
-            <div className="mt-1 font-bold">{heroTo}</div>
-          </div>
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
-            <div className="mt-1 font-bold">100% client-side</div>
-          </div>
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
-            <div className="mt-1 font-bold">Seconds</div>
-          </div>
-        </div>
+        {heroVariant === 'generic' && (
+          <GenericHero onShowPicker={onShowPicker} pickerVisible={pickerVisible} />
+        )}
+        {heroVariant === 'category' && (
+          <CategoryHero
+            categoryId={selectedTool.category}
+            onShowPicker={onShowPicker}
+            pickerVisible={pickerVisible}
+          />
+        )}
+        {heroVariant === 'tool' && (
+          <ToolHero
+            tool={selectedTool}
+            onShowPicker={onShowPicker}
+            pickerVisible={pickerVisible}
+          />
+        )}
       </section>
 
       {/* ─────────────── CHOOSEFILES CARD ─────────────── */}
