@@ -1510,6 +1510,7 @@ export default function ConversionPanel({
     const spendResult = spend(cost, 'conversion_spend', {
       description: `Convert ${selectedTool.name} · ${files.length || 1} file(s)`,
       subtype: `${selectedTool.id}`,
+      currentUser,
     });
     if (!spendResult.ok) {
       setIsProcessing(false);

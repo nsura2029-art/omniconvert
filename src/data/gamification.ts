@@ -375,10 +375,22 @@ export interface AwardOptions {
   relatedId?: string;
   subtype?: string;
   silent?: boolean;
+  // Pass the active user (admin/paid/registered) so award/spend can resolve
+  // the right user record. Without this, logged-in users got treated as
+  // 'banned' because the old code always looked up by anonymous session id.
+  currentUser?: { id: string; email: string; name?: string; plan?: string } | null;
 }
 
 export const award = (amount: number, type: TxType, opts: AwardOptions = {}): CreditTransaction | null => {
-  const user = loadUser(getOrCreateSessionId());
+  // Resolve the right user. The old `loadUser(getOrCreateSessionId())` was
+  // a bug — it always pointed at the anonymous session, so admin/paid/
+  // registered users got flagged as banned on their first award/spend.
+  const ctx = resolveTierContext(opts.currentUser);
+  const stored = read<GamificationUser | null>(KEY.user, null);
+  let user = stored && stored.id === ctx.userId ? stored : null;
+  if (!user && opts.currentUser) {
+    user = getOrCreateUser(opts.currentUser);
+  }
   if (!user || user.banned) return null;
   const cfg = TIER_TABLE[user.tier];
   const newBalance = Math.min(cfg.maxCredits, Math.max(0, user.credits + amount));
@@ -408,7 +420,13 @@ export const award = (amount: number, type: TxType, opts: AwardOptions = {}): Cr
 };
 
 export const spend = (amount: number, type: TxType, opts: AwardOptions = {}): { ok: true; tx: CreditTransaction } | { ok: false; reason: 'insufficient' | 'banned' | 'capped' } => {
-  const user = loadUser(getOrCreateSessionId());
+  // Same fix as award(): resolve the right user via currentUser.
+  const ctx = resolveTierContext(opts.currentUser);
+  const stored = read<GamificationUser | null>(KEY.user, null);
+  let user = stored && stored.id === ctx.userId ? stored : null;
+  if (!user && opts.currentUser) {
+    user = getOrCreateUser(opts.currentUser);
+  }
   if (!user) return { ok: false, reason: 'banned' };
   if (user.banned) return { ok: false, reason: 'banned' };
   if (user.credits < amount) return { ok: false, reason: 'insufficient' };
