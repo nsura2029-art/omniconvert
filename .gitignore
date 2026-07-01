@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local preview files (HTML mocks + extracted video frames used for analysis)
+preview/

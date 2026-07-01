@@ -16,9 +16,10 @@ import AdminPanel, { AdminSection } from './pages/admin/AdminPanel';
 import { getOrCreateUser, captureReferralFromUrl } from './data/gamification';
 import FloatingCreditPill from './components/gamification/FloatingCreditPill';
 import OnboardingTour from './components/OnboardingTour';
-import InteractiveHeroSelector from './components/InteractiveHeroSelector';
 import SecurityPage from './components/SecurityPage';
 import SecurityTrustBand from './components/SecurityTrustBand';
+import ChooseFileSection from './components/ChooseFileSection';
+import DynamicHeroText from './components/DynamicHeroText';
 
 const categoryPath = (categoryId: string) => `/${categoryId.toLowerCase()}-converter/`;
 const cadSeoPath = (slug: string) => `/cad/${slug}`;
@@ -67,6 +68,8 @@ export default function App() {
   const [selectedCadSlug, setSelectedCadSlug] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool>(TOOLS[0]); // Default: PDF to Word
+  const [pickedFileName, setPickedFileName] = useState<string | null>(null); // drives DynamicHeroText + SEO swap on home page
+
   
   // Light/Dark Theme: default is light
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -94,17 +97,6 @@ export default function App() {
     totalRevenue: 30,
     conversionsCount: 0
   });
-
-  // State for active Hero Section layout ('cyber' or 'bento'). Default is 'bento'
-  const [activeHeroPreset, setActiveHeroPreset] = useState<'cyber' | 'bento'>(() => {
-    const saved = localStorage.getItem('omni_active_hero_preset');
-    return (saved === 'cyber' || saved === 'bento') ? saved : 'bento';
-  });
-
-  const handleUpdateHeroPreset = (preset: 'cyber' | 'bento') => {
-    setActiveHeroPreset(preset);
-    localStorage.setItem('omni_active_hero_preset', preset);
-  };
 
   // Sync theme to root element
   useEffect(() => {
@@ -585,8 +577,12 @@ export default function App() {
         {currentPage === 'tools' && (
           <div className="space-y-12 animate-fade-in" id="tools-page">
             
-            {/* HERO HEROICS inspired by family.co */}
-            <div className="text-center max-w-4xl mx-auto space-y-4 pt-4 pb-8">
+            {/* STATIC HERO — always-visible brand copy + dynamic overlay below.
+                The dynamic overlay swaps in once a file is picked via the
+                ChooseFileSection below it (driven by `pickedFileName`). The
+                SEO title + meta tags swap simultaneously via
+                DynamicHeroText's useEffect. */}
+            <div className="text-center max-w-4xl mx-auto space-y-4 pt-4 pb-8" id="home-hero-block">
               <span className="text-[10px] uppercase tracking-wider font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
                 🚀 Multi-Format Cloud Transcoder
               </span>
@@ -594,17 +590,66 @@ export default function App() {
                 Any Format. <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">Zero Friction.</span>
               </h1>
               <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                A highly aesthetic, professional sandbox file conversion platform. 
+                A highly aesthetic, professional sandbox file conversion platform.
                 Experience edge-optimized compiling powered by serverless parallel architectures.
               </p>
             </div>
 
-            <InteractiveHeroSelector 
-              selectedTool={selectedTool}
-              onSelectTool={handleSelectTool}
-              activePreset={activeHeroPreset}
-              onPresetChange={handleUpdateHeroPreset}
-            />
+            {/* DYNAMIC HERO OVERLAY — swaps when files are picked.
+                Hidden via opacity-only when no file is picked (so the
+                static hero stays the visible one). Driven by `pickedFileName`. */}
+            {pickedFileName && (
+              <div className="max-w-4xl mx-auto" id="home-dynamic-hero">
+                <DynamicHeroText fileName={pickedFileName} />
+              </div>
+            )}
+
+            {/* CHOSEN WORKSPACE STAGE — the reusable ChooseFileSection is the
+                primary landing-page action. When no files are picked it
+                renders the compact picker; once files are added it renders
+                per-file rows + sticky convert bar pinned to viewport bottom. */}
+            {!limitExceeded && (
+              <ChooseFileSection
+                inputLabel="PDF, DOCX, XLSX, PPTX, PNG, JPG, MP4, ZIP…"
+                outputLabel="PDF, DOCX, DWG, DXF, JPG, MP3…"
+                title="Pick Your Files"
+                subtitle="Convert your files to any format — browser-based, no signup."
+                defaultBulkOutput="PDF"
+                brandColor="#1f4ed8"
+                onFilesAdd={(metas) => {
+                  const first = metas[0];
+                  if (!first) return;
+                  const ext = (first.name.split('.').pop() ?? '').toLowerCase();
+                  const matched = TOOLS.find(t =>
+                    t.input.toLowerCase().split(/[,\s/]+/).includes(ext)
+                  );
+                  if (matched) handleSelectTool(matched);
+                  setPickedFileName(first.name);
+                  try {
+                    localStorage.setItem('omni_pending_files', JSON.stringify(
+                      metas.map(m => ({ name: m.name, size: m.size, type: m.type }))
+                    ));
+                  } catch { /* quota / private mode — no-op */ }
+                }}
+                onFileRemove={() => {
+                  /* If the removed file was the one driving the hero, revert.
+                     We clear pickedFileName when the localStorage stash no
+                     longer contains a file matching the current hero key. */
+                  try {
+                    const stored = JSON.parse(localStorage.getItem('omni_pending_files') || '[]') as Array<{ name: string }>;
+                    if (!pickedFileName || !stored.some(f => f.name === pickedFileName)) {
+                      setPickedFileName(null);
+                    }
+                  } catch {
+                    setPickedFileName(null);
+                  }
+                }}
+                onClearAll={() => {
+                  try { localStorage.removeItem('omni_pending_files'); } catch { /* no-op */ }
+                  setPickedFileName(null);
+                }}
+              />
+            )}
 
             {/* IF LIMIT EXCEEDED WARNING */}
             {limitExceeded && (
