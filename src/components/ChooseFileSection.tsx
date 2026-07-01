@@ -398,120 +398,125 @@ const FileInputRow: React.FC<{
   return (
     <div
       ref={ref}
+      /* Stable 3-zone grid: left-zone (flex) · center-zone (auto) ·
+         right-zone (flex). The center zone is anchored via
+         justify-self:center so the TO trigger lands at the row's
+         geometric center regardless of the variable widths of the
+         left and right zones (filename length, status pill width,
+         size column, etc.). */
       className={cls(
-        'relative flex items-center gap-2.5 rounded-xl border bg-white px-3 py-2.5',
+        'grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 rounded-xl border bg-white px-3 py-2.5',
         'min-h-[56px] text-xs',
         showConverted ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200',
       )}
     >
-      {/* Input icon: package / box */}
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-50 text-amber-700">
-        <PackageOpen className="h-4 w-4" />
-      </span>
+      {/* ── LEFT ZONE: icon + filename + ext chip + status pill ── */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        {/* Input icon: package / box */}
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-50 text-amber-700">
+          <PackageOpen className="h-4 w-4" />
+        </span>
 
-      {/* Filename */}
-      <span
-        className="truncate font-extrabold text-slate-800 max-w-[220px] shrink"
-        title={file.name}
-      >
-        {file.name}
-      </span>
-
-      {/* Input ext chip */}
-      <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wide shrink-0">
-        {extOf(file.name)}
-      </span>
-
-      {/* Status pill */}
-      <StatusPill status={file.status} text={statusText} />
-
-      {/* Spacer #1 — pushes the TO picker toward the row's center */}
-      <span className="flex-1" />
-
-      {/* TO label */}
-      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 shrink-0">
-        TO
-      </span>
-
-      {/* Target dropdown — pops up anchored RIGHT-aligned with the trigger
-          so it never bleeds off-screen. Two spacers (#1 above, #2 below)
-          keep the trigger centered in the row. */}
-      <div className="relative shrink-0">
-        <button
-          type="button"
-          onClick={() => !isLocked && setOpen(o => !o)}
-          disabled={isLocked}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          className={cls(
-            'flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-extrabold text-slate-800',
-            isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:border-blue-300 hover:text-blue-600',
-          )}
+        {/* Filename */}
+        <span
+          className="truncate font-extrabold text-slate-800 min-w-0"
+          title={file.name}
         >
-          <span>{file.output}</span>
-          <ChevronDown className="h-3 w-3 text-slate-500" />
-        </button>
-        <TargetDropdown
-          open={open}
-          value={file.output}
-          onPick={(v) => onChangeOutput(file.id, v)}
-          onClose={() => setOpen(false)}
-          catalog={catalog}
-        />
+          {file.name}
+        </span>
+
+        {/* Input ext chip */}
+        <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wide shrink-0 whitespace-nowrap">
+          {extOf(file.name)}
+        </span>
+
+        {/* Status pill */}
+        <StatusPill status={file.status} text={statusText} />
       </div>
 
-      {/* Spacer #2 — balances Spacer #1 to keep the TO cluster centered */}
-      <span className="flex-1" />
-
-      {/* Size */}
-      <span className="font-mono text-[10px] tabular-nums text-slate-400 min-w-[50px] text-right shrink-0">
-        {formatBytes(file.size)}
-      </span>
-
-      {/* Right-rail action: Converted pill OR per-row Convert OR per-row Download */}
-      {showConverted ? (
-        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-700 shrink-0 border border-emerald-200">
-          Converted
+      {/* ── CENTER ZONE: TO label + target dropdown. justify-self:center
+              places this cluster at the geometric middle of the row. ── */}
+      <div className="flex items-center gap-1.5 justify-self-center">
+        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 shrink-0">
+          TO
         </span>
-      ) : showDownload ? (
-        <button
-          type="button"
-          onClick={() => onDownload(file.id)}
-          className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-[11px] font-extrabold text-white shrink-0 hover:bg-emerald-700"
-        >
-          <Download className="h-3 w-3" /> Download
-        </button>
-      ) : showConvert ? (
-        <button
-          type="button"
-          onClick={() => onConvertOne(file.id)}
-          className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[11px] font-extrabold shrink-0"
-          style={{ backgroundColor: brandColor, color: 'white' }}
-        >
-          <Play className="h-3 w-3" fill="currentColor" /> Convert
-        </button>
-      ) : (
-        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-600 shrink-0 border border-slate-200">
-          Pending
-        </span>
-      )}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => !isLocked && setOpen(o => !o)}
+            disabled={isLocked}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            className={cls(
+              'flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-extrabold text-slate-800',
+              isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:border-blue-300 hover:text-blue-600',
+            )}
+          >
+            <span>{file.output}</span>
+            <ChevronDown className="h-3 w-3 text-slate-500" />
+          </button>
+          <TargetDropdown
+            open={open}
+            value={file.output}
+            onPick={(v) => onChangeOutput(file.id, v)}
+            onClose={() => setOpen(false)}
+            catalog={catalog}
+          />
+        </div>
+      </div>
 
-      {/* Trash */}
-      {file.status !== 'done' && (
-        <button
-          type="button"
-          onClick={() => onRemove(file.id)}
-          aria-label={`Remove ${file.name}`}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-rose-600"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      )}
-      {file.status === 'done' && (
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center text-slate-300">
-          <Check className="h-3.5 w-3.5" />
+      {/* ── RIGHT ZONE: size + action + trash ── */}
+      <div className="flex items-center justify-end gap-2 min-w-0">
+        {/* Size */}
+        <span className="font-mono text-[10px] tabular-nums text-slate-400 text-right shrink-0 min-w-[56px]">
+          {formatBytes(file.size)}
         </span>
-      )}
+
+        {/* Right-rail action: Converted pill OR per-row Convert OR per-row Download */}
+        {showConverted ? (
+          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-700 shrink-0 border border-emerald-200 whitespace-nowrap">
+            Converted
+          </span>
+        ) : showDownload ? (
+          <button
+            type="button"
+            onClick={() => onDownload(file.id)}
+            className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-[11px] font-extrabold text-white shrink-0 hover:bg-emerald-700 whitespace-nowrap"
+          >
+            <Download className="h-3 w-3" /> Download
+          </button>
+        ) : showConvert ? (
+          <button
+            type="button"
+            onClick={() => onConvertOne(file.id)}
+            className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[11px] font-extrabold shrink-0 whitespace-nowrap"
+            style={{ backgroundColor: brandColor, color: 'white' }}
+          >
+            <Play className="h-3 w-3" fill="currentColor" /> Convert
+          </button>
+        ) : (
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-600 shrink-0 border border-slate-200 whitespace-nowrap">
+            Pending
+          </span>
+        )}
+
+        {/* Trash */}
+        {file.status !== 'done' && (
+          <button
+            type="button"
+            onClick={() => onRemove(file.id)}
+            aria-label={`Remove ${file.name}`}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {file.status === 'done' && (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-slate-300">
+            <Check className="h-3.5 w-3.5" />
+          </span>
+        )}
+      </div>
     </div>
   );
 };
@@ -530,40 +535,55 @@ const FileOutputRow: React.FC<{
 }> = ({ file, onDownload, onRemove }) => {
   if (file.status !== 'done' || !file.outputName) return null;
   const outSize = file.outputBlob?.size ?? file.size;
+  /* Same 3-zone grid as the input row so columns line up vertically:
+     left (icon + name + ext + status), center (acts as spacer matching
+     the input row's TO cluster), right (size + Download + trash).
+     The output row is wrapped in ml-10 + border-l-2 emerald by its
+     parent so it visually "hangs from" the input row. */
   return (
-    <div className="relative flex items-center gap-2.5 rounded-xl border border-emerald-200/70 bg-emerald-50/40 px-3 py-2.5 min-h-[56px] text-xs">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
-        <Check className="h-4 w-4" />
-      </span>
-      <span
-        className="truncate font-extrabold text-slate-800 max-w-[220px] shrink"
-        title={file.outputName}
-      >
-        {file.outputName}
-      </span>
-      <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-extrabold text-blue-700 uppercase tracking-wide shrink-0">
-        {extOf(file.outputName)}
-      </span>
-      <StatusPill status="done" text="DONE" />
-      <span className="flex-1" />
-      <span className="font-mono text-[10px] tabular-nums text-slate-400 min-w-[50px] text-right shrink-0">
-        {formatBytes(outSize)}
-      </span>
-      <button
-        type="button"
-        onClick={() => onDownload(file.id)}
-        className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-[11px] font-extrabold text-white shrink-0 hover:bg-emerald-700"
-      >
-        <Download className="h-3 w-3" /> Download
-      </button>
-      <button
-        type="button"
-        onClick={() => onRemove(file.id)}
-        aria-label={`Remove ${file.outputName}`}
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 rounded-xl border border-emerald-200/70 bg-emerald-50/40 px-3 py-2.5 min-h-[56px] text-xs">
+      {/* LEFT ZONE: ✓ icon + output filename + ext chip + DONE pill */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
+          <Check className="h-4 w-4" />
+        </span>
+        <span
+          className="truncate font-extrabold text-slate-800 min-w-0"
+          title={file.outputName}
+        >
+          {file.outputName}
+        </span>
+        <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-extrabold text-blue-700 uppercase tracking-wide shrink-0 whitespace-nowrap">
+          {extOf(file.outputName)}
+        </span>
+        <StatusPill status="done" text="DONE" />
+      </div>
+
+      {/* CENTER ZONE: spacer — keeps the right cluster pinned to the
+          same horizontal position as the input row's right cluster. */}
+      <div className="justify-self-end" />
+
+      {/* RIGHT ZONE: size + Download + trash */}
+      <div className="flex items-center justify-end gap-2 min-w-0">
+        <span className="font-mono text-[10px] tabular-nums text-slate-400 text-right shrink-0 min-w-[56px]">
+          {formatBytes(outSize)}
+        </span>
+        <button
+          type="button"
+          onClick={() => onDownload(file.id)}
+          className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-[11px] font-extrabold text-white shrink-0 hover:bg-emerald-700 whitespace-nowrap"
+        >
+          <Download className="h-3 w-3" /> Download
+        </button>
+        <button
+          type="button"
+          onClick={() => onRemove(file.id)}
+          aria-label={`Remove ${file.outputName}`}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 };
@@ -1380,7 +1400,10 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-col gap-1.5"
+                /* `relative` so the connector vertical line on the left
+                   can be positioned absolutely. The line only runs while
+                   the pair has an output row (or progress rail) below. */
+                className="relative flex flex-col gap-1.5"
               >
                 <div id={`fr-${f.id}`}>
                   <FileInputRow
@@ -1394,8 +1417,11 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
                     onConvertOne={convertOne}
                   />
                 </div>
+
+                {/* Progress rail (mid-conversion). Sits flush left to align
+                    with the input row's icon column. */}
                 {(f.status === 'analyzing' || f.status === 'loading_libs' || f.status === 'converting') && (
-                  <div className="h-1 overflow-hidden rounded-full bg-slate-100">
+                  <div className="ml-11 mr-3 h-1 overflow-hidden rounded-full bg-slate-100">
                     <motion.div
                       className="h-full bg-blue-500"
                       animate={{ width: `${f.progress}%` }}
@@ -1403,17 +1429,41 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
                     />
                   </div>
                 )}
+
+                {/* Output row — visually "derives from" the input row.
+                    Indented by ml-11 to align under the filename; a thin
+                    emerald left rail marks it as a derived result. The
+                    connector vertical line (rendered above) bridges the
+                    input row's icon column to the output row's icon. */}
                 <AnimatePresence>
                   {f.status === 'done' && (
                     <motion.div
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.18 }}
+                      className="relative ml-11 border-l-2 border-emerald-300 pl-3"
                     >
+                      {/* small "↓ converted to" chevron connector */}
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -top-3 -left-px h-3 w-3 rounded-full bg-white border border-emerald-300 flex items-center justify-center"
+                      >
+                        <span className="block h-1 w-1 rotate-45 border-r border-b border-emerald-400 -translate-y-[1px]" />
+                      </span>
                       <FileOutputRow file={f} onDownload={downloadOne} onRemove={removeFile} />
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Connector vertical line — bridges the gap between the
+                    input row's icon and the output row. Renders only
+                    when the row has progress or an output. */}
+                {(f.status === 'analyzing' || f.status === 'loading_libs' || f.status === 'converting' || f.status === 'done') && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-[19px] top-[56px] bottom-0 w-px bg-gradient-to-b from-emerald-300/60 to-transparent"
+                  />
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
