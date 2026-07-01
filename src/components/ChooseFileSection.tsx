@@ -46,7 +46,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   AlertTriangle, FolderOpen, Link as LinkIcon, Lock, X,
   Check, Plus, Trash2, Download, Play, Loader2,
-  PackageOpen, ChevronDown,
+  PackageOpen, ChevronDown, ChevronUp, Search,
 } from 'lucide-react';
 import {
   OUTPUT_CATALOG, type OutputOption,
@@ -280,6 +280,7 @@ const TargetDropdown: React.FC<{
   anchor?: HTMLElement | null;
 }> = ({ open, value, onPick, onClose, catalog }) => {
   const [activeCat, setActiveCat] = useState<string>(catalog[0]?.category ?? 'Documents');
+  const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
   // close on outside click / escape
@@ -301,55 +302,131 @@ const TargetDropdown: React.FC<{
   }, [open, onClose]);
 
   if (!open) return null;
-  const active = catalog.find(c => c.category === activeCat) ?? catalog[0];
+
+  /* Search filters by category name OR by an extension string in the
+     active category. When the user types, fall back to showing matches
+     from any category (a flat-search across the whole catalog). */
+  const flatResults = (() => {
+    if (!search.trim()) return null;
+    const q = search.trim().toLowerCase();
+    const hits: Array<{ category: string; extensions: string[] }> = [];
+    catalog.forEach(c => {
+      const cMatch = c.category.toLowerCase().includes(q);
+      const eMatches = c.extensions.filter(e => e.toLowerCase().includes(q));
+      if (cMatch || eMatches.length > 0) {
+        hits.push({
+          category: c.category,
+          extensions: cMatch && eMatches.length === 0 ? c.extensions : eMatches,
+        });
+      }
+    });
+    return hits.length > 0 ? hits : null;
+  })();
+
+  const renderPills = (extensions: string[]) => (
+    <>
+      {extensions.map(ext => (
+        <button
+          key={ext}
+          type="button"
+          onClick={() => { onPick(ext); onClose(); }}
+          className={cls(
+            'inline-flex items-center rounded-md border px-3 py-1 text-[11px] font-extrabold whitespace-nowrap transition-colors',
+            ext === value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600',
+          )}
+        >
+          {ext}
+        </button>
+      ))}
+    </>
+  );
 
   return (
     <div
       ref={ref}
       role="dialog"
       aria-label="Choose output format"
-      className="absolute z-40 mt-1 w-[280px] rounded-xl border border-slate-200 bg-white shadow-xl"
+      className="absolute z-40 mt-1 w-[420px] rounded-xl border border-slate-200 bg-white shadow-2xl"
       style={{ right: 0, top: 'calc(100% + 4px)' }}
     >
-      <div className="grid grid-cols-[100px_1fr] gap-0">
-        <div className="border-r border-slate-100 bg-slate-50/80 rounded-l-xl p-1.5 flex flex-col">
-          {catalog.map(c => (
-            <button
-              key={c.category}
-              type="button"
-              /* Hover (mouseover) swaps the active category — no click
-                 required. Click is preserved for keyboard / touch users. */
-              onMouseEnter={() => setActiveCat(c.category)}
-              onFocus={() => setActiveCat(c.category)}
-              onClick={() => setActiveCat(c.category)}
-              className={cls(
-                'flex items-center justify-between gap-1 rounded-lg px-2 py-1.5 text-left text-[11px] font-bold',
-                c.category === activeCat ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
-              )}
-            >
-              <span className="truncate">{c.category}</span>
-              <span className="opacity-70 text-[10px]">{'>'}</span>
-            </button>
-          ))}
-        </div>
-        <div className="p-2 grid grid-cols-3 gap-1.5">
-          {active?.extensions.map(ext => (
-            <button
-              key={ext}
-              type="button"
-              onClick={() => { onPick(ext); onClose(); }}
-              className={cls(
-                'rounded-md border px-2 py-1.5 text-center text-[11px] font-extrabold',
-                ext === value
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600',
-              )}
-            >
-              {ext}
-            </button>
-          ))}
+      {/* Header: "Select Format ⌄" + close */}
+      <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+        <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600">
+          Select Format
+          <ChevronDown className="h-4 w-4" />
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close format picker"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Search bar */}
+      <div className="border-b border-slate-100 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-md bg-slate-50 border border-slate-100 px-2 py-1.5">
+          <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search Format"
+            className="flex-1 bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
+          />
         </div>
       </div>
+
+      {/* Two-column body: categories (left) + format pills (right). When
+          the user types in the search, we replace the right pane with a
+          flat list of matches (categories with their matches), or show
+          the empty state. */}
+      {flatResults ? (
+        <div className="max-h-72 overflow-y-auto p-2 flex flex-col gap-2">
+          {flatResults.map(group => (
+            <div key={group.category} className="flex flex-col gap-1">
+              <span className="px-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                {group.category}
+              </span>
+              <div className="flex flex-wrap gap-1.5">{renderPills(group.extensions)}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-[140px_1fr] max-h-72">
+          {/* Left column: category tabs. Hover swaps the active category. */}
+          <div className="border-r border-slate-100 overflow-y-auto p-1.5">
+            {catalog.map(c => (
+              <button
+                key={c.category}
+                type="button"
+                onMouseEnter={() => setActiveCat(c.category)}
+                onFocus={() => setActiveCat(c.category)}
+                onClick={() => setActiveCat(c.category)}
+                className={cls(
+                  'flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-1.5 text-left text-sm font-bold transition-colors',
+                  c.category === activeCat ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
+                )}
+              >
+                <span className="truncate">{c.category}</span>
+                <ChevronDown className="-rotate-90 h-3.5 w-3.5 opacity-70" />
+              </button>
+            ))}
+          </div>
+
+          {/* Right column: format pills for the active category */}
+          <div className="overflow-y-auto p-2 flex flex-wrap gap-1.5 content-start">
+            {(() => {
+              const active = catalog.find(c => c.category === activeCat) ?? catalog[0];
+              return renderPills(active?.extensions ?? []);
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -370,7 +447,8 @@ const FileInputRow: React.FC<{
   onChangeOutput: (id: string, ext: string) => void;
   onRemove: (id: string) => void;
   onDownload: (id: string) => void;
-}> = ({ file, catalog, brandColor, isLocked, onChangeOutput, onRemove, onDownload }) => {
+  onConvertOne: (id: string) => void;
+}> = ({ file, catalog, brandColor, isLocked, onChangeOutput, onRemove, onDownload, onConvertOne }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -381,6 +459,11 @@ const FileInputRow: React.FC<{
 
   const showDownload = file.status === 'done';
   const showConverted = file.status === 'done';
+  /* Per-row Convert button shows for any row the user can manually fire.
+     Pending → can fire. Mid-conversion → disabled (button is now Converting).
+     Done → can re-fire with current target. Failed → can retry. */
+  const canPerRowConvert = file.status === 'pending' || file.status === 'done' || file.status === 'failed';
+  const showPerRowConvert = canPerRowConvert;
 
   const statusText = useMemo(() => {
     switch (file.status) {
@@ -470,11 +553,22 @@ const FileInputRow: React.FC<{
           {formatBytes(file.size)}
         </span>
 
-        {/* Right-rail action: Download (only when done). The per-row
-            ▶ Convert button was removed — conversion now auto-fires when
-            the file is added or its TO target changes. The sticky-bar
-            Convert button remains as a manual "Reconvert all" override. */}
-        {showDownload ? (
+        {/* Right-rail action: per-row Convert (manual trigger) when pending /
+            mid / failed; Download when done. The per-row Convert button is
+            the primary manual start action — bulk Convert lives in the
+            sticky bar for batch operation. */}
+        {showPerRowConvert && file.status !== 'done' ? (
+          <button
+            type="button"
+            onClick={() => onConvertOne(file.id)}
+            disabled={file.status === 'analyzing' || file.status === 'loading_libs' || file.status === 'converting'}
+            className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[11px] font-extrabold shrink-0 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ backgroundColor: brandColor, color: 'white' }}
+          >
+            <Play className="h-3 w-3" fill="currentColor" />
+            {file.status === 'analyzing' || file.status === 'loading_libs' || file.status === 'converting' ? 'Converting…' : (file.status === 'failed' ? 'Retry' : '▶ Convert')}
+          </button>
+        ) : showDownload ? (
           <button
             type="button"
             onClick={() => onDownload(file.id)}
@@ -693,6 +787,7 @@ const BulkTargetDropdown: React.FC<{
   catalog: ReadonlyArray<OutputOption>;
 }> = ({ open, value, onPick, onClose, catalog }) => {
   const [activeCat, setActiveCat] = useState<string>(catalog[0]?.category ?? 'Documents');
+  const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -713,54 +808,123 @@ const BulkTargetDropdown: React.FC<{
   }, [open, onClose]);
 
   if (!open) return null;
-  const active = catalog.find(c => c.category === activeCat) ?? catalog[0];
+
+  const flatResults = (() => {
+    if (!search.trim()) return null;
+    const q = search.trim().toLowerCase();
+    const hits: Array<{ category: string; extensions: string[] }> = [];
+    catalog.forEach(c => {
+      const cMatch = c.category.toLowerCase().includes(q);
+      const eMatches = c.extensions.filter(e => e.toLowerCase().includes(q));
+      if (cMatch || eMatches.length > 0) {
+        hits.push({
+          category: c.category,
+          extensions: cMatch && eMatches.length === 0 ? c.extensions : eMatches,
+        });
+      }
+    });
+    return hits.length > 0 ? hits : null;
+  })();
+
+  const renderPills = (extensions: string[]) => (
+    <>
+      {extensions.map(ext => (
+        <button
+          key={ext}
+          type="button"
+          onClick={() => { onPick(ext); onClose(); }}
+          className={cls(
+            'inline-flex items-center rounded-md border px-3 py-1 text-[11px] font-extrabold whitespace-nowrap transition-colors',
+            ext === value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600',
+          )}
+        >
+          {ext}
+        </button>
+      ))}
+    </>
+  );
 
   return (
     <div
       ref={ref}
       role="dialog"
       aria-label="Choose default output format for all files"
-      className="absolute z-40 mb-1 w-[280px] rounded-xl border border-slate-200 bg-white shadow-xl bottom-full"
+      /* opens ABOVE the sticky bar (mb-1 / bottom-full) so it doesn't
+         get clipped by the viewport */
+      className="absolute z-40 mb-1 w-[420px] rounded-xl border border-slate-200 bg-white shadow-2xl bottom-full"
       style={{ left: 0 }}
     >
-      <div className="grid grid-cols-[100px_1fr] gap-0">
-        <div className="border-r border-slate-100 bg-slate-50/80 rounded-l-xl p-1.5 flex flex-col">
-          {catalog.map(c => (
-            <button
-              key={c.category}
-              type="button"
-              /* Hover swaps the active category — no click required. */
-              onMouseEnter={() => setActiveCat(c.category)}
-              onFocus={() => setActiveCat(c.category)}
-              onClick={() => setActiveCat(c.category)}
-              className={cls(
-                'flex items-center justify-between gap-1 rounded-lg px-2 py-1.5 text-left text-[11px] font-bold',
-                c.category === activeCat ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
-              )}
-            >
-              <span className="truncate">{c.category}</span>
-              <span className="opacity-70 text-[10px]">{'>'}</span>
-            </button>
-          ))}
-        </div>
-        <div className="p-2 grid grid-cols-3 gap-1.5">
-          {active?.extensions.map(ext => (
-            <button
-              key={ext}
-              type="button"
-              onClick={() => { onPick(ext); onClose(); }}
-              className={cls(
-                'rounded-md border px-2 py-1.5 text-center text-[11px] font-extrabold',
-                ext === value
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600',
-              )}
-            >
-              {ext}
-            </button>
-          ))}
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+        <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600">
+          Select Format
+          <ChevronUp className="h-4 w-4" />
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close format picker"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="border-b border-slate-100 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-md bg-slate-50 border border-slate-100 px-2 py-1.5">
+          <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search Format"
+            className="flex-1 bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400"
+          />
         </div>
       </div>
+
+      {flatResults ? (
+        <div className="max-h-72 overflow-y-auto p-2 flex flex-col gap-2">
+          {flatResults.map(group => (
+            <div key={group.category} className="flex flex-col gap-1">
+              <span className="px-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                {group.category}
+              </span>
+              <div className="flex flex-wrap gap-1.5">{renderPills(group.extensions)}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-[140px_1fr] max-h-72">
+          <div className="border-r border-slate-100 overflow-y-auto p-1.5">
+            {catalog.map(c => (
+              <button
+                key={c.category}
+                type="button"
+                onMouseEnter={() => setActiveCat(c.category)}
+                onFocus={() => setActiveCat(c.category)}
+                onClick={() => setActiveCat(c.category)}
+                className={cls(
+                  'flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-1.5 text-left text-sm font-bold transition-colors',
+                  c.category === activeCat ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
+                )}
+              >
+                <span className="truncate">{c.category}</span>
+                <ChevronDown className="-rotate-90 h-3.5 w-3.5 opacity-70" />
+              </button>
+            ))}
+          </div>
+          <div className="overflow-y-auto p-2 flex flex-wrap gap-1.5 content-start">
+            {(() => {
+              const active = catalog.find(c => c.category === activeCat) ?? catalog[0];
+              return renderPills(active?.extensions ?? []);
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1088,52 +1252,6 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
   // per-row conversion state — set when the user clicks Convert
   const conversionTimersRef = useRef<Map<string, number[]>>(new Map());
 
-  /* ── Auto-convert scheduler ──
-   *
-   * One shared debounce timer keeps a Set of file ids that need conversion.
-   * Every trigger (file added, per-row TO changed, bulk TO changed) adds
-   * ids to the Set and (re)schedules a 400ms debounced run. This ensures:
-   *   • a 3-file multi-pick fires ONE batch, not three sequential runs
-   *   • rapid TO-clicks during a sweep don't fire 5 conversions
-   *   • the always-at-end choice wins when the user is mid-hover-sweep
-   *
-   * Declared BEFORE the callbacks that reference it (addFiles /
-   * changePerFileOutput / changeBulkOutput) so the closure can capture
-   * it cleanly. The body only references setFiles via the ref'd
-   * closure-free `filesRef` so we don't need it in the dep list.
-   */
-  const AUTO_CONVERT_DELAY_MS = 400;
-  const schedulerRef = useRef<{ timer: number | null; affected: Set<string> }>({ timer: null, affected: new Set() });
-
-  /* Latest files accessible from inside the scheduler's setTimeout. */
-  const filesRef = useRef<FileMeta[]>([]);
-  useEffect(() => { filesRef.current = files; }, [files]);
-
-  /** Schedule conversions for the given file ids. Idempotent — repeated
-   *  calls within the debounce window accumulate ids rather than firing
-   *  one-shot runs. */
-  const scheduleAutoConvert = useCallback((ids: string[]) => {
-    const s = schedulerRef.current;
-    ids.forEach(id => s.affected.add(id));
-    if (s.timer !== null) window.clearTimeout(s.timer);
-    s.timer = window.setTimeout(() => {
-      const idsToConvert = Array.from(s.affected);
-      s.affected.clear();
-      s.timer = null;
-      idsToConvert.forEach(id => {
-        const f = filesRef.current.find(x => x.id === id);
-        if (!f) return;
-        runSimulatedConversion(id);
-      });
-    }, AUTO_CONVERT_DELAY_MS);
-  }, []);
-
-  /* Cancel any pending scheduler debounce when the component unmounts. */
-  useEffect(() => () => {
-    const t = schedulerRef.current.timer;
-    if (t !== null) window.clearTimeout(t);
-  }, []);
-
   /* ── derived ── */
   const visibleCatalog: ReadonlyArray<OutputOption> = useMemo(() => {
     // Phase 1: expose everything; could be narrowed per tool.
@@ -1148,12 +1266,6 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
     setFiles(prev => {
       const existing = new Set(prev.map(f => `${f.name}::${f.size}`));
       const fresh = metas.filter(m => !existing.has(`${m.name}::${m.size}`));
-      // Auto-convert the FRESH picks only (dedup-aware). Calling
-      // scheduleAutoConvert inside the state updater is safe because
-      // it just queues a setTimeout — no setState, no React warning.
-      if (fresh.length > 0) {
-        scheduleAutoConvert(fresh.map(m => m.id));
-      }
       // If the bulk output is still the default and there are no rows,
       // adopt the freshly-added file's suggested output so the sticky
       // bar stays meaningful.
@@ -1163,7 +1275,10 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
       return [...prev, ...fresh];
     });
     onFilesAdd?.(metas);
-  }, [onFilesAdd, scheduleAutoConvert]);
+    /* NO auto-convert — user must explicitly click Convert. The fresh
+     * rows land in `pending` state and sit idle until the user picks
+     * a TO target (or accepts the default) and clicks Convert. */
+  }, [onFilesAdd]);
 
   const removeFile = useCallback((id: string) => {
     // Cancel any pending timers for this row
@@ -1185,28 +1300,45 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
 
   const changeBulkOutput = useCallback((v: string) => {
     setBulkOutput(v);
-    // When bulk target changes, apply to all rows that haven't been
-    // overridden (i.e. all rows, since Phase 1 has no per-row override UI yet
-    // — the Target dropdown stays available but the bulk change takes
-    // precedence for synced state).
-    let allIds: string[] = [];
-    setFiles(prev => {
-      allIds = prev.map(f => f.id);
-      return prev.map(f => ({ ...f, output: v }));
-    });
+    // Apply to all rows + wipe any stale outputs (mirror of
+    // changePerFileOutput's behavior at scale).
+    setFiles(prev => prev.map(f => {
+      if (f.status !== 'done') return { ...f, output: v };
+      if (f.output === v)   return f;
+      return {
+        ...f,
+        output: v,
+        status: 'pending' as FileStatus,
+        statusText: 'Pending',
+        progress: 0,
+        outputName: undefined,
+        outputBlob: undefined,
+      };
+    }));
     onBulkOutputChange?.(v);
-    /* Auto-convert every row with the new bulk target. The scheduler
-     * dedupes ids so per-row TO changes fired in the same window will
-     * collapse into a single batch run per file. */
-    if (allIds.length > 0) scheduleAutoConvert(allIds);
-  }, [onBulkOutputChange, scheduleAutoConvert]);
+  }, [onBulkOutputChange]);
 
   const changePerFileOutput = useCallback((id: string, ext: string) => {
-    setFiles(prev => prev.map(f => f.id === id ? { ...f, output: ext } : f));
+    setFiles(prev => prev.map(f => {
+      if (f.id !== id) return f;
+      /* If the row was Done with a different target, the existing output
+       * is now stale. Wipe it + revert to pending so the user can click
+       * Convert to re-run with the new target. */
+      if (f.status === 'done' && f.output !== ext) {
+        return {
+          ...f,
+          output: ext,
+          status: 'pending' as FileStatus,
+          statusText: 'Pending',
+          progress: 0,
+          outputName: undefined,
+          outputBlob: undefined,
+        };
+      }
+      return { ...f, output: ext };
+    }));
     onPerFileOutputChange?.(id, ext);
-    /* Auto-convert this row with the new target. */
-    scheduleAutoConvert([id]);
-  }, [onPerFileOutputChange, scheduleAutoConvert]);
+  }, [onPerFileOutputChange]);
 
   /* ── Phase 1: simulate a conversion cycle ── */
 
@@ -1491,6 +1623,7 @@ const ChooseFileSection = forwardRef<ChooseFileSectionHandle, ChooseFileSectionP
                     onChangeOutput={changePerFileOutput}
                     onRemove={removeFile}
                     onDownload={downloadOne}
+                    onConvertOne={convertOne}
                   />
                 </div>
 
