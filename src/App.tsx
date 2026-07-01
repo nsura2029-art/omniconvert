@@ -560,8 +560,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-transparent text-zinc-800 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-white antialiased transition-colors duration-300" id="omnicovert-saas-root">
-      <div className="mesh-bg"></div>
-      
+      {/* mesh-bg removed — page uses browser default white */}
+
       {/* CLERK STYLE HEADER */}
       <Navbar 
         currentUser={currentUser}

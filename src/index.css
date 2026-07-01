@@ -46,7 +46,7 @@
   }
 }
 :root {
-  --bg-main: #fbfaf7;
+  --bg-main: #ffffff;
   --text-main: #0f172a;
   --text-secondary: #64748b;
   --glass-bg: rgba(255, 255, 255, 0.78);
@@ -57,14 +57,11 @@
   --input-bg: rgba(255, 255, 255, 0.88);
   --shadow-color: rgba(15, 23, 42, 0.08);
   --border-color: rgba(226, 232, 240, 0.95);
-  --mesh-gradient: 
-    radial-gradient(at 8% 0%, rgba(219, 234, 254, 0.76) 0, transparent 42%), 
-    radial-gradient(at 84% 2%, rgba(204, 251, 241, 0.62) 0, transparent 36%), 
-    radial-gradient(at 52% 100%, rgba(254, 243, 199, 0.5) 0, transparent 42%);
+  --mesh-gradient: none;
 }
 
 .dark {
-  --bg-main: #0b1220;
+  --bg-main: #ffffff;
   --text-main: #f8fafc;
   --text-secondary: #a5b4c8;
   --glass-bg: rgba(15, 23, 42, 0.7);
@@ -75,10 +72,7 @@
   --input-bg: rgba(15, 23, 42, 0.7);
   --shadow-color: rgba(0, 0, 0, 0.48);
   --border-color: rgba(148, 163, 184, 0.18);
-  --mesh-gradient: 
-    radial-gradient(at 8% 0%, rgba(37, 99, 235, 0.24) 0, transparent 44%), 
-    radial-gradient(at 82% 0%, rgba(20, 184, 166, 0.2) 0, transparent 38%), 
-    radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.1) 0, transparent 42%);
+  --mesh-gradient: none;
 }
 
 /* Light-mode normalization for generated dark-first panels. */
@@ -147,18 +141,9 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Background mesh gradients */
+/* Background mesh gradient (disabled — page uses browser default white) */
 .mesh-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -10;
-  background-color: var(--bg-main);
-  background-image: var(--mesh-gradient);
-  background-attachment: fixed;
-  transition: background-color 0.3s ease, background-image 0.3s ease;
+  display: none;
 }
 
 /* Frosted glass utilities */
