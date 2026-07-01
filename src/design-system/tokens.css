@@ -1,0 +1,266 @@
+/* ============================================================================
+ * OmniConvert Design System — Tokens
+ *
+ * Single source of truth for all visual decisions in the product.
+ * Inspired by family.co's content-first design language: cream backgrounds,
+ * generous whitespace, restrained color, subtle elevation.
+ *
+ * Token layers:
+ *   1. Primitives (raw color/spacing/duration values) — _d prefix
+ *   2. Semantic (purpose-bound: --color-bg, --color-fg-primary, …) — _s prefix
+ *   3. Component (used in a specific component: --btn-primary-bg, …) — kept inline
+ *
+ * The semantic layer is what components consume. Primitives are internal —
+ * do not reach for them directly from JSX.
+ *
+ * Theme:
+ *   - Light is the format-OS default. family.co lives mostly in light mode.
+ *   - Dark is supported via .dark class on the root.
+ *
+ * Sync: tailwind.config + index.css read these via @theme and var(--*).
+ * ========================================================================== */
+
+:root {
+  /* ── PRIMITIVES — colors (raw) ───────────────────────────────────────── */
+  /* Neutrals — warm, cream-tinted (family.co signature) */
+  --d-ink-50:  #ffffff;
+  --d-ink-75:  #fbfaf7;  /* canvas — match family.co bg */
+  --d-ink-100: #f5f4ef;
+  --d-ink-150: #eeece5;
+  --d-ink-200: #e2e0d8;
+  --d-ink-300: #c8c6bd;
+  --d-ink-400: #94928a;
+  --d-ink-500: #6b6a63;
+  --d-ink-600: #4a4942;
+  --d-ink-700: #2e2d28;
+  --d-ink-800: #1c1b18;
+  --d-ink-900: #0f0e0c;
+  --d-ink-950: #0a0907;
+
+  /* Accent — restrained, single accent + warm complement */
+  --d-blue-50:  #eff5ff;
+  --d-blue-100: #dce8ff;
+  --d-blue-200: #b9d2ff;
+  --d-blue-300: #8ab2ff;
+  --d-blue-400: #5989fc;
+  --d-blue-500: #2f64f0;
+  --d-blue-600: #1f4ed8;
+  --d-blue-700: #1b40b0;
+  --d-blue-800: #163887;
+  --d-blue-900: #112d68;
+
+  --d-teal-50:  #ebfbf7;
+  --d-teal-100: #d2f5ea;
+  --d-teal-300: #6cd9bc;
+  --d-teal-500: #11a387;
+  --d-teal-600: #0d8a70;
+  --d-teal-700: #0a6c58;
+
+  --d-amber-50:  #fef7e6;
+  --d-amber-100: #fdecc4;
+  --d-amber-300: #f8c969;
+  --d-amber-500: #e09213;
+  --d-amber-600: #b87510;
+
+  --d-rose-50:  #fff1f3;
+  --d-rose-300: #f9a5b1;
+  --d-rose-500: #e0254a;
+
+  /* ── SEMANTIC — colors ──────────────────────────────────────────────── */
+  /* Surfaces */
+  --color-canvas:        var(--d-ink-75);   /* page bg, family-co cream */
+  --color-surface:       var(--d-ink-50);   /* card bg */
+  --color-surface-2:     var(--d-ink-100);  /* inset/sunken */
+  --color-surface-hover: var(--d-ink-50);
+  --color-overlay:       rgba(15, 14, 12, 0.55); /* modal scrim */
+
+  /* Foreground (text) */
+  --color-fg-primary:    var(--d-ink-900);  /* headings + body strong */
+  --color-fg-secondary:  var(--d-ink-500);  /* body, captions */
+  --color-fg-tertiary:   var(--d-ink-400);  /* labels, hints */
+  --color-fg-inverse:    var(--d-ink-50);
+  --color-fg-link:       var(--d-blue-600);
+  --color-fg-link-hover: var(--d-blue-700);
+
+  /* Borders */
+  --color-border:        var(--d-ink-200);  /* default 1px */
+  --color-border-strong: var(--d-ink-300);  /* emphasized divider */
+  --color-border-subtle: var(--d-ink-150);  /* hairline */
+  --color-border-accent: var(--d-blue-300); /* on accent surfaces */
+
+  /* Accents */
+  --color-accent:         var(--d-blue-600);
+  --color-accent-hover:   var(--d-blue-700);
+  --color-accent-soft:    var(--d-blue-50);
+  --color-accent-fg:      var(--d-ink-50);  /* text on accent bg */
+
+  --color-success:        var(--d-teal-600);
+  --color-success-soft:   var(--d-teal-50);
+  --color-warning:        var(--d-amber-600);
+  --color-warning-soft:   var(--d-amber-50);
+  --color-danger:         var(--d-rose-500);
+  --color-danger-soft:    var(--d-rose-50);
+
+  /* Focus ring — keep visible against any bg */
+  --color-focus-ring:     rgba(31, 78, 216, 0.40);
+
+  /* ── TYPOGRAPHY ──────────────────────────────────────────────────────── */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Sizes — modular 1.25 scale, anchored on 16px base */
+  --text-2xs:   0.6875rem;   /* 11px — eyebrow, hint */
+  --text-xs:    0.75rem;     /* 12px — caption */
+  --text-sm:    0.875rem;    /* 14px — small body */
+  --text-base:  1rem;        /* 16px — body */
+  --text-lg:    1.125rem;    /* 18px — body+ */
+  --text-xl:    1.375rem;    /* 22px — small heading */
+  --text-2xl:   1.75rem;     /* 28px — h4/h3 */
+  --text-3xl:   2.25rem;     /* 36px — h2 */
+  --text-4xl:   3rem;        /* 48px — h1 */
+  --text-5xl:   3.75rem;     /* 60px — hero */
+  --text-6xl:   4.75rem;     /* 76px — display */
+  --text-display: clamp(2.5rem, 5vw + 1rem, 5.25rem);  /* fluid hero */
+
+  /* Weights — Inter has the full set */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extrabold:800;
+
+  /* Leading */
+  --leading-tight:    1.1;
+  --leading-snug:     1.25;
+  --leading-normal:   1.5;
+  --leading-relaxed:  1.65;
+
+  /* Tracking */
+  --tracking-tight:   -0.02em;
+  --tracking-snug:    -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.04em;
+  --tracking-widest:  0.16em;  /* eyebrow caps */
+
+  /* ── SPACING — 4px base ─────────────────────────────────────────────── */
+  --space-0:   0;
+  --space-1:   0.25rem;   /*  4 */
+  --space-2:   0.5rem;    /*  8 */
+  --space-3:   0.75rem;   /* 12 */
+  --space-4:   1rem;      /* 16 */
+  --space-5:   1.5rem;    /* 24 */
+  --space-6:   2rem;      /* 32 */
+  --space-7:   2.5rem;    /* 40 */
+  --space-8:   3rem;      /* 48 */
+  --space-10:  4rem;      /* 64 */
+  --space-12:  5rem;      /* 80 */
+  --space-16:  7rem;      /* 112 */
+  --space-20:  9rem;      /* 144 */
+
+  /* ── RADIUS — family.co uses very generous radii ─────────────────────── */
+  --radius-xs:    4px;
+  --radius-sm:    8px;
+  --radius-md:    12px;
+  --radius-lg:    16px;
+  --radius-xl:    24px;       /* hero panels */
+  --radius-2xl:   32px;       /* giant surfaces */
+  --radius-full:  9999px;     /* pill */
+
+  /* ── SHADOW — restrained, low-spread ────────────────────────────────── */
+  --shadow-xs:    0 1px 2px rgba(15, 14, 12, 0.04);
+  --shadow-sm:    0 2px 4px rgba(15, 14, 12, 0.05), 0 1px 2px rgba(15, 14, 12, 0.03);
+  --shadow-md:    0 6px 16px rgba(15, 14, 12, 0.06), 0 2px 4px rgba(15, 14, 12, 0.04);
+  --shadow-lg:    0 16px 32px rgba(15, 14, 12, 0.08), 0 4px 8px rgba(15, 14, 12, 0.05);
+  --shadow-xl:    0 24px 48px rgba(15, 14, 12, 0.10), 0 8px 16px rgba(15, 14, 12, 0.06);
+  --shadow-ring:  0 0 0 3px var(--color-focus-ring);
+  --shadow-card-hover: var(--shadow-lg);
+  --shadow-card:        var(--shadow-md);
+
+  /* ── BORDER WEIGHT ───────────────────────────────────────────────────── */
+  --border-thin:   1px;
+  --border-medium: 1.5px;
+  --border-thick:  2px;
+
+  /* ── LAYOUT — page max widths, sidebar widths ────────────────────────── */
+  --layout-prose:    64ch;
+  --layout-narrow:   48rem;
+  --layout-content:  72rem;
+  --layout-wide:     84rem;
+  --layout-bleed:    96rem;
+  --layout-nav-h:    64px;
+
+  /* ── MOTION ──────────────────────────────────────────────────────────── */
+  --duration-fast:    120ms;
+  --duration-normal:  200ms;
+  --duration-slow:    320ms;
+  --duration-deliberate: 480ms;
+
+  /* Easings — family.co leans on snappy ease-out + smooth for hovers */
+  --ease-out-quint:  cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-cubic:  cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Z-INDEX SCALE ───────────────────────────────────────────────────── */
+  --z-base:      0;
+  --z-raised:    10;
+  --z-sticky:    100;
+  --z-overlay:   500;
+  --z-modal:     1000;
+  --z-toast:     2000;
+
+  /* ── MESH — hero background (warm, subtle) ───────────────────────────── */
+  --mesh-canvas:
+    radial-gradient(at 8% 0%, rgba(220, 232, 255, 0.7) 0, transparent 42%),
+    radial-gradient(at 84% 2%, rgba(210, 245, 234, 0.55) 0, transparent 38%),
+    radial-gradient(at 52% 100%, rgba(254, 243, 199, 0.5) 0, transparent 42%);
+}
+
+/* ============================================================================
+ * DARK THEME — same primitives, different semantic mapping
+ * ========================================================================== */
+.dark {
+  --color-canvas:        #0b1220;
+  --color-surface:       #111a2e;
+  --color-surface-2:     #0f172a;
+  --color-surface-hover: #18223c;
+  --color-overlay:       rgba(0, 0, 0, 0.65);
+
+  --color-fg-primary:    #f8fafc;
+  --color-fg-secondary:  #a5b4c8;
+  --color-fg-tertiary:   #6e7e96;
+  --color-fg-inverse:    #0f172a;
+  --color-fg-link:       #8ab2ff;
+  --color-fg-link-hover: #b9d2ff;
+
+  --color-border:        rgba(148, 163, 184, 0.18);
+  --color-border-strong: rgba(148, 163, 184, 0.28);
+  --color-border-subtle: rgba(148, 163, 184, 0.10);
+  --color-border-accent: rgba(89, 137, 252, 0.40);
+
+  --color-accent:        #5989fc;
+  --color-accent-hover:  #8ab2ff;
+  --color-accent-soft:   rgba(47, 100, 240, 0.18);
+  --color-accent-fg:     #fbfaf7;
+
+  --color-success:       #6cd9bc;
+  --color-success-soft:  rgba(17, 163, 135, 0.18);
+  --color-warning:       #f8c969;
+  --color-warning-soft:  rgba(224, 146, 19, 0.16);
+  --color-danger:        #f9a5b1;
+  --color-danger-soft:   rgba(224, 37, 74, 0.16);
+
+  --color-focus-ring:    rgba(89, 137, 252, 0.45);
+
+  --shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-sm:    0 2px 4px rgba(0, 0, 0, 0.36), 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-md:    0 6px 16px rgba(0, 0, 0, 0.40), 0 2px 4px rgba(0, 0, 0, 0.24);
+  --shadow-lg:    0 16px 32px rgba(0, 0, 0, 0.48), 0 4px 8px rgba(0, 0, 0, 0.28);
+  --shadow-xl:    0 24px 48px rgba(0, 0, 0, 0.55), 0 8px 16px rgba(0, 0, 0, 0.32);
+
+  --mesh-canvas:
+    radial-gradient(at 8% 0%, rgba(47, 100, 240, 0.22) 0, transparent 44%),
+    radial-gradient(at 82% 0%, rgba(17, 163, 135, 0.18) 0, transparent 38%),
+    radial-gradient(at 50% 100%, rgba(224, 146, 19, 0.08) 0, transparent 42%);
+}

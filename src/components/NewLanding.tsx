@@ -16,6 +16,7 @@ import {
   Upload, ArrowRight, ChevronRight, FileCheck2, Download,
   Sparkles, ShieldCheck, Zap, Lock, X, Sliders,
 } from 'lucide-react';
+import { Pill, Eyebrow, HeadingDisplay, Stack, Button } from '../design-system/primitives';
 import { Tool, TOOLS } from '../data/tools';
 import { User, FileConversion, CloudIntegration } from '../types';
 import { getUser } from '../data/gamification';
@@ -121,22 +122,14 @@ const UpvoteButton: React.FC = () => (
 
 const GenericHero: React.FC<{ onShowPicker?: () => void; pickerVisible: boolean }> = ({ onShowPicker, pickerVisible }) => (
   <>
-    <div className="flex flex-wrap items-center gap-2 mb-3">
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
-        <Sparkles className="w-3 h-3" />
-        OMNICONVERT
-      </span>
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-        <ShieldCheck className="w-3 h-3" />
-        BROWSER-SAFE · NO SIGNUP
-      </span>
-    </div>
+    <Stack direction="row" gap={2} className="mb-4">
+      <Pill tone="accent"  icon={<Sparkles className="w-3 h-3" />}>OmniConvert</Pill>
+      <Pill tone="success" icon={<ShieldCheck className="w-3 h-3" />}>Browser-Safe · No Signup</Pill>
+    </Stack>
     <div className="flex items-start justify-between gap-4 flex-wrap">
       <div className="flex-1 min-w-0">
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
-          {GENERIC_HERO_TITLE}
-        </h1>
-        <p className="mt-3 text-sm md:text-lg text-slate-600 dark:text-slate-400 max-w-3xl">
+        <HeadingDisplay accent="Any Format">{GENERIC_HERO_TITLE}</HeadingDisplay>
+        <p className="mt-3 text-base md:text-lg text-fg-secondary max-w-prose">
           {GENERIC_HERO_DESCRIPTION}
         </p>
       </div>
@@ -145,20 +138,20 @@ const GenericHero: React.FC<{ onShowPicker?: () => void; pickerVisible: boolean 
         <UpvoteButton />
       </div>
     </div>
-    <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+    <Stack direction="row" gap={6} className="mt-8 pt-6 border-t border-border">
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Formats</div>
-        <div className="mt-1 font-bold">200+ supported</div>
+        <Eyebrow>Formats</Eyebrow>
+        <div className="mt-1.5 font-bold text-fg-primary text-base">200+ supported</div>
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
-        <div className="mt-1 font-bold">100% client-side</div>
+        <Eyebrow>Privacy</Eyebrow>
+        <div className="mt-1.5 font-bold text-fg-primary text-base">100% client-side</div>
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
-        <div className="mt-1 font-bold">Seconds</div>
+        <Eyebrow>Speed</Eyebrow>
+        <div className="mt-1.5 font-bold text-fg-primary text-base">Seconds</div>
       </div>
-    </div>
+    </Stack>
   </>
 );
 
@@ -168,35 +161,23 @@ const CategoryHero: React.FC<{ categoryId: string; onShowPicker?: () => void; pi
   const description = getCategoryDescription(categoryId);
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
-          <Sparkles className="w-3 h-3" />
-          {categoryId.toUpperCase()} CONVERTER
-        </span>
-        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
-          {categoryId}
-        </span>
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-          <ShieldCheck className="w-3 h-3" />
-          BROWSER-SAFE · NO SIGNUP
-        </span>
-      </div>
+      <Stack direction="row" gap={2} className="mb-4">
+        <Pill tone="accent"  icon={<Sparkles className="w-3 h-3" />}>{categoryId.toUpperCase()} CONVERTER</Pill>
+        <Pill tone="neutral">{categoryId}</Pill>
+        <Pill tone="success" icon={<ShieldCheck className="w-3 h-3" />}>Browser-Safe · No Signup</Pill>
+      </Stack>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            {catName} Converter
-          </h1>
-          <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl">
-            {description}
-          </p>
+          <HeadingDisplay accent="Converter">{`${catName} Converter`}</HeadingDisplay>
+          <p className="mt-2 text-base text-fg-secondary max-w-prose">{description}</p>
           {formats.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {formats.map(f => (
-                <span key={f} className="inline-flex items-center font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300">
+                <span key={f} className="inline-flex items-center font-mono font-bold text-2xs px-1.5 py-0.5 rounded bg-surface-2 text-fg-secondary border border-border-subtle">
                   {f}
                 </span>
               ))}
-              <span className="text-[11px] text-slate-500 self-center">+ more</span>
+              <span className="text-xs text-fg-tertiary self-center">+ more</span>
             </div>
           )}
         </div>
@@ -205,20 +186,20 @@ const CategoryHero: React.FC<{ categoryId: string; onShowPicker?: () => void; pi
           <UpvoteButton />
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+      <Stack direction="row" gap={6} className="mt-8 pt-6 border-t border-border">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Formats</div>
-          <div className="mt-1 font-bold">{formats.length > 0 ? `${formats.length}+ in this category` : 'Multiple formats'}</div>
+          <Eyebrow>Formats</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base">{formats.length > 0 ? `${formats.length}+ in this category` : 'Multiple formats'}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
-          <div className="mt-1 font-bold">100% client-side</div>
+          <Eyebrow>Privacy</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base">100% client-side</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
-          <div className="mt-1 font-bold">Seconds</div>
+          <Eyebrow>Speed</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base">Seconds</div>
         </div>
-      </div>
+      </Stack>
     </>
   );
 };
@@ -244,10 +225,10 @@ const ToolHero: React.FC<{ tool: Tool; onShowPicker?: () => void; pickerVisible:
       </div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            {from} to {to} Converter
-          </h1>
-          <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-3xl line-clamp-2">
+          <HeadingDisplay accent={`${from} to ${to}`}>
+            {`${from} to ${to} Converter`}
+          </HeadingDisplay>
+          <p className="mt-2 text-base text-fg-secondary max-w-prose line-clamp-2">
             {description}
           </p>
         </div>
@@ -256,24 +237,24 @@ const ToolHero: React.FC<{ tool: Tool; onShowPicker?: () => void; pickerVisible:
           <UpvoteButton />
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Source</div>
-          <div className="mt-1 font-bold">{from}</div>
+      <Stack direction="row" gap={6} className="mt-8 pt-6 border-t border-border" wrap>
+        <div className="min-w-[8rem]">
+          <Eyebrow>Source</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base font-mono">{from}</div>
         </div>
-        <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Target</div>
-          <div className="mt-1 font-bold">{to}</div>
+        <div className="min-w-[8rem]">
+          <Eyebrow>Target</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base font-mono">{to}</div>
         </div>
-        <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Privacy</div>
-          <div className="mt-1 font-bold">100% client-side</div>
+        <div className="min-w-[8rem]">
+          <Eyebrow>Privacy</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base">100% client-side</div>
         </div>
-        <div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Speed</div>
-          <div className="mt-1 font-bold">Seconds</div>
+        <div className="min-w-[8rem]">
+          <Eyebrow>Speed</Eyebrow>
+          <div className="mt-1.5 font-bold text-fg-primary text-base">Seconds</div>
         </div>
-      </div>
+      </Stack>
     </>
   );
 };
@@ -507,10 +488,13 @@ const NewLanding: React.FC<NewLandingProps> = ({
       {/* ─────────────── HERO ─────────────── */}
       {/*
         Flattened: no rounded-3xl, no glass, no bordered card wrapper.
-        The hero now renders directly in the page flow with just
-        spacing. Matches the pre-9686df6 single-page hero style.
+        Hero renders directly in the page flow with family.co-style
+        generous spacing and a soft mesh gradient backdrop.
       */}
-      <div className="py-4 md:py-6">
+      <header
+        className="ds-bg-mesh ds-section-narrow px-4 md:px-8 -mx-4 md:-mx-8 rounded-xl"
+        role="banner"
+      >
         {heroVariant === 'generic' && (
           <GenericHero onShowPicker={onShowPicker} pickerVisible={pickerVisible} />
         )}
@@ -528,7 +512,7 @@ const NewLanding: React.FC<NewLandingProps> = ({
             pickerVisible={pickerVisible}
           />
         )}
-      </div>
+      </header>
 
       {/* ─────────────── CHOOSEFILES CARD ─────────────── */}
       <section className="rounded-3xl glass border border-zinc-200/70 dark:border-zinc-800/70 p-5 md:p-7">
